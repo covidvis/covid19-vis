@@ -191,6 +191,27 @@ class ChartSpec(DotDict):
                 ).transform_calculate(
                     lockdown_tooltip_text='datum.{} + " " + datum.lockdown_type'.format(self.colorby)
                 )
+        if self.get('lockdown_extrapolation', False):
+            def _add_model_transformation_fields(base_chart):
+                ret = base_chart.transform_calculate(
+                    model_y='datum.lockdown_y * pow(datum.lockdown_slope, datum.x - datum.lockdown_x)'
+                ).transform_filter(
+                    'datum.x >= datum.lockdown_x'
+                ).transform_filter(
+                    'datum.y !== null'
+                )
+                if 'ydomain' in self:
+                    ret = ret.transform_filter('datum.model_y <= {}'.format(self.ydomain[1]))
+                return ret
+
+            layers['model_lines'] = _add_model_transformation_fields(
+                base.mark_line(size=3, strokeDash=[1, 1]).encode(
+                    x=alt.X('x:Q', **xaxis_kwargs),
+                    y=alt.Y('model_y:Q', **yaxis_kwargs),
+                    color=alt.Color(self.colorby),
+                    opacity=alt.condition(legend_selection, alt.value(1), alt.value(0.1)) if legend_selection is not None else alt.value(1),
+                )
+            )
         layered = alt.layer(*layers.values())
         return layered
 
@@ -257,6 +278,21 @@ class CovidChart(object):
         if self.quarantine_df is not None:
             df = df.merge(self.quarantine_df, how='left', on=self.groupcol)
             df[self.lockdown_X] = df.apply(lambda x: _days_between(x['date_of_N'], x['lockdown_date']), axis=1)
+
+            idx_before_at_lockdown = df.loc[df.x <= df.lockdown_x].groupby(df[self.groupcol]).x.idxmax()
+            df_lockdown_y = df.loc[idx_before_at_lockdown]
+            df_intercept = df.loc[df.x == 0].groupby(df[self.groupcol]).first().reset_index(drop=True)
+            df = df.merge(
+                df_intercept.rename(columns={'y': 'intercept'})[[self.groupcol, 'intercept']],
+                how='left',
+                on=self.groupcol
+            )
+            df = df.merge(
+                df_lockdown_y.rename(columns={'y': 'lockdown_y'})[[self.groupcol, 'lockdown_y']],
+                how='left',
+                on=self.groupcol
+            )
+            df['lockdown_slope'] = np.exp(np.log(df.lockdown_y / df.intercept) / df.lockdown_x)
 
             for group in self.quarantine_df[self.groupcol].unique():
                 lockdown_Xs = df.loc[df[self.groupcol] == group, self.lockdown_X].unique()
@@ -325,16 +361,27 @@ class CovidChart(object):
 
     def set_height(self, height):
         self.spec.height = height
+        return self
 
     def set_width(self, width):
         self.spec.width = width
+        return self
 
     def add_all_tooltips(self):
         return self.add_tooltip_points().add_tooltip_text().add_tooltip_rules()
 
+    def add_lockdown_extrapolation(self):
+        self.spec.lockdown_extrapolation = True
+        return self
+
     def set_defaults(self):
         self.spec.colorby = self.groupcol
-        ret = self.add_lines().add_points().set_logscale().set_interactive_legend().add_all_tooltips()
+        ret = self.add_lines(
+        ).add_points(
+        ).set_logscale(
+        ).set_interactive_legend(
+        ).add_all_tooltips(
+        ).add_lockdown_extrapolation()
         if self.quarantine_df is not None:
             ret = ret.add_lockdown_rules()
         return ret
