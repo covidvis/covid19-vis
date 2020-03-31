@@ -179,10 +179,10 @@ class ChartSpec(DotDict):
             if self.get('tooltip_rules'):
                 layers['tooltip_rules'] = base.mark_rule(color='gray').encode(x='x:Q',).transform_filter(nearest)
             if self.get('lockdown_rules', False):
-                layers['lockdown_rules'] = base.mark_rule(strokeDash=[7,3]).encode(
+                layers['lockdown_rules'] = base.mark_rule(strokeDash=[7, 3]).encode(
                     x='x:Q',
                     color=alt.Color(self.colorby),
-                    opacity=alt.condition(legend_selection, alt.value(1), alt.value(0.1)),
+                    opacity=alt.condition(legend_selection, alt.value(1), alt.value(0.1)) if legend_selection is not None else alt.value(1),
                 ).transform_filter(
                     'datum.x == datum.lockdown_x'
                 )
@@ -206,7 +206,8 @@ class CovidChart(object):
             groupcol: str,
             start_criterion: StartCriterion,
             ycol: str,
-            ycol_is_cumulative: bool,
+            use_defaults: bool = True,
+            ycol_is_cumulative: bool = True,
             top_k_groups: int = None,
             xcol: str = 'date',
             quarantine_df: pd.DataFrame = None
@@ -235,7 +236,8 @@ class CovidChart(object):
         self.ycol_is_cumulative = ycol_is_cumulative
         self.top_k_groups = top_k_groups
         self.spec = ChartSpec()
-        self.set_defaults()
+        if use_defaults:
+            self.set_defaults()
 
     def _preprocess_df(self) -> pd.DataFrame:
         df = self.df.copy()
@@ -255,6 +257,16 @@ class CovidChart(object):
         if self.quarantine_df is not None:
             df = df.merge(self.quarantine_df, how='left', on=self.groupcol)
             df[self.lockdown_X] = df.apply(lambda x: _days_between(x['date_of_N'], x['lockdown_date']), axis=1)
+
+            for group in self.quarantine_df[self.groupcol].unique():
+                lockdown_Xs = df.loc[df[self.groupcol] == group, self.lockdown_X].unique()
+                # insert some dummy rows w/ X == lockdown_X to get tooltip_rules w/ mouseover to work properly
+                new_rows = pd.DataFrame({
+                    self.groupcol: [group] * len(lockdown_Xs),
+                    self.X: lockdown_Xs,
+                    self.lockdown_X: lockdown_Xs,
+                })
+                df = df.append(new_rows, ignore_index=True, sort=False)
         return df
 
     def set_logscale(self):
