@@ -15,9 +15,15 @@ class StartCriterion(object):
 
 def _days_between(d1: Union[str, datetime], d2: Union[str, datetime]):
     if isinstance(d1, str):
-        d1 = datetime.strptime(d1, "%m-%d-%Y")
+        try:
+            d1 = datetime.strptime(d1, "%m-%d-%Y")
+        except ValueError:
+            d1 = datetime.strptime(d1, "%Y-%m-%d")
     if isinstance(d2, str):
-        d2 = datetime.strptime(d2, "%m-%d-%Y")
+        try:
+            d2 = datetime.strptime(d2, "%m-%d-%Y")
+        except ValueError:
+            d2 = datetime.strptime(d2, "%Y-%m-%d")
     return int((d2 - d1).days)
 
 
@@ -190,7 +196,7 @@ class CovidChart(object):
             xcol: str = 'date'
     ):
         if isinstance(df, str):
-            df = pd.read_csv(df, index_col=0, parse_dates=True)
+            df = pd.read_csv(df, parse_dates=[xcol], infer_datetime_format=True)
         if groupcol not in df.columns:
             raise ValueError('grouping col should be in dataframe cols')
         if ycol not in df.columns:
@@ -204,7 +210,7 @@ class CovidChart(object):
         self.ycol_is_cumulative = ycol_is_cumulative
         self.top_k_groups = top_k_groups
         self.spec = ChartSpec()
-        self.spec.colorby = self.groupcol
+        self.set_defaults()
 
     def _preprocess_df(self) -> pd.DataFrame:
         df = self.df.copy()
@@ -279,6 +285,7 @@ class CovidChart(object):
         return self.add_tooltip_points().add_tooltip_text().add_tooltip_rules()
 
     def set_defaults(self):
+        self.spec.colorby = self.groupcol
         return self.add_lines().add_points().set_logscale().set_interactive_legend().add_all_tooltips()
 
     def compile(self):
