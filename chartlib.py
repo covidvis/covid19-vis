@@ -260,11 +260,13 @@ class CovidChart(object):
 
             for group in self.quarantine_df[self.groupcol].unique():
                 lockdown_Xs = df.loc[df[self.groupcol] == group, self.lockdown_X].unique()
+                lockdown_types = df.loc[df[self.groupcol] == group, 'lockdown_type'].unique()
                 # insert some dummy rows w/ X == lockdown_X to get tooltip_rules w/ mouseover to work properly
                 new_rows = pd.DataFrame({
                     self.groupcol: [group] * len(lockdown_Xs),
                     self.X: lockdown_Xs,
                     self.lockdown_X: lockdown_Xs,
+                    'lockdown_type': lockdown_types
                 })
                 df = df.append(new_rows, ignore_index=True, sort=False)
         return df
