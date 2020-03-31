@@ -14,6 +14,8 @@ class StartCriterion(object):
 
 
 def _days_between(d1: Union[str, datetime], d2: Union[str, datetime]):
+    if pd.isna(d1) or pd.isna(d2):
+        return None
     if isinstance(d1, str):
         try:
             d1 = datetime.strptime(d1, "%m-%d-%Y")
@@ -84,6 +86,7 @@ class DotDict(dict):
 
 
 class ChartSpec(DotDict):
+    lockdown_X = 'lockdown_x'
     X = 'x'
     Y = 'y'
 
@@ -135,7 +138,6 @@ class ChartSpec(DotDict):
         kwargs = dict(x=alt_x, y=alt_y, color=alt.Color(self.colorby))
         if not self.get('lines', False):
             kwargs['opacity'] = alt.value(0)
-            kwargs['color'] = alt.Color(self.colorby, legend=None)
         elif legend_selection is not None:
             kwargs['opacity'] = alt.condition(legend_selection, alt.value(1), alt.value(.1))
         line_layer = base.mark_line(size=3).encode(**kwargs)
@@ -146,7 +148,6 @@ class ChartSpec(DotDict):
         kwargs = dict(x=alt_x, y=alt_y, color=alt.Color(self.colorby))
         if not self.get('points', False):
             kwargs['opacity'] = alt.value(0)
-            kwargs['color'] = alt.Color(self.colorby, legend=None)
         elif legend_selection is not None:
             kwargs['opacity'] = alt.condition(legend_selection, alt.value(.4), alt.value(.1))
         point_layer = base.mark_point(size=90, filled=True).encode(**kwargs)
@@ -177,11 +178,25 @@ class ChartSpec(DotDict):
                 )
             if self.get('tooltip_rules'):
                 layers['tooltip_rules'] = base.mark_rule(color='gray').encode(x='x:Q',).transform_filter(nearest)
+            if self.get('lockdown_rules', False):
+                layers['lockdown_rules'] = base.mark_rule(strokeDash=[7,3]).encode(
+                    x='x:Q',
+                    color=alt.Color(self.colorby),
+                    opacity=alt.condition(legend_selection, alt.value(1), alt.value(0.1)),
+                ).transform_filter(
+                    'datum.x == datum.lockdown_x'
+                )
+                layers['lockdown_tooltips'] = layers['lockdown_rules'].mark_text(align='left', dx=5, dy=-220).encode(
+                    text=alt.condition(nearest, 'lockdown_tooltip_text:N', alt.value(' '))
+                ).transform_calculate(
+                    lockdown_tooltip_text='datum.{} + " " + datum.lockdown_type'.format(self.colorby)
+                )
         layered = alt.layer(*layers.values())
         return layered
 
 
 class CovidChart(object):
+    lockdown_X = 'lockdown_x'
     X = 'x'
     Y = 'y'
 
@@ -193,7 +208,8 @@ class CovidChart(object):
             ycol: str,
             ycol_is_cumulative: bool,
             top_k_groups: int = None,
-            xcol: str = 'date'
+            xcol: str = 'date',
+            quarantine_df: pd.DataFrame = None
     ):
         if isinstance(df, str):
             df = pd.read_csv(df, parse_dates=[xcol], infer_datetime_format=True)
@@ -202,7 +218,16 @@ class CovidChart(object):
         if ycol not in df.columns:
             raise ValueError('measure col should be in dataframe cols')
 
+        if quarantine_df is not None:
+            if groupcol not in quarantine_df.columns:
+                raise ValueError('grouping col should be in dataframe cols')
+            if 'lockdown_date' not in quarantine_df.columns:
+                raise ValueError('lockdown_date should be in quarantine_df columns')
+            if 'lockdown_type' not in quarantine_df.columns:
+                raise ValueError('lockdown_type should be in quarantine_df columns')
+
         self.df = df
+        self.quarantine_df = quarantine_df
         self.groupcol = groupcol
         self.start_criterion = start_criterion
         self.xcol = xcol
@@ -226,7 +251,11 @@ class CovidChart(object):
             top_k_groups = list(df.groupby(self.groupcol)[self.Y].max().nlargest(self.top_k_groups).index)
             df = df.loc[df[self.groupcol].isin(top_k_groups)]
 
-        return self.start_criterion.transform(self, df)
+        df = self.start_criterion.transform(self, df)
+        if self.quarantine_df is not None:
+            df = df.merge(self.quarantine_df, how='left', on=self.groupcol)
+            df[self.lockdown_X] = df.apply(lambda x: _days_between(x['date_of_N'], x['lockdown_date']), axis=1)
+        return df
 
     def set_logscale(self):
         self.spec.yscale = 'log'
@@ -275,6 +304,11 @@ class CovidChart(object):
         self.spec.tooltip_rules = True
         return self
 
+    def add_lockdown_rules(self):
+        self.spec.has_tooltips = True
+        self.spec.lockdown_rules = True
+        return self
+
     def set_height(self, height):
         self.spec.height = height
 
@@ -286,7 +320,10 @@ class CovidChart(object):
 
     def set_defaults(self):
         self.spec.colorby = self.groupcol
-        return self.add_lines().add_points().set_logscale().set_interactive_legend().add_all_tooltips()
+        ret = self.add_lines().add_points().set_logscale().set_interactive_legend().add_all_tooltips()
+        if self.quarantine_df is not None:
+            ret = ret.add_lockdown_rules()
+        return ret
 
     def compile(self):
         chart_df = self._preprocess_df()
