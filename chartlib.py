@@ -44,6 +44,7 @@ class DaysSinceNumReached(StartCriterion):
 class ChartSpec(Bunch):
     X = 'x'
     Y = 'y'
+
     def validate(self, df):
         if 'lines' not in self and 'points' not in self:
             raise ValueError('should have at least one of lines or points')
@@ -54,6 +55,7 @@ class ChartSpec(Bunch):
 
     def _proprocess_df(self, df):
         chart_df = df.copy()
+        chart_df['zeros'] = np.zeros_like(chart_df[self.X])
         if 'xdomain' in self:
             xmin, xmax = self.xdomain[0], self.xdomain[1]
             chart_df = chart_df.loc[(chart_df[self.X] >= xmin) & (chart_df[self.X] <= xmax)]
@@ -69,7 +71,10 @@ class ChartSpec(Bunch):
         legend_selection = None
         if self.get('interactive_legend', False):
             legend_selection = alt.selection_multi(fields=[self.colorby], bind='legend')
-        layers = []
+        # put a fake layer in first to get an always-opaque legend
+        layers = {'fake': base.mark_point(size=0, filled=True).encode(color=self.colorby)}
+        if legend_selection is not None:
+            layers['fake'] = layers['fake'].add_selection(legend_selection)
         xaxis_kwargs = {}
         if 'xdomain' in self:
             xaxis_kwargs['scale'] = alt.Scale(domain=self.xdomain)
@@ -83,60 +88,55 @@ class ChartSpec(Bunch):
             yaxis_kwargs['scale'] = alt.Scale(type=yscale)
         if 'ytitle' in self:
             yaxis_kwargs['title'] = self.ytitle
-        alt_x = alt.X("x:Q", **xaxis_kwargs)
-        alt_y = alt.Y("y:Q", **yaxis_kwargs)
-        if 'lines' in self:
-            kwargs = dict(x=alt_x, y=alt_y, color=alt.Color(self.colorby))
-            if legend_selection is not None:
-                kwargs['opacity'] = alt.condition(legend_selection, alt.value(1), alt.value(.1))
-            line_layer = base.mark_line(size=3).encode(**kwargs)
-            line_layer = line_layer.transform_filter('datum.y !== null')
-            if yscale == 'log':
-                line_layer = line_layer.transform_filter('datum.y > 0')
-            if legend_selection is not None:
-                line_layer = line_layer.add_selection(legend_selection)
-            layers.append(line_layer)
-        if 'points' in self:
-            kwargs = dict(x=alt_x, y=alt_y, color=alt.Color(self.colorby))
-            if legend_selection is not None:
-                kwargs['opacity'] = alt.condition(legend_selection, alt.value(.4), alt.value(.1))
-            point_layer = base.mark_point(size=90, filled=True).encode(**kwargs)
-            point_layer = point_layer.transform_filter('datum.y !== null')
-            if self.get('yscale', 'linear') == 'log':
-                point_layer = point_layer.transform_filter('datum.y > 0')
-            layers.append(point_layer)
+        alt_x = alt.X('x:Q', **xaxis_kwargs)
+        alt_y = alt.Y('y:Q', **yaxis_kwargs)
+        kwargs = dict(x=alt_x, y=alt_y, color=alt.Color(self.colorby))
+        if not self.get('lines', False):
+            kwargs['opacity'] = alt.value(0)
+            kwargs['color'] = alt.Color(self.colorby, legend=None)
+        elif legend_selection is not None:
+            kwargs['opacity'] = alt.condition(legend_selection, alt.value(1), alt.value(.1))
+        line_layer = base.mark_line(size=3).encode(**kwargs)
+        line_layer = line_layer.transform_filter('datum.y !== null')
+        if yscale == 'log':
+            line_layer = line_layer.transform_filter('datum.y > 0')
+        layers['lines'] = line_layer
+        kwargs = dict(x=alt_x, y=alt_y, color=alt.Color(self.colorby))
+        if not self.get('points', False):
+            kwargs['opacity'] = alt.value(0)
+            kwargs['color'] = alt.Color(self.colorby, legend=None)
+        elif legend_selection is not None:
+            kwargs['opacity'] = alt.condition(legend_selection, alt.value(.4), alt.value(.1))
+        point_layer = base.mark_point(size=90, filled=True).encode(**kwargs)
+        point_layer = point_layer.transform_filter('datum.y !== null')
+        if self.get('yscale', 'linear') == 'log':
+            point_layer = point_layer.transform_filter('datum.y > 0')
+        layers['points'] = point_layer
         if self.get('has_tooltips', False):
             nearest = alt.selection(type='single', nearest=True, on='mouseover',
                                     fields=['x'], empty='none')
-            layers.append(
-                base.mark_point().encode(
+            layers['selectors'] = base.mark_point().encode(
                     x='x:Q',
                     opacity=alt.value(0),
-                ).add_selection(nearest)
-            )
+            ).add_selection(nearest)
             if self.get('tooltip_points', False):
-                layers.append(
-                    layers[1].mark_point(filled=True).encode(
+                layers['tooltip_points'] = layers['points'].mark_point(filled=True).encode(
                         opacity=alt.condition(nearest, alt.value(1), alt.value(0))
-                    )
                 )
             if self.get('tooltip_text', False):
                 extra_kwargs = {}
                 if legend_selection is not None:
                     extra_kwargs['opacity'] = alt.condition(legend_selection, alt.value(1), alt.value(0.1))
-                layers.append(
-                    layers[1].mark_text(align='left', dx=5, dy=-5).encode(
-                        text=alt.condition(nearest, 'tooltip_text:N', alt.value(' ')),
-                        **extra_kwargs
-                    ).transform_calculate(
-                        tooltip_text='datum.{} + ": " + datum.y'.format(self.colorby)
-                    )
+                layers['tooltip_text'] = layers['points'].mark_text(align='left', dx=5, dy=-5).encode(
+                    text=alt.condition(nearest, 'tooltip_text:N', alt.value(' ')),
+                    **extra_kwargs
+                ).transform_calculate(
+                    tooltip_text='datum.{} + ": " + datum.y'.format(self.colorby)
                 )
             if self.get('tooltip_rules'):
-                layers.append(
-                    base.mark_rule(color='gray').encode(x='x:Q',).transform_filter(nearest)
-                )
-        return alt.layer(*layers)
+                layers['tooltip_rules'] = base.mark_rule(color='gray').encode(x='x:Q',).transform_filter(nearest)
+        layered = alt.layer(*layers.values())
+        return layered
 
 
 class CovidChart(object):
@@ -167,8 +167,8 @@ class CovidChart(object):
         self.ycol = ycol
         self.ycol_is_cumulative = ycol_is_cumulative
         self.top_k_groups = top_k_groups
-        self.chart_spec = ChartSpec()
-        self.chart_spec.colorby = self.groupcol
+        self.spec = ChartSpec()
+        self.spec.colorby = self.groupcol
 
     def _preprocess_df(self) -> pd.DataFrame:
         df = self.df.copy()
@@ -187,64 +187,64 @@ class CovidChart(object):
         return self.start_criterion.transform(self, df)
 
     def set_logscale(self):
-        self.chart_spec.yscale = 'log'
+        self.spec.yscale = 'log'
         return self
 
     def set_xdomain(self, limits):
-        self.chart_spec.xdomain = limits
+        self.spec.xdomain = limits
         return self
 
     def set_ydomain(self, limits):
-        self.chart_spec.ydomain = limits
+        self.spec.ydomain = limits
         return self
 
     def set_xtitle(self, xtitle):
-        self.chart_spec.xtitle = xtitle
+        self.spec.xtitle = xtitle
         return self
 
     def set_ytitle(self, ytitle):
-        self.chart_spec.ytitle = ytitle
+        self.spec.ytitle = ytitle
         return self
 
     def add_lines(self):
-        self.chart_spec.lines = True
+        self.spec.lines = True
         return self
 
     def add_points(self):
-        self.chart_spec.points = True
+        self.spec.points = True
         return self
 
     def set_interactive_legend(self):
-        self.chart_spec.interactive_legend = True
+        self.spec.interactive_legend = True
         return self
 
     def add_tooltip_text(self):
-        self.chart_spec.has_tooltips = True
-        self.chart_spec.tooltip_text = True
+        self.spec.has_tooltips = True
+        self.spec.tooltip_text = True
         return self
 
     def add_tooltip_points(self):
-        self.chart_spec.has_tooltips = True
-        self.chart_spec.tooltip_points = True
+        self.spec.has_tooltips = True
+        self.spec.tooltip_points = True
         return self
 
     def add_tooltip_rules(self):
-        self.chart_spec.has_tooltips = True
-        self.chart_spec.tooltip_rules = True
+        self.spec.has_tooltips = True
+        self.spec.tooltip_rules = True
         return self
 
     def set_height(self, height):
-        self.chart_spec.height = height
+        self.spec.height = height
 
     def set_width(self, width):
-        self.chart_spec.width = width
+        self.spec.width = width
 
     def add_all_tooltips(self):
         return self.add_tooltip_points().add_tooltip_text().add_tooltip_rules()
 
-    def set_default(self):
+    def set_defaults(self):
         return self.add_lines().add_points().set_logscale().set_interactive_legend().add_all_tooltips()
 
     def compile(self):
         chart_df = self._preprocess_df()
-        return self.chart_spec.compile(chart_df)
+        return self.spec.compile(chart_df)
