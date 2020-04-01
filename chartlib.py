@@ -434,6 +434,7 @@ class CovidChart(object):
 
     def export(self, fname = "vis.json", varName = "vis"):
         import json
+        self.set_width(600)
         altChart = self.compile()
         with open(fname,'w') as f:
             f.write(f"var {varName} = ")
