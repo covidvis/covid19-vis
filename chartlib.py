@@ -431,3 +431,11 @@ class CovidChart(object):
     def compile(self):
         chart_df = self._preprocess_df()
         return self.spec.compile(chart_df)
+
+    def export(self, fname = "vis.json", varName = "vis"):
+        import json
+        altChart = self.compile()
+        with open(fname,'w') as f:
+            f.write(f"var {varName} = ")
+            json.dump(altChart.to_dict(),f)
+        f.close()
