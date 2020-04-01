@@ -109,6 +109,130 @@ class ChartSpec(DotDict):
             chart_df = chart_df.loc[(chart_df[self.Y] >= ymin) & (chart_df[self.Y] <= ymax)]
         return chart_df
 
+    def _get_x(self, shorthand='x:Q'):
+        xaxis_kwargs = {}
+        if 'xdomain' in self:
+            xaxis_kwargs['scale'] = alt.Scale(domain=self.xdomain)
+        if 'xtitle' in self:
+            xaxis_kwargs['title'] = self.xtitle
+        return alt.X(shorthand, **xaxis_kwargs)
+
+    def _get_y(self, shorthand='y:Q'):
+        yaxis_kwargs = {}
+        yscale = self.get('yscale', 'linear')
+        if 'ydomain' in self:
+            yaxis_kwargs['scale'] = alt.Scale(type=yscale, domain=self.ydomain)
+        else:
+            yaxis_kwargs['scale'] = alt.Scale(type=yscale)
+        if 'ytitle' in self:
+            yaxis_kwargs['title'] = self.ytitle
+        return alt.Y(shorthand, **yaxis_kwargs)
+
+    @property
+    def _alt_color(self):
+        return alt.Color(self.colorby)
+
+    @property
+    def _yscale(self):
+        return self.get('yscale', 'linear')
+
+    def _make_line_layer(self, base, legend_selection):
+        kwargs = dict(x=self._get_x(), y=self._get_y(), color=self._alt_color)
+        if not self.get('lines', False):
+            kwargs['opacity'] = alt.value(0)
+        elif legend_selection is not None:
+            kwargs['opacity'] = alt.condition(legend_selection, alt.value(1), alt.value(.1))
+        line_layer = base.mark_line(size=3).encode(**kwargs)
+        line_layer = line_layer.transform_filter('datum.y !== null')
+        if self._yscale == 'log':
+            line_layer = line_layer.transform_filter('datum.y > 0')
+        return line_layer
+
+    def _make_point_layer(self, base, legend_selection):
+        kwargs = dict(x=self._get_x(), y=self._get_y(), color=alt.Color(self.colorby))
+        if not self.get('points', False):
+            kwargs['opacity'] = alt.value(0)
+        elif legend_selection is not None:
+            kwargs['opacity'] = alt.condition(legend_selection, alt.value(.4), alt.value(.1))
+        point_layer = base.mark_point(size=90, filled=True).encode(**kwargs)
+        point_layer = point_layer.transform_filter('datum.y !== null')
+        if self._yscale == 'log':
+            point_layer = point_layer.transform_filter('datum.y > 0')
+        return point_layer
+
+    def _make_tooltip_text_layer(self, point_layer, nearest, legend_selection):
+        extra_kwargs = {}
+        if legend_selection is not None:
+            extra_kwargs['opacity'] = alt.condition(legend_selection, alt.value(1), alt.value(0.1))
+        return point_layer.mark_text(align='left', dx=5, dy=-5).encode(
+            text=alt.condition(nearest, 'tooltip_text:N', alt.value(' ')),
+            **extra_kwargs
+        ).transform_calculate(
+            tooltip_text='datum.{} + ": " + datum.y'.format(self.colorby)
+        )
+
+    def _make_lockdown_rules_layer(self, base, legend_selection):
+        extra_kwargs = {}
+        if legend_selection is not None:
+            extra_kwargs['opacity'] = alt.condition(legend_selection, alt.value(1), alt.value(0.1))
+        return base.mark_rule(strokeDash=[7, 3]).encode(
+            x='x:Q', color=self._alt_color, **extra_kwargs
+        ).transform_filter('datum.x == datum.lockdown_x')
+
+    def _make_lockdown_tooltips_layer(self, rules, nearest):
+        return rules.mark_text(align='left', dx=5, dy=-220).encode(
+            text=alt.condition(nearest, 'lockdown_tooltip_text:N', alt.value(' '))
+        ).transform_calculate(
+            lockdown_tooltip_text='datum.{} + " " + datum.lockdown_type'.format(self.colorby)
+        )
+
+    def _collect_tooltip_layers(self, layers, base, legend_selection):
+        if not self.get('has_tooltips', False):
+            return
+        nearest = alt.selection(type='single', nearest=True, on='mouseover',
+                                fields=['x'], empty='none')
+        layers['selectors'] = base.mark_point().encode(
+            x='x:Q', opacity=alt.value(0),
+        ).add_selection(nearest)
+        if self.get('tooltip_points', False):
+            layers['tooltip_points'] = layers['points'].mark_point(filled=True).encode(
+                opacity=alt.condition(nearest, alt.value(1), alt.value(0))
+            )
+        if self.get('tooltip_text', False):
+            layers['tooltip_text'] = self._make_tooltip_text_layer(layers['points'], nearest, legend_selection)
+        if self.get('tooltip_rules'):
+            layers['tooltip_rules'] = base.mark_rule(color='gray').encode(x='x:Q',).transform_filter(nearest)
+        if self.get('lockdown_rules', False):
+            layers['lockdown_rules'] = self._make_lockdown_rules_layer(base, legend_selection)
+            layers['lockdown_tooltips'] = self._make_lockdown_tooltips_layer(layers['lockdown_rules'], nearest)
+
+    def _make_lockdown_extrapolation_layer(self, base, legend_selection):
+        def _add_model_transformation_fields(base_chart):
+            ret = base_chart.transform_filter(
+                'datum.lockdown_x != null'
+            ).transform_filter(
+                'datum.x >= datum.lockdown_x'
+            ).transform_filter(
+                'datum.y !== null'
+            ).transform_calculate(
+                model_y='datum.lockdown_y * pow(datum.lockdown_slope, datum.x - datum.lockdown_x)'
+            )
+            if 'ydomain' in self:
+                ret = ret.transform_filter('datum.model_y <= {}'.format(self.ydomain[1]))
+            return ret
+
+        extra_kwargs = {}
+        if legend_selection is not None:
+            extra_kwargs['opacity'] = alt.condition(legend_selection, alt.value(1), alt.value(0.1))
+        return _add_model_transformation_fields(
+            base.mark_line(size=3, strokeDash=[1, 1]).encode(
+                x=self._get_x('x:Q'),
+                y=self._get_y('model_y:Q'),
+                color=self._alt_color,
+                **extra_kwargs
+            )
+        )
+
     def compile(self, df):
         self.validate(df)
         df = self._proprocess_df(df)
@@ -120,100 +244,13 @@ class ChartSpec(DotDict):
         layers = {'fake': base.mark_point(size=0, filled=True).encode(color=self.colorby)}
         if legend_selection is not None:
             layers['fake'] = layers['fake'].add_selection(legend_selection)
-        xaxis_kwargs = {}
-        if 'xdomain' in self:
-            xaxis_kwargs['scale'] = alt.Scale(domain=self.xdomain)
-        if 'xtitle' in self:
-            xaxis_kwargs['title'] = self.xtitle
-        yaxis_kwargs = {}
-        yscale = self.get('yscale', 'linear')
-        if 'ydomain' in self:
-            yaxis_kwargs['scale'] = alt.Scale(type=yscale, domain=self.ydomain)
-        else:
-            yaxis_kwargs['scale'] = alt.Scale(type=yscale)
-        if 'ytitle' in self:
-            yaxis_kwargs['title'] = self.ytitle
-        alt_x = alt.X('x:Q', **xaxis_kwargs)
-        alt_y = alt.Y('y:Q', **yaxis_kwargs)
-        kwargs = dict(x=alt_x, y=alt_y, color=alt.Color(self.colorby))
-        if not self.get('lines', False):
-            kwargs['opacity'] = alt.value(0)
-        elif legend_selection is not None:
-            kwargs['opacity'] = alt.condition(legend_selection, alt.value(1), alt.value(.1))
-        line_layer = base.mark_line(size=3).encode(**kwargs)
-        line_layer = line_layer.transform_filter('datum.y !== null')
-        if yscale == 'log':
-            line_layer = line_layer.transform_filter('datum.y > 0')
-        layers['lines'] = line_layer
-        kwargs = dict(x=alt_x, y=alt_y, color=alt.Color(self.colorby))
-        if not self.get('points', False):
-            kwargs['opacity'] = alt.value(0)
-        elif legend_selection is not None:
-            kwargs['opacity'] = alt.condition(legend_selection, alt.value(.4), alt.value(.1))
-        point_layer = base.mark_point(size=90, filled=True).encode(**kwargs)
-        point_layer = point_layer.transform_filter('datum.y !== null')
-        if self.get('yscale', 'linear') == 'log':
-            point_layer = point_layer.transform_filter('datum.y > 0')
-        layers['points'] = point_layer
-        if self.get('has_tooltips', False):
-            nearest = alt.selection(type='single', nearest=True, on='mouseover',
-                                    fields=['x'], empty='none')
-            layers['selectors'] = base.mark_point().encode(
-                    x='x:Q',
-                    opacity=alt.value(0),
-            ).add_selection(nearest)
-            if self.get('tooltip_points', False):
-                layers['tooltip_points'] = layers['points'].mark_point(filled=True).encode(
-                        opacity=alt.condition(nearest, alt.value(1), alt.value(0))
-                )
-            if self.get('tooltip_text', False):
-                extra_kwargs = {}
-                if legend_selection is not None:
-                    extra_kwargs['opacity'] = alt.condition(legend_selection, alt.value(1), alt.value(0.1))
-                layers['tooltip_text'] = layers['points'].mark_text(align='left', dx=5, dy=-5).encode(
-                    text=alt.condition(nearest, 'tooltip_text:N', alt.value(' ')),
-                    **extra_kwargs
-                ).transform_calculate(
-                    tooltip_text='datum.{} + ": " + datum.y'.format(self.colorby)
-                )
-            if self.get('tooltip_rules'):
-                layers['tooltip_rules'] = base.mark_rule(color='gray').encode(x='x:Q',).transform_filter(nearest)
-            if self.get('lockdown_rules', False):
-                layers['lockdown_rules'] = base.mark_rule(strokeDash=[7, 3]).encode(
-                    x='x:Q',
-                    color=alt.Color(self.colorby),
-                    opacity=alt.condition(legend_selection, alt.value(1), alt.value(0.1)) if legend_selection is not None else alt.value(1)
-                ).transform_filter(
-                    'datum.x == datum.lockdown_x'
-                )
-                layers['lockdown_tooltips'] = layers['lockdown_rules'].mark_text(align='left', dx=5, dy=-220).encode(
-                    text=alt.condition(nearest, 'lockdown_tooltip_text:N', alt.value(' '))
-                ).transform_calculate(
-                    lockdown_tooltip_text='datum.{} + " " + datum.lockdown_type'.format(self.colorby)
-                )
-        if self.get('lockdown_extrapolation', False):
-            def _add_model_transformation_fields(base_chart):
-                ret = base_chart.transform_filter(
-                    'datum.lockdown_x != null'
-                ).transform_filter(
-                    'datum.x >= datum.lockdown_x'
-                ).transform_filter(
-                    'datum.y !== null'
-                ).transform_calculate(
-                    model_y='datum.lockdown_y * pow(datum.lockdown_slope, datum.x - datum.lockdown_x)'
-                )
-                if 'ydomain' in self:
-                    ret = ret.transform_filter('datum.model_y <= {}'.format(self.ydomain[1]))
-                return ret
+        layers['lines'] = self._make_line_layer(base, legend_selection)
+        layers['points'] = self._make_point_layer(base, legend_selection)
 
-            layers['model_lines'] = _add_model_transformation_fields(
-                base.mark_line(size=3, strokeDash=[1, 1]).encode(
-                    x=alt.X('x:Q', **xaxis_kwargs),
-                    y=alt.Y('model_y:Q', **yaxis_kwargs),
-                    color=alt.Color(self.colorby),
-                    opacity=alt.condition(legend_selection, alt.value(1), alt.value(0.1)) if legend_selection is not None else alt.value(1),
-                )
-            )
+        self._collect_tooltip_layers(layers, base, legend_selection)
+
+        if self.get('lockdown_extrapolation', False):
+            layers['model_lines'] = self._make_lockdown_extrapolation_layer(base, legend_selection)
         layered = alt.layer(*layers.values())
         return layered
 
