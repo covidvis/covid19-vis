@@ -423,7 +423,8 @@ class CovidChart(object):
         ).set_logscale(
         ).set_interactive_legend(
         ).add_all_tooltips(
-        ).add_lockdown_extrapolation()
+        ).add_lockdown_extrapolation(
+        ).set_width(600)
         if self.quarantine_df is not None:
             ret = ret.add_lockdown_rules()
         return ret
@@ -432,11 +433,7 @@ class CovidChart(object):
         chart_df = self._preprocess_df()
         return self.spec.compile(chart_df)
 
-    def export(self, fname = "vis.json", varName = "vis"):
+    def export(self, fname="vis.json", varName="vis"):
         import json
-        self.set_width(600)
-        altChart = self.compile()
-        with open(fname,'w') as f:
-            f.write(f"var {varName} = ")
-            json.dump(altChart.to_dict(),f)
-        f.close()
+        with open(fname, 'w') as f:
+            f.write(f"var {varName} = {json.dumps(self.compile().to_dict())}")
