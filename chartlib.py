@@ -295,14 +295,13 @@ class CovidChart(object):
             df['lockdown_slope'] = np.exp(np.log(df.lockdown_y / df.intercept) / df.lockdown_x)
 
             for group in self.quarantine_df[self.groupcol].unique():
-                lockdown_Xs = df.loc[df[self.groupcol] == group, self.lockdown_X].unique()
-                lockdown_types = df.loc[df[self.groupcol] == group, 'lockdown_type'].unique()
+                lockdown_Xs_and_types = df.loc[df[self.groupcol] == group, [self.lockdown_X, 'lockdown_type']]
                 # insert some dummy rows w/ X == lockdown_X to get tooltip_rules w/ mouseover to work properly
                 new_rows = pd.DataFrame({
-                    self.groupcol: [group] * len(lockdown_Xs),
-                    self.X: lockdown_Xs,
-                    self.lockdown_X: lockdown_Xs,
-                    'lockdown_type': lockdown_types
+                    self.groupcol: [group] * len(lockdown_Xs_and_types),
+                    self.X: lockdown_Xs_and_types.lockdown_x,
+                    self.lockdown_X: lockdown_Xs_and_types.lockdown_x,
+                    'lockdown_type': lockdown_Xs_and_types.lockdown_type
                 })
                 df = df.append(new_rows, ignore_index=True, sort=False)
         return df
