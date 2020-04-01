@@ -182,7 +182,7 @@ class ChartSpec(DotDict):
                 layers['lockdown_rules'] = base.mark_rule(strokeDash=[7, 3]).encode(
                     x='x:Q',
                     color=alt.Color(self.colorby),
-                    opacity=alt.condition(legend_selection, alt.value(1), alt.value(0.1)) if legend_selection is not None else alt.value(1),
+                    opacity=alt.condition(legend_selection, alt.value(1), alt.value(0.1)) if legend_selection is not None else alt.value(1)
                 ).transform_filter(
                     'datum.x == datum.lockdown_x'
                 )
@@ -193,12 +193,14 @@ class ChartSpec(DotDict):
                 )
         if self.get('lockdown_extrapolation', False):
             def _add_model_transformation_fields(base_chart):
-                ret = base_chart.transform_calculate(
-                    model_y='datum.lockdown_y * pow(datum.lockdown_slope, datum.x - datum.lockdown_x)'
+                ret = base_chart.transform_filter(
+                    'datum.lockdown_x != null'
                 ).transform_filter(
                     'datum.x >= datum.lockdown_x'
                 ).transform_filter(
                     'datum.y !== null'
+                ).transform_calculate(
+                    model_y='datum.lockdown_y * pow(datum.lockdown_slope, datum.x - datum.lockdown_x)'
                 )
                 if 'ydomain' in self:
                     ret = ret.transform_filter('datum.model_y <= {}'.format(self.ydomain[1]))
@@ -276,12 +278,22 @@ class CovidChart(object):
 
         df = self.start_criterion.transform(self, df)
         if self.quarantine_df is not None:
-            df = df.merge(self.quarantine_df, how='left', on=self.groupcol)
-            df[self.lockdown_X] = df.apply(lambda x: _days_between(x['date_of_N'], x['lockdown_date']), axis=1)
+            quarantine_df = self.quarantine_df.copy()
+            quarantine_df = quarantine_df.dropna()
+            quarantine_df = quarantine_df.merge(
+                df[[self.groupcol, 'date_of_N']], on=self.groupcol, how='inner'
+            )
+            quarantine_df[self.lockdown_X] = quarantine_df.apply(lambda x: _days_between(x['date_of_N'], x['lockdown_date']), axis=1)
+
+            # only retain latest lockdown that appears... eventually we will want to allow for multiple
+            quarantine_df = quarantine_df.loc[quarantine_df.lockdown_x > 0]
+            quarantine_df = quarantine_df.loc[quarantine_df.groupby(self.groupcol).lockdown_x.idxmin()]
+            del quarantine_df['date_of_N']
+            df = df.merge(quarantine_df, how='left', on=self.groupcol)
 
             idx_before_at_lockdown = df.loc[df.x <= df.lockdown_x].groupby(df[self.groupcol]).x.idxmax()
             df_lockdown_y = df.loc[idx_before_at_lockdown]
-            df_intercept = df.loc[df.x == 0].groupby(df[self.groupcol]).first().reset_index(drop=True)
+            df_intercept = df.loc[df.x == 0].groupby(self.groupcol).first().reset_index()
             df = df.merge(
                 df_intercept.rename(columns={'y': 'intercept'})[[self.groupcol, 'intercept']],
                 how='left',
@@ -294,16 +306,10 @@ class CovidChart(object):
             )
             df['lockdown_slope'] = np.exp(np.log(df.lockdown_y / df.intercept) / df.lockdown_x)
 
-            for group in self.quarantine_df[self.groupcol].unique():
-                lockdown_Xs_and_types = df.loc[df[self.groupcol] == group, [self.lockdown_X, 'lockdown_type']]
-                # insert some dummy rows w/ X == lockdown_X to get tooltip_rules w/ mouseover to work properly
-                new_rows = pd.DataFrame({
-                    self.groupcol: [group] * len(lockdown_Xs_and_types),
-                    self.X: lockdown_Xs_and_types.lockdown_x,
-                    self.lockdown_X: lockdown_Xs_and_types.lockdown_x,
-                    'lockdown_type': lockdown_Xs_and_types.lockdown_type
-                })
-                df = df.append(new_rows, ignore_index=True, sort=False)
+            new_rows = df.groupby(self.groupcol).max().reset_index()[[self.groupcol, self.lockdown_X, 'lockdown_type']]
+            new_rows['x'] = new_rows.lockdown_x
+            df = df.append(new_rows, ignore_index=True, sort=False)
+
         return df
 
     def set_logscale(self):
