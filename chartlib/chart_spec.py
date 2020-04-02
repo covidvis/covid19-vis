@@ -15,6 +15,7 @@ class ChartSpec(DotDict):
     Y = 'y'
     DEFAULT_HEIGHT = 400
     DEFAULT_WIDTH = 600
+    EMPTY_SELECTION = ''
 
     def validate(self, df):
         if 'lines' not in self and 'points' not in self:
@@ -59,13 +60,22 @@ class ChartSpec(DotDict):
         return base
 
     def _clicked_or_empty(self):
-        return f'!isDefined({self.click}.{self.colorby}) || !isDefined({self.click}_{self.colorby}) || {self.click}.{self.colorby} == datum.{self.colorby}'
+        return ' || '.join([
+            f'!isDefined({self.click}.{self.colorby})',
+            f'!isDefined({self.click}_{self.colorby})',
+            f'{self.click}.{self.colorby} == datum.{self.colorby}',
+            f'{self.click}.{self.colorby} == "{self.EMPTY_SELECTION}"'
+        ])
 
     def _clicked_with_focus(self):
         return f'isDefined({self.click}.{self.colorby}) && {self.click}.{self.colorby} == datum.{self.colorby}'
 
     def _someone_has_focus(self):
-        return f'isDefined({self.click}.{self.colorby}) && isDefined({self.click}_{self.colorby})'
+        return ' && '.join([
+            f'isDefined({self.click}.{self.colorby})',
+            f'isDefined({self.click}_{self.colorby})',
+            f'{self.click}.{self.colorby} != "{self.EMPTY_SELECTION}"'
+        ])
 
     def _make_line_layer(self, base, click_selection):
         kwargs = dict(x=self._get_x(), y=self._get_y(), color=self._alt_color)
@@ -196,7 +206,7 @@ class ChartSpec(DotDict):
         layers = {}
         click_selection = None
         if self.get('click_selection', False):
-            dropdown_options = [None] + list(df[self.colorby].unique())
+            dropdown_options = [self.EMPTY_SELECTION] + list(df[self.colorby].unique())
             dropdown = alt.binding_select(options=dropdown_options, name=f'Filter on {self.colorby}: ')
             click_selection = alt.selection_single(
                 fields=[self.colorby], on='click', name=self.click, empty='all',
