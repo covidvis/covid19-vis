@@ -192,7 +192,7 @@ class ChartSpec(DotDict):
             text=alt.condition(nearest, 'tooltip_text:N', alt.value(' ')),
             opacity=alt.value(1)
         ).transform_calculate(
-            tooltip_text='datum.{} + ": " + datum.y'.format(self.colorby)
+            tooltip_text=f'datum.{self.colorby} + ": " + datum.y'
         )
         return self._only_visible_when_in_focus(ret, click_selection)
 
@@ -206,7 +206,7 @@ class ChartSpec(DotDict):
         ret = rules.mark_text(align='left', dx=5, dy=-200).encode(
             text=alt.condition(nearest, 'lockdown_tooltip_text:N', alt.value(' '))
         ).transform_calculate(
-            lockdown_tooltip_text='datum.{} + " " + datum.lockdown_type'.format(self.colorby)
+            lockdown_tooltip_text=f'datum.{self.colorby} + " " + datum.lockdown_type'
         )
         return self._only_visible_when_in_focus(ret, click_selection)
 
@@ -240,7 +240,7 @@ class ChartSpec(DotDict):
                 layers['lockdown_rules'], nearest, click_selection
             )
 
-    def _make_lockdown_extrapolation_layer(self, base, click_selection):
+    def _make_lockdown_extrapolation_layer(self, base, click_selection, nearest):
         def _add_model_transformation_fields(base_chart):
             ret = base_chart.transform_filter(
                 'datum.lockdown_x != null'
@@ -252,7 +252,7 @@ class ChartSpec(DotDict):
                 model_y='datum.lockdown_y * pow(datum.lockdown_slope, datum.x - datum.lockdown_x)'
             )
             if 'ydomain' in self:
-                ret = ret.transform_filter('datum.model_y <= {}'.format(self.ydomain[1]))
+                ret = ret.transform_filter(f'datum.model_y <= {self.ydomain[1]}')
             return ret
 
         ret = _add_model_transformation_fields(
@@ -263,6 +263,14 @@ class ChartSpec(DotDict):
             )
         )
         return self._only_visible_when_in_focus(ret, click_selection)
+
+    def _make_extrapolation_tooltip_layer(self, extrap, nearest):
+        return extrap.mark_text(align='left', dx=5, dy=-20).encode(
+            text=alt.condition(nearest, 'extrap_text:N', alt.value(' ')),
+            opacity=alt.value(1)
+        ).transform_calculate(
+            extrap_text=f'"trend at lockdown for " + datum.{self.colorby}'
+        )
 
     def compile(self, df):
         self.validate(df)
@@ -289,7 +297,8 @@ class ChartSpec(DotDict):
         self._collect_tooltip_layers(layers, base, nearest, click_selection)
 
         if self.get('lockdown_extrapolation', False):
-            layers['model_lines'] = self._make_lockdown_extrapolation_layer(base, click_selection)
+            layers['model_lines'] = self._make_lockdown_extrapolation_layer(base, click_selection, nearest)
+            layers['model_tooltip'] = self._make_extrapolation_tooltip_layer(layers['model_lines'], nearest)
         layered = alt.layer(*layers.values())
         return layered
 
