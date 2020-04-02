@@ -86,10 +86,17 @@ class DotDict(dict):
 
 
 class ChartSpec(DotDict):
+    """
+    A wrapper around a dictionary capturing all the state that determines how
+    to generate a Vega-Lite spec, given a pandas dataframe as input.
+    Anything that calls into altair happens here.
+    """
     click = 'click'
     lockdown_X = 'lockdown_x'
     X = 'x'
     Y = 'y'
+    DEFAULT_HEIGHT = 400
+    DEFAULT_WIDTH = 600
 
     def validate(self, df):
         if 'lines' not in self and 'points' not in self:
@@ -98,17 +105,6 @@ class ChartSpec(DotDict):
             raise ValueError('dataframe should have an x column')
         if self.Y not in df.columns:
             raise ValueError('dataframe should have a y column')
-
-    def _proprocess_df(self, df):
-        chart_df = df.copy()
-        chart_df['zeros'] = np.zeros_like(chart_df[self.X])
-        if 'xdomain' in self:
-            xmin, xmax = self.xdomain[0], self.xdomain[1]
-            chart_df = chart_df.loc[(chart_df[self.X] >= xmin) & (chart_df[self.X] <= xmax)]
-        if 'ydomain' in self:
-            ymin, ymax = self.ydomain[0], self.ydomain[1]
-            chart_df = chart_df.loc[(chart_df[self.Y] >= ymin) & (chart_df[self.Y] <= ymax)]
-        return chart_df
 
     def _get_x(self, shorthand='x:Q'):
         xaxis_kwargs = {}
@@ -274,8 +270,11 @@ class ChartSpec(DotDict):
 
     def compile(self, df):
         self.validate(df)
-        df = self._proprocess_df(df)
-        base = alt.Chart(df, width=self.get('width', 1000), height=self.get('height', 500))
+        base = alt.Chart(
+            df,
+            width=self.get('width', self.DEFAULT_WIDTH),
+            height=self.get('height', self.DEFAULT_HEIGHT)
+        )
         layers = {}
         click_selection = None
         if self.get('click_selection', False):
@@ -285,6 +284,11 @@ class ChartSpec(DotDict):
                 fields=[self.colorby], on='click', name=self.click, empty='all',
                 bind=dropdown
             )
+        # put a fake layer in first with no click selection
+        # since it has X and Y, it will help with chart.interactive()
+        layers['fake_points_for_interactive'] = self._make_point_layer(base, None, is_fake=True)
+
+        # next goes the tooltip selector layer (needs to happen before click selection layer)
         nearest, selectors = self._make_nearest_selectors(base)
         layers['selectors'] = selectors
 
@@ -300,10 +304,19 @@ class ChartSpec(DotDict):
             layers['model_lines'] = self._make_lockdown_extrapolation_layer(base, click_selection, nearest)
             layers['model_tooltip'] = self._make_extrapolation_tooltip_layer(layers['model_lines'], nearest)
         layered = alt.layer(*layers.values())
+        if self.get('interactive', False):
+            layered = layered.interactive()
         return layered
 
 
 class CovidChart(object):
+    """
+    A class that composes a ChartSpec and uses the state therein to compute a dataframe
+    that will be used as input to altair to generate a Vega-Lite spec. None of the altair
+    stuff happens here (that's in ChartSpec), but *all* of the dataframe processing happens here.
+
+    Also provides various convenience methods for setting ChartSpec state.
+    """
     lockdown_X = 'lockdown_x'
     X = 'x'
     Y = 'y'
@@ -391,10 +404,22 @@ class CovidChart(object):
             )
             df['lockdown_slope'] = np.exp(np.log(df.lockdown_y / df.intercept) / df.lockdown_x)
 
+            # these new rows are to ensure we have at least one point where x == lockdown_x since this is the filter
+            # used to generate lockdown rules...
+            # we need this b/c we can only attach mouseover interactions to one column, and it is already attached to x
+
+            # TODO (smacke): instead of x and lockdown_x, we should have x and x_type, where x_type can be normal,
+            # lockdown, etc... This will also generalize better if we want to change x based on e.g. a dropdown
             new_rows = df.groupby(self.groupcol).max().reset_index()[[self.groupcol, self.lockdown_X, 'lockdown_type']]
             new_rows['x'] = new_rows.lockdown_x
             df = df.append(new_rows, ignore_index=True, sort=False)
 
+        if 'xdomain' in self.spec:
+            xmin, xmax = self.spec.xdomain[0], self.spec.xdomain[1]
+            df = df.loc[(df[self.X] >= xmin) & (df[self.X] <= xmax)]
+        if 'ydomain' in self.spec:
+            ymin, ymax = self.spec.ydomain[0], self.spec.ydomain[1]
+            df = df.loc[(df[self.Y] >= ymin) & (df[self.Y] <= ymax)]
         return df
 
     def set_logscale(self):
@@ -464,6 +489,10 @@ class CovidChart(object):
         self.spec.lockdown_extrapolation = True
         return self
 
+    def set_interactive(self, interactive=True):
+        self.spec.interactive = interactive
+        return self
+
     def set_defaults(self):
         self.spec.colorby = self.groupcol
         ret = self.add_lines(
@@ -472,7 +501,11 @@ class CovidChart(object):
         ).set_click_selection(
         ).add_all_tooltips(
         ).add_lockdown_extrapolation(
-        ).set_width(1000).set_height(500)
+        ).set_interactive(False).set_width(
+            self.spec.DEFAULT_WIDTH
+        ).set_height(
+            self.spec.DEFAULT_HEIGHT
+        )
         if self.quarantine_df is not None:
             ret = ret.add_lockdown_rules()
         return ret
