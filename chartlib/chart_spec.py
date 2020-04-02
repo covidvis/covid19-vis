@@ -101,7 +101,7 @@ class ChartSpec(DotDict):
                 self._clicked_or_empty(), alt.value(.4 * not_fake), alt.value(.1 * not_fake)
             )
         # nice big clickable points if is_fake
-        point_layer = base.mark_point(size=400 if is_fake else 90, filled=True).encode(**kwargs)
+        point_layer = base.mark_point(size=400 if is_fake else 45, filled=True).encode(**kwargs)
         point_layer = point_layer.transform_filter('datum.y !== null')
         if self._yscale == 'log':
             point_layer = point_layer.transform_filter('datum.y > 0')
@@ -175,7 +175,7 @@ class ChartSpec(DotDict):
             ).transform_calculate(
                 model_y='datum.lockdown_y * pow(datum.lockdown_slope, datum.x - datum.lockdown_x)'
             )
-            if 'ydomain' in self:
+            if 'ydomain' in self and self.get('extrap_clip_to_ydomain', False):
                 ret = ret.transform_filter(f'datum.model_y <= {self.ydomain[1]}')
             return ret
 

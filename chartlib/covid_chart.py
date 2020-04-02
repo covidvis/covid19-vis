@@ -122,6 +122,18 @@ class CovidChart(object):
             df = df.loc[(df[self.Y] >= ymin) & (df[self.Y] <= ymax)]
         return df
 
+    def _make_info_dict(self, qdf):
+        info_dict = {}
+
+        def _make_info_from_row(row):
+            info_dict[row[self.groupcol]] = f'{self.groupcol} is implementing a general lockdown '
+            f'{"across the territory" if row["Planned end date"] is None else "in specific regions"}. '
+            f'The lockdown started on {row["DateEnacted"]}. '
+            f'{"No specific end date is announced" if row["Planned end date"] is None else "It will last until {}".format(row["Planned end date"])}.'
+
+        qdf.apply(_make_info_from_row)
+        return info_dict
+
     def set_logscale(self):
         self.spec.yscale = 'log'
         return self
