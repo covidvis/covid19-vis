@@ -64,13 +64,21 @@ class ChartSpec(DotDict):
         return f'({expr})'
 
     def _legend_is_active(self):
-        return self._ensure_parens(' && '.join([
+        conditions = [
             f'{str(self.legend_selection).lower()}',
             f'isDefined({self.legend}.{self.detailby})',
-            # TODO (smacke): legend_tuple not defined for facet charts; need a more reliable way to detect if we clicked on a blank area
-            f'!isDefined({self.legend}_tuple.unit)' if self.get('facetby', None) is None else f'isValid({self.legend}_{self.detailby}_legend)',
             f'(!isDefined({self.click}) || !isDefined({self.click}_{self.detailby}))',
-        ]))
+        ]
+        # TODO (smacke): legend_tuple not defined for facet charts;
+        # need a more reliable way to detect if we clicked on a blank area
+        if self.get('facetby', None) is None:
+            conditions.extend([
+                f'isValid({self.legend}_tuple)',
+                f'!isDefined({self.legend}_tuple.unit)',
+            ])
+        else:
+            conditions.append(f'isValid({self.legend}_{self.detailby}_legend)')
+        return self._ensure_parens(' && '.join(conditions))
 
     def _click_is_active(self):
         return self._ensure_parens(' && '.join([
