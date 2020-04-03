@@ -231,7 +231,7 @@ class ChartSpec(DotDict):
             opacity=alt.value(1),
             color=alt.value('black')
         ).transform_calculate(
-            extrap_text=f'"trend at lockdown for " + datum.{self.detailby}'
+            extrap_text=f'"Original trend for " + datum.{self.detailby}'
         )
 
     def compile(self, df):
