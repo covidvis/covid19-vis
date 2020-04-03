@@ -86,7 +86,7 @@ class CovidChart(object):
             )
             quarantine_df[self.lockdown_X] = quarantine_df.apply(lambda x: days_between(x['date_of_N'], x['lockdown_date']), axis=1)
 
-            # only retain latest lockdown that appears... eventually we will want to allow for multiple
+            # only retain earliest lockdown that appears... eventually we will want to allow for multiple
             quarantine_df = quarantine_df.loc[quarantine_df.lockdown_x > 0]
             quarantine_df = quarantine_df.loc[quarantine_df.groupby(self.groupcol).lockdown_x.idxmin()]
             del quarantine_df['date_of_N']

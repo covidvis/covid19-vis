@@ -67,9 +67,8 @@ class ChartSpec(DotDict):
         return self._ensure_parens(' && '.join([
             f'{str(self.legend_selection).lower()}',
             f'isDefined({self.legend}.{self.detailby})',
-            f'isDefined({self.legend}_tuple)',
-            f'{self.legend}_tuple != null',
-            f'!isDefined({self.legend}_tuple.unit)',
+            # TODO (smacke): legend_tuple not defined for facet charts; need a more reliable way to detect if we clicked on a blank area
+            f'!isDefined({self.legend}_tuple.unit)' if self.get('facetby', None) is None else f'isValid({self.legend}_{self.detailby}_legend)',
             f'(!isDefined({self.click}) || !isDefined({self.click}_{self.detailby}))',
         ]))
 
@@ -299,6 +298,6 @@ class ChartSpec(DotDict):
         layered = layered.configure_legend(symbolType='diamond')
         if self.get('interactive', False):
             layered = layered.interactive(bind_x=True, bind_y=True)
-        if self.get('title',False):
+        if self.get('title', False):
             layered.title = self.get('title')
         return layered
