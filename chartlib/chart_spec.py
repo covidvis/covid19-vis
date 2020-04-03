@@ -99,19 +99,22 @@ class ChartSpec(DotDict):
             line_layer = line_layer.transform_filter('datum.y > 0')
         return line_layer
 
-    def _make_point_layer(self, base, click_selection, is_fake=False):
+    def _make_point_layer(self, base, click_selection, point_size, is_fake, opacity=None):
         kwargs = dict(x=self._get_x(), y=self._get_y(), detail=self._alt_detail, color=self._alt_color)
-        if not self.get('points', False) and not is_fake:
-            kwargs['opacity'] = alt.value(0)
-        elif is_fake and click_selection is None:
-            kwargs['opacity'] = alt.value(0)
-        elif click_selection is not None:
-            not_fake = not is_fake
-            kwargs['opacity'] = alt.condition(
-                self._clicked_or_empty(), alt.value(.4 * not_fake), alt.value(.1 * not_fake)
-            )
+        if opacity is None:
+            if not self.get('points', False) and not is_fake:
+                kwargs['opacity'] = alt.value(0)
+            elif is_fake and click_selection is None:
+                kwargs['opacity'] = alt.value(0)
+            elif click_selection is not None:
+                not_fake = not is_fake
+                kwargs['opacity'] = alt.condition(
+                    self._clicked_or_empty(), alt.value(.4 * not_fake), alt.value(.1 * not_fake)
+                )
+        else:
+            kwargs['opacity'] = opacity
         # nice big clickable points if is_fake
-        point_layer = base.mark_point(size=400 if is_fake else 45, filled=True).encode(**kwargs)
+        point_layer = base.mark_point(size=point_size, filled=True).encode(**kwargs)
         point_layer = point_layer.transform_filter('datum.y !== null')
         if self._yscale == 'log':
             point_layer = point_layer.transform_filter('datum.y > 0')
@@ -234,17 +237,20 @@ class ChartSpec(DotDict):
             )
         # put a fake layer in first with no click selection
         # since it has X and Y, it will help with chart.interactive()
-        layers['fake_points_for_interactive'] = self._make_point_layer(base, None, is_fake=True)
+        layers['fake_points_for_interactive'] = self._make_point_layer(
+            base, None, point_size=0, is_fake=True, opacity=alt.value(1)
+        )
 
         # next goes the tooltip selector layer (needs to happen before click selection layer)
         nearest, selectors = self._make_nearest_selectors(base)
         layers['selectors'] = selectors
 
         # put a fake layer in first to attach the click selection to
-        layers['fake_points'] = self._make_point_layer(base, click_selection, is_fake=True)
+        layers['fake_points'] = self._make_point_layer(base, click_selection, point_size=400, is_fake=True)
 
+        # now the meaty layers with actual content
         layers['lines'] = self._make_line_layer(base, click_selection)
-        layers['points'] = self._make_point_layer(base, click_selection)
+        layers['points'] = self._make_point_layer(base, click_selection, point_size=45, is_fake=False)
 
         self._collect_tooltip_layers(layers, base, nearest, click_selection)
 
