@@ -22,16 +22,16 @@ class CovidChart(object):
     Y = 'y'
 
     def __init__(
-            self,
-            df: Union[str, pd.DataFrame],
-            groupcol: str,
-            start_criterion: StartCriterion,
-            ycol: str,
-            use_defaults: bool = True,
-            ycol_is_cumulative: bool = True,
-            top_k_groups: int = None,
-            xcol: str = 'date',
-            quarantine_df: pd.DataFrame = None,
+        self,
+        df: Union[str, pd.DataFrame],
+        groupcol: str,
+        start_criterion: StartCriterion,
+        ycol: str,
+        use_defaults: bool = True,
+        ycol_is_cumulative: bool = True,
+        top_k_groups: int = None,
+        xcol: str = 'date',
+        quarantine_df: pd.DataFrame = None,
     ):
         if isinstance(df, str):
             df = pd.read_csv(df, parse_dates=[xcol], infer_datetime_format=True)
