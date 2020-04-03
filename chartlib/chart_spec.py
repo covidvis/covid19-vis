@@ -258,4 +258,6 @@ class ChartSpec(DotDict):
         layered = self._maybe_add_facet(layered)
         if self.get('interactive', False):
             layered = layered.interactive()
+        if self.get('title',False):
+            layered.title = self.get('title')
         return layered

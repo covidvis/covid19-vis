@@ -137,6 +137,10 @@ class CovidChart(object):
         qdf.apply(_make_info_from_row)
         return info_dict
 
+    def set_title(self, title):
+        self.spec.title = title
+        return self
+        
     def set_logscale(self):
         self.spec.yscale = 'log'
         return self
