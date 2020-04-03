@@ -64,6 +64,7 @@ class ChartSpec(DotDict):
             f'isDefined({self.legend}_tuple)',
             f'{self.legend}_tuple != null',
             f'!isDefined({self.legend}_tuple.unit)',
+            f'!isDefined({self.click}_{self.detailby})',
         ])
 
     def _legend_selected(self):
