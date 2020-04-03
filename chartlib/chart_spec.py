@@ -58,48 +58,52 @@ class ChartSpec(DotDict):
     def _yscale(self):
         return self.get('yscale', 'linear')
 
+    def _ensure_parens(self, expr):
+        return f'({expr})'
+
     def _legend_is_active(self):
-        return ' && '.join([
+        return self._ensure_parens(' && '.join([
             f'isDefined({self.legend}.{self.detailby})',
             f'isDefined({self.legend}_tuple)',
             f'{self.legend}_tuple != null',
             f'!isDefined({self.legend}_tuple.unit)',
             f'!isDefined({self.click}_{self.detailby})',
-        ])
+        ]))
 
-    def _legend_selected(self):
-        return ' && '.join([
+    def _click_is_active(self):
+        return self._ensure_parens(' && '.join([
+            f'isDefined({self.click}.{self.detailby})',
+            f'isDefined({self.click}_{self.detailby})',
+            f'{self.click}.{self.detailby} != "{self.EMPTY_SELECTION}"'
+        ]))
+
+    def _legend_focused(self):
+        return self._ensure_parens(' && '.join([
             f'{self._legend_is_active()}',
             f'indexof({self.legend}.{self.detailby}, datum.{self.detailby}) >= 0'
-        ])
+        ]))
+
+    def _click_focused(self):
+        return self._ensure_parens(' && '.join([
+            self._click_is_active(),
+            f'{self.click}.{self.detailby} == datum.{self.detailby}'
+        ]))
 
     def _only_visible_when_in_focus(self, base, click_selection):
         if click_selection is not None:
             base = base.transform_filter(
-                self._is_in_focus()
+                self._in_focus()
             )
         return base
 
-    def _clicked_or_empty(self):
-        clicked_or_empty = ' || '.join([
-            f'!isDefined({self.click}.{self.detailby})',
-            f'!isDefined({self.click}_{self.detailby})',
-            f'{self.click}.{self.detailby} == datum.{self.detailby}',
-            f'{self.click}.{self.detailby} == "{self.EMPTY_SELECTION}"',
-        ])
-        return f'({self._legend_selected()}) || (!({self._legend_is_active()}) && ({clicked_or_empty}))'
-
-    def _is_in_focus(self):
-        in_focus = f'isDefined({self.click}.{self.detailby}) && {self.click}.{self.detailby} == datum.{self.detailby}'
-        return f'({in_focus}) || ({self._legend_selected()})'
+    def _in_focus(self):
+        return self._ensure_parens(f'{self._click_focused()} || {self._legend_focused()}')
 
     def _someone_has_focus(self):
-        someone_has_focus = ' && '.join([
-            f'isDefined({self.click}.{self.detailby})',
-            f'isDefined({self.click}_{self.detailby})',
-            f'{self.click}.{self.detailby} != "{self.EMPTY_SELECTION}"'
-        ])
-        return f'({someone_has_focus}) || ({self._legend_selected()})'
+        return self._ensure_parens(f'{self._click_is_active()} || {self._legend_is_active()}')
+
+    def _in_focus_or_none_selected(self):
+        return self._ensure_parens(f'{self._in_focus()} || !{self._someone_has_focus()}')
 
     def _maybe_add_facet(self, base):
         facetby = self.get('facetby', None)
@@ -112,7 +116,7 @@ class ChartSpec(DotDict):
         if not self.get('lines', False):
             kwargs['opacity'] = alt.value(0)
         elif click_selection is not None:
-            kwargs['opacity'] = alt.condition(self._clicked_or_empty(), alt.value(1), alt.value(.1))
+            kwargs['opacity'] = alt.condition(self._in_focus_or_none_selected(), alt.value(1), alt.value(.1))
         line_layer = base.mark_line(size=3).encode(**kwargs)
         line_layer = line_layer.transform_filter('datum.y !== null')
         if self._yscale == 'log':
@@ -127,7 +131,7 @@ class ChartSpec(DotDict):
             kwargs['opacity'] = alt.value(0)
         elif click_selection is not None:
             kwargs['opacity'] = alt.condition(
-                self._clicked_or_empty(), alt.value(.4), alt.value(.1)
+                self._in_focus_or_none_selected(), alt.value(.4), alt.value(.1)
             )
 
         point_layer = base.mark_point(size=point_size, filled=True).encode(**kwargs)
@@ -136,7 +140,7 @@ class ChartSpec(DotDict):
             point_layer = point_layer.transform_filter('datum.y > 0')
         if is_fake and click_selection is not None:
             # the first one makes it easier for tooltips to follow since otherwise these guys will stick
-            point_layer = point_layer.transform_filter(self._clicked_or_empty())
+            point_layer = point_layer.transform_filter(self._in_focus_or_none_selected())
             point_layer = point_layer.add_selection(click_selection)
         return point_layer
 
@@ -178,7 +182,7 @@ class ChartSpec(DotDict):
         if self.get('tooltip_points', False):
             layers['tooltip_points'] = layers['points'].mark_point(filled=True).encode(
                 opacity=alt.condition(nearest, alt.value(1), alt.value(0))
-            ).transform_filter(self._is_in_focus())
+            ).transform_filter(self._in_focus())
         if self.get('tooltip_text', False):
             layers['tooltip_text'] = self._make_tooltip_text_layer(layers['points'], nearest, click_selection)
         if self.get('tooltip_rules'):
