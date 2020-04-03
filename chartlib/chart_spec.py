@@ -10,6 +10,8 @@ class ChartSpec(DotDict):
     Anything that calls into altair happens here.
     """
     click = 'click'
+    cursor = 'cursor'
+    legend = 'legend'
     lockdown_X = 'lockdown_x'
     X = 'x'
     Y = 'y'
@@ -56,30 +58,47 @@ class ChartSpec(DotDict):
     def _yscale(self):
         return self.get('yscale', 'linear')
 
+    def _legend_is_active(self):
+        return ' && '.join([
+            f'isDefined({self.legend}.{self.detailby})',
+            f'isDefined({self.legend}_tuple)',
+            f'{self.legend}_tuple != null',
+            f'!isDefined({self.legend}_tuple.unit)',
+        ])
+
+    def _legend_selected(self):
+        return ' && '.join([
+            f'{self._legend_is_active()}',
+            f'indexof({self.legend}.{self.detailby}, datum.{self.detailby}) >= 0'
+        ])
+
     def _only_visible_when_in_focus(self, base, click_selection):
         if click_selection is not None:
             base = base.transform_filter(
-                self._clicked_with_focus()
+                self._is_in_focus()
             )
         return base
 
     def _clicked_or_empty(self):
-        return ' || '.join([
+        clicked_or_empty = ' || '.join([
             f'!isDefined({self.click}.{self.detailby})',
             f'!isDefined({self.click}_{self.detailby})',
             f'{self.click}.{self.detailby} == datum.{self.detailby}',
-            f'{self.click}.{self.detailby} == "{self.EMPTY_SELECTION}"'
+            f'{self.click}.{self.detailby} == "{self.EMPTY_SELECTION}"',
         ])
+        return f'({self._legend_selected()}) || (!({self._legend_is_active()}) && ({clicked_or_empty}))'
 
-    def _clicked_with_focus(self):
-        return f'isDefined({self.click}.{self.detailby}) && {self.click}.{self.detailby} == datum.{self.detailby}'
+    def _is_in_focus(self):
+        in_focus = f'isDefined({self.click}.{self.detailby}) && {self.click}.{self.detailby} == datum.{self.detailby}'
+        return f'({in_focus}) || ({self._legend_selected()})'
 
     def _someone_has_focus(self):
-        return ' && '.join([
+        someone_has_focus = ' && '.join([
             f'isDefined({self.click}.{self.detailby})',
             f'isDefined({self.click}_{self.detailby})',
             f'{self.click}.{self.detailby} != "{self.EMPTY_SELECTION}"'
         ])
+        return f'({someone_has_focus}) || ({self._legend_selected()})'
 
     def _maybe_add_facet(self, base):
         facetby = self.get('facetby', None)
@@ -99,19 +118,18 @@ class ChartSpec(DotDict):
             line_layer = line_layer.transform_filter('datum.y > 0')
         return line_layer
 
-    def _make_point_layer(self, base, click_selection, is_fake=False):
+    def _make_point_layer(self, base, click_selection, point_size, is_fake):
         kwargs = dict(x=self._get_x(), y=self._get_y(), detail=self._alt_detail, color=self._alt_color)
         if not self.get('points', False) and not is_fake:
             kwargs['opacity'] = alt.value(0)
-        elif is_fake and click_selection is None:
+        elif is_fake:
             kwargs['opacity'] = alt.value(0)
         elif click_selection is not None:
-            not_fake = not is_fake
             kwargs['opacity'] = alt.condition(
-                self._clicked_or_empty(), alt.value(.4 * not_fake), alt.value(.1 * not_fake)
+                self._clicked_or_empty(), alt.value(.4), alt.value(.1)
             )
-        # nice big clickable points if is_fake
-        point_layer = base.mark_point(size=400 if is_fake else 45, filled=True).encode(**kwargs)
+
+        point_layer = base.mark_point(size=point_size, filled=True).encode(**kwargs)
         point_layer = point_layer.transform_filter('datum.y !== null')
         if self._yscale == 'log':
             point_layer = point_layer.transform_filter('datum.y > 0')
@@ -121,9 +139,9 @@ class ChartSpec(DotDict):
             point_layer = point_layer.add_selection(click_selection)
         return point_layer
 
-    def _make_tooltip_text_layer(self, point_layer, nearest, click_selection):
+    def _make_tooltip_text_layer(self, point_layer, cursor, click_selection):
         ret = point_layer.mark_text(align='left', dx=5, dy=-5).encode(
-            text=alt.condition(nearest, 'tooltip_text:N', alt.value(' ')),
+            text=alt.condition(cursor, 'tooltip_text:N', alt.value(' ')),
             opacity=alt.value(1),
             color=alt.value('black')
         ).transform_calculate(
@@ -132,26 +150,26 @@ class ChartSpec(DotDict):
         return self._only_visible_when_in_focus(ret, click_selection)
 
     def _make_lockdown_rules_layer(self, base, click_selection):
-        ret = base.mark_rule(strokeDash=[7, 3]).encode(
+        ret = base.mark_rule(size=3, strokeDash=[7, 3]).encode(
             x='x:Q', detail=self._alt_detail, color=self._alt_color
         ).transform_filter('datum.x == datum.lockdown_x')
         return self._only_visible_when_in_focus(ret, click_selection)
 
-    def _make_lockdown_tooltips_layer(self, rules, nearest, click_selection):
+    def _make_lockdown_tooltips_layer(self, rules, cursor, click_selection):
         ret = rules.mark_text(align='left', dx=5, dy=-200).encode(
-            text=alt.condition(nearest, 'lockdown_tooltip_text:N', alt.value(' ')),
+            text=alt.condition(cursor, 'lockdown_tooltip_text:N', alt.value(' ')),
             color=alt.value('black')
         ).transform_calculate(
             lockdown_tooltip_text=f'datum.{self.detailby} + " " + datum.lockdown_type'
         )
         return self._only_visible_when_in_focus(ret, click_selection)
 
-    def _make_nearest_selectors(self, base):
-        nearest = alt.selection_single(nearest=True, on='mouseover',
-                                       fields=['x'], empty='none')
-        return nearest, base.mark_point().encode(
+    def _make_cursor_selection(self, base):
+        cursor = alt.selection_single(name=self.cursor, nearest=True, on='mouseover',
+                                      fields=['x'], empty='none')
+        return cursor, base.mark_point().encode(
             x='x:Q', opacity=alt.value(0),
-        ).add_selection(nearest)
+        ).add_selection(cursor)
 
     def _collect_tooltip_layers(self, layers, base, nearest, click_selection):
         if not self.get('has_tooltips', False):
@@ -159,7 +177,7 @@ class ChartSpec(DotDict):
         if self.get('tooltip_points', False):
             layers['tooltip_points'] = layers['points'].mark_point(filled=True).encode(
                 opacity=alt.condition(nearest, alt.value(1), alt.value(0))
-            ).transform_filter(self._clicked_with_focus())
+            ).transform_filter(self._is_in_focus())
         if self.get('tooltip_text', False):
             layers['tooltip_text'] = self._make_tooltip_text_layer(layers['points'], nearest, click_selection)
         if self.get('tooltip_rules'):
@@ -192,7 +210,7 @@ class ChartSpec(DotDict):
             return ret
 
         ret = _add_model_transformation_fields(
-            base.mark_line(size=3, strokeDash=[1, 1]).encode(
+            base.mark_line(size=5, strokeDash=[1, 1]).encode(
                 x=self._get_x('x:Q'),
                 y=self._get_y('model_y:Q'),
                 detail=self._alt_detail,
@@ -211,11 +229,6 @@ class ChartSpec(DotDict):
             extrap_text=f'"trend at lockdown for " + datum.{self.detailby}'
         )
 
-    def _collect_facet_layers(self, layers):
-        keys = list(layers.keys())
-        for key in keys:
-            layers[key] = self._maybe_add_facet(layers[key])
-
     def compile(self, df):
         self.validate(df)
         base = alt.Chart(
@@ -224,40 +237,70 @@ class ChartSpec(DotDict):
             height=self.get('height', self.DEFAULT_HEIGHT)
         )
         layers = {}
+
         click_selection = None
         if self.get('click_selection', False):
             dropdown_options = [self.EMPTY_SELECTION] + list(df[self.detailby].unique())
             dropdown = alt.binding_select(options=dropdown_options, name=f'Filter on {self.detailby}: ')
             click_selection = alt.selection_single(
                 fields=[self.detailby], on='click', name=self.click, empty='all',
-                bind=dropdown
+                bind=dropdown, clear='dblclick'
             )
+
+        legend_selection = None
+        if self.get('legend_selection', False):
+            legend_selection = alt.selection_multi(
+                fields=[self.detailby], on='click', name=self.legend, empty='all',
+                bind='legend', clear='dblclick'
+            )
+
         # put a fake layer in first with no click selection
-        # since it has X and Y, it will help with chart.interactive()
-        layers['fake_points_for_interactive'] = self._make_point_layer(base, None, is_fake=True)
+        # since it has X and Y, it will help chart.interactive() to find x and y fields to bind to,
+        # allowing us to pan up and down and zoom over both axes instead of just 1.
+        layers['fake_interactive'] = base.mark_line().encode(
+            x=self._get_x(), y=self._get_y()
+        ).transform_filter('false')
 
         # next goes the tooltip selector layer (needs to happen before click selection layer)
-        nearest, selectors = self._make_nearest_selectors(base)
+        cursor, selectors = self._make_cursor_selection(base)
         layers['selectors'] = selectors
 
-        # put a fake layer in first to attach the click selection to
-        layers['fake_points'] = self._make_point_layer(base, click_selection, is_fake=True)
+        # The first layer with a specified color channel is used to generate the legend.
+        # as such, we need to make sure the marks in the first layer w/ specified color channel are not translucent,
+        # otherwise we'll get a blank legend.
+        # We put a fake layer in here before we add any other layers w/ color channel specified, and we
+        # furthermore add the legend selection to it b/c it also seems like a multi-selection bound to the
+        # legend needs to be added to the layer that generates the legend.
+        layers['legend'] = base.mark_point(size=0).encode(
+            x=self._get_x(), y=self._get_y(), color=self._alt_color
+        )
+        if legend_selection is not None:
+            layers['legend'] = layers['legend'].add_selection(legend_selection)
 
+        # Put a fake layer in first to attach the click selection to. We use a fake layer for this for a few reasons.
+        # 1. It's not used as a base layer, so we won't get errors
+        #    about the spec having the selection added multiple times.
+        # 2. We need a layer that has nice fat points that are easy to click for adding the click_selection to.
+        #    Since the layer has fat points, however, the points need to be translucent, and since they
+        #    need to be translucent, this layer cannot be the first layer that specifies color channel
+        #    and similarly cannot be the layer with the legend_selection added on.
+        layers['fake_points'] = self._make_point_layer(base, click_selection, point_size=400, is_fake=True)
+
+        # now the meaty layers with actual content
         layers['lines'] = self._make_line_layer(base, click_selection)
-        layers['points'] = self._make_point_layer(base, click_selection)
+        layers['points'] = self._make_point_layer(base, click_selection, point_size=45, is_fake=False)
 
-        self._collect_tooltip_layers(layers, base, nearest, click_selection)
+        self._collect_tooltip_layers(layers, base, cursor, click_selection)
 
         if self.get('lockdown_extrapolation', False):
-            layers['model_lines'] = self._make_lockdown_extrapolation_layer(base, click_selection, nearest)
-            layers['model_tooltip'] = self._make_extrapolation_tooltip_layer(layers['model_lines'], nearest)
-
-        # self._collect_facet_layers(layers)
+            layers['model_lines'] = self._make_lockdown_extrapolation_layer(base, click_selection, cursor)
+            layers['model_tooltip'] = self._make_extrapolation_tooltip_layer(layers['model_lines'], cursor)
 
         layered = alt.layer(*layers.values())
         layered = self._maybe_add_facet(layered)
+        layered = layered.configure_legend(symbolType='diamond')
         if self.get('interactive', False):
-            layered = layered.interactive()
+            layered = layered.interactive(bind_x=True, bind_y=True)
         if self.get('title',False):
             layered.title = self.get('title')
         return layered

@@ -173,6 +173,10 @@ class CovidChart(object):
         self.spec.click_selection = True
         return self
 
+    def set_legend_selection(self):
+        self.spec.legend_selection = True
+        return self
+
     def add_tooltip_text(self):
         self.spec.has_tooltips = True
         self.spec.tooltip_text = True
@@ -227,6 +231,7 @@ class CovidChart(object):
         ).add_points(
         ).set_logscale(
         ).set_click_selection(
+        ).set_legend_selection(
         ).add_all_tooltips(
         ).add_lockdown_extrapolation(
         ).set_interactive(False).set_width(
