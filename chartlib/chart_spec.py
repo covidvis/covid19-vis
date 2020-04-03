@@ -45,8 +45,12 @@ class ChartSpec(DotDict):
         return alt.Y(shorthand, **yaxis_kwargs)
 
     @property
+    def _alt_detail(self):
+        return alt.Detail(f'{self.detailby}:N')
+
+    @property
     def _alt_color(self):
-        return alt.Color(self.colorby)
+        return alt.Color(f'{self.colorby}:N')
 
     @property
     def _yscale(self):
@@ -61,24 +65,30 @@ class ChartSpec(DotDict):
 
     def _clicked_or_empty(self):
         return ' || '.join([
-            f'!isDefined({self.click}.{self.colorby})',
-            f'!isDefined({self.click}_{self.colorby})',
-            f'{self.click}.{self.colorby} == datum.{self.colorby}',
-            f'{self.click}.{self.colorby} == "{self.EMPTY_SELECTION}"'
+            f'!isDefined({self.click}.{self.detailby})',
+            f'!isDefined({self.click}_{self.detailby})',
+            f'{self.click}.{self.detailby} == datum.{self.detailby}',
+            f'{self.click}.{self.detailby} == "{self.EMPTY_SELECTION}"'
         ])
 
     def _clicked_with_focus(self):
-        return f'isDefined({self.click}.{self.colorby}) && {self.click}.{self.colorby} == datum.{self.colorby}'
+        return f'isDefined({self.click}.{self.detailby}) && {self.click}.{self.detailby} == datum.{self.detailby}'
 
     def _someone_has_focus(self):
         return ' && '.join([
-            f'isDefined({self.click}.{self.colorby})',
-            f'isDefined({self.click}_{self.colorby})',
-            f'{self.click}.{self.colorby} != "{self.EMPTY_SELECTION}"'
+            f'isDefined({self.click}.{self.detailby})',
+            f'isDefined({self.click}_{self.detailby})',
+            f'{self.click}.{self.detailby} != "{self.EMPTY_SELECTION}"'
         ])
 
+    def _maybe_add_facet(self, base):
+        facetby = self.get('facetby', None)
+        if facetby is not None:
+            base = base.facet(column=f'{facetby}:N')
+        return base
+
     def _make_line_layer(self, base, click_selection):
-        kwargs = dict(x=self._get_x(), y=self._get_y(), color=self._alt_color)
+        kwargs = dict(x=self._get_x(), y=self._get_y(), detail=self._alt_detail, color=self._alt_color)
         if not self.get('lines', False):
             kwargs['opacity'] = alt.value(0)
         elif click_selection is not None:
@@ -90,7 +100,7 @@ class ChartSpec(DotDict):
         return line_layer
 
     def _make_point_layer(self, base, click_selection, is_fake=False):
-        kwargs = dict(x=self._get_x(), y=self._get_y(), color=alt.Color(self.colorby))
+        kwargs = dict(x=self._get_x(), y=self._get_y(), detail=self._alt_detail, color=self._alt_color)
         if not self.get('points', False) and not is_fake:
             kwargs['opacity'] = alt.value(0)
         elif is_fake and click_selection is None:
@@ -116,13 +126,13 @@ class ChartSpec(DotDict):
             text=alt.condition(nearest, 'tooltip_text:N', alt.value(' ')),
             opacity=alt.value(1)
         ).transform_calculate(
-            tooltip_text=f'datum.{self.colorby} + ": " + datum.y'
+            tooltip_text=f'datum.{self.detailby} + ": " + datum.y'
         )
         return self._only_visible_when_in_focus(ret, click_selection)
 
     def _make_lockdown_rules_layer(self, base, click_selection):
         ret = base.mark_rule(strokeDash=[7, 3]).encode(
-            x='x:Q', color=self._alt_color
+            x='x:Q', detail=self._alt_detail, color=self._alt_color
         ).transform_filter('datum.x == datum.lockdown_x')
         return self._only_visible_when_in_focus(ret, click_selection)
 
@@ -130,7 +140,7 @@ class ChartSpec(DotDict):
         ret = rules.mark_text(align='left', dx=5, dy=-200).encode(
             text=alt.condition(nearest, 'lockdown_tooltip_text:N', alt.value(' '))
         ).transform_calculate(
-            lockdown_tooltip_text=f'datum.{self.colorby} + " " + datum.lockdown_type'
+            lockdown_tooltip_text=f'datum.{self.detailby} + " " + datum.lockdown_type'
         )
         return self._only_visible_when_in_focus(ret, click_selection)
 
@@ -183,18 +193,25 @@ class ChartSpec(DotDict):
             base.mark_line(size=3, strokeDash=[1, 1]).encode(
                 x=self._get_x('x:Q'),
                 y=self._get_y('model_y:Q'),
+                detail=self._alt_detail,
                 color=self._alt_color,
             )
         )
-        return self._only_visible_when_in_focus(ret, click_selection)
+        ret = self._only_visible_when_in_focus(ret, click_selection)
+        return ret
 
     def _make_extrapolation_tooltip_layer(self, extrap, nearest):
         return extrap.mark_text(align='left', dx=5, dy=-20).encode(
             text=alt.condition(nearest, 'extrap_text:N', alt.value(' ')),
             opacity=alt.value(1)
         ).transform_calculate(
-            extrap_text=f'"trend at lockdown for " + datum.{self.colorby}'
+            extrap_text=f'"trend at lockdown for " + datum.{self.detailby}'
         )
+
+    def _collect_facet_layers(self, layers):
+        keys = list(layers.keys())
+        for key in keys:
+            layers[key] = self._maybe_add_facet(layers[key])
 
     def compile(self, df):
         self.validate(df)
@@ -206,10 +223,10 @@ class ChartSpec(DotDict):
         layers = {}
         click_selection = None
         if self.get('click_selection', False):
-            dropdown_options = [self.EMPTY_SELECTION] + list(df[self.colorby].unique())
-            dropdown = alt.binding_select(options=dropdown_options, name=f'Filter on {self.colorby}: ')
+            dropdown_options = [self.EMPTY_SELECTION] + list(df[self.detailby].unique())
+            dropdown = alt.binding_select(options=dropdown_options, name=f'Filter on {self.detailby}: ')
             click_selection = alt.selection_single(
-                fields=[self.colorby], on='click', name=self.click, empty='all',
+                fields=[self.detailby], on='click', name=self.click, empty='all',
                 bind=dropdown
             )
         # put a fake layer in first with no click selection
@@ -231,7 +248,11 @@ class ChartSpec(DotDict):
         if self.get('lockdown_extrapolation', False):
             layers['model_lines'] = self._make_lockdown_extrapolation_layer(base, click_selection, nearest)
             layers['model_tooltip'] = self._make_extrapolation_tooltip_layer(layers['model_lines'], nearest)
+
+        # self._collect_facet_layers(layers)
+
         layered = alt.layer(*layers.values())
+        layered = self._maybe_add_facet(layered)
         if self.get('interactive', False):
             layered = layered.interactive()
         return layered

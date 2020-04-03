@@ -31,7 +31,7 @@ class CovidChart(object):
             ycol_is_cumulative: bool = True,
             top_k_groups: int = None,
             xcol: str = 'date',
-            quarantine_df: pd.DataFrame = None
+            quarantine_df: pd.DataFrame = None,
     ):
         if isinstance(df, str):
             df = pd.read_csv(df, parse_dates=[xcol], infer_datetime_format=True)
@@ -57,6 +57,9 @@ class CovidChart(object):
         self.ycol_is_cumulative = ycol_is_cumulative
         self.top_k_groups = top_k_groups
         self.spec = ChartSpec()
+        self.spec.detailby = groupcol
+        self.spec.colorby = groupcol
+        self.spec.facetby = None
         if use_defaults:
             self.set_defaults()
 
@@ -205,7 +208,16 @@ class CovidChart(object):
         self.spec.interactive = interactive
         return self
 
+    def colorby(self, col):
+        self.spec.colorby = col
+        return self
+
+    def facetby(self, col):
+        self.spec.facetby = col
+        return self
+
     def set_defaults(self):
+        self.spec.detailby = self.groupcol
         self.spec.colorby = self.groupcol
         ret = self.add_lines(
         ).add_points(
