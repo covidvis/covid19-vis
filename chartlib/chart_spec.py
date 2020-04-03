@@ -124,7 +124,8 @@ class ChartSpec(DotDict):
     def _make_tooltip_text_layer(self, point_layer, nearest, click_selection):
         ret = point_layer.mark_text(align='left', dx=5, dy=-5).encode(
             text=alt.condition(nearest, 'tooltip_text:N', alt.value(' ')),
-            opacity=alt.value(1)
+            opacity=alt.value(1),
+            color=alt.value('black')
         ).transform_calculate(
             tooltip_text=f'datum.{self.detailby} + ": " + datum.y'
         )
@@ -138,7 +139,8 @@ class ChartSpec(DotDict):
 
     def _make_lockdown_tooltips_layer(self, rules, nearest, click_selection):
         ret = rules.mark_text(align='left', dx=5, dy=-200).encode(
-            text=alt.condition(nearest, 'lockdown_tooltip_text:N', alt.value(' '))
+            text=alt.condition(nearest, 'lockdown_tooltip_text:N', alt.value(' ')),
+            color=alt.value('black')
         ).transform_calculate(
             lockdown_tooltip_text=f'datum.{self.detailby} + " " + datum.lockdown_type'
         )
@@ -203,7 +205,8 @@ class ChartSpec(DotDict):
     def _make_extrapolation_tooltip_layer(self, extrap, nearest):
         return extrap.mark_text(align='left', dx=5, dy=-20).encode(
             text=alt.condition(nearest, 'extrap_text:N', alt.value(' ')),
-            opacity=alt.value(1)
+            opacity=alt.value(1),
+            color=alt.value('black')
         ).transform_calculate(
             extrap_text=f'"trend at lockdown for " + datum.{self.detailby}'
         )
