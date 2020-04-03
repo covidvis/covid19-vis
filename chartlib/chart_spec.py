@@ -58,30 +58,47 @@ class ChartSpec(DotDict):
     def _yscale(self):
         return self.get('yscale', 'linear')
 
+    def _legend_is_active(self):
+        return ' && '.join([
+            f'isDefined({self.legend}.{self.detailby})',
+            f'isDefined({self.legend}_tuple)',
+            f'{self.legend}_tuple != null',
+            f'!isDefined({self.legend}_tuple.unit)',
+        ])
+
+    def _legend_selected(self):
+        return ' && '.join([
+            f'{self._legend_is_active()}',
+            f'indexof({self.legend}.{self.detailby}, datum.{self.detailby}) >= 0'
+        ])
+
     def _only_visible_when_in_focus(self, base, click_selection):
         if click_selection is not None:
             base = base.transform_filter(
-                self._clicked_with_focus()
+                self._is_in_focus()
             )
         return base
 
     def _clicked_or_empty(self):
-        return ' || '.join([
+        clicked_or_empty = ' || '.join([
             f'!isDefined({self.click}.{self.detailby})',
             f'!isDefined({self.click}_{self.detailby})',
             f'{self.click}.{self.detailby} == datum.{self.detailby}',
-            f'{self.click}.{self.detailby} == "{self.EMPTY_SELECTION}"'
+            f'{self.click}.{self.detailby} == "{self.EMPTY_SELECTION}"',
         ])
+        return f'({self._legend_selected()}) || (!({self._legend_is_active()}) && ({clicked_or_empty}))'
 
-    def _clicked_with_focus(self):
-        return f'isDefined({self.click}.{self.detailby}) && {self.click}.{self.detailby} == datum.{self.detailby}'
+    def _is_in_focus(self):
+        in_focus = f'isDefined({self.click}.{self.detailby}) && {self.click}.{self.detailby} == datum.{self.detailby}'
+        return f'({in_focus}) || ({self._legend_selected()})'
 
     def _someone_has_focus(self):
-        return ' && '.join([
+        someone_has_focus = ' && '.join([
             f'isDefined({self.click}.{self.detailby})',
             f'isDefined({self.click}_{self.detailby})',
             f'{self.click}.{self.detailby} != "{self.EMPTY_SELECTION}"'
         ])
+        return f'({someone_has_focus}) || ({self._legend_selected()})'
 
     def _maybe_add_facet(self, base):
         facetby = self.get('facetby', None)
@@ -160,7 +177,7 @@ class ChartSpec(DotDict):
         if self.get('tooltip_points', False):
             layers['tooltip_points'] = layers['points'].mark_point(filled=True).encode(
                 opacity=alt.condition(nearest, alt.value(1), alt.value(0))
-            ).transform_filter(self._clicked_with_focus())
+            ).transform_filter(self._is_in_focus())
         if self.get('tooltip_text', False):
             layers['tooltip_text'] = self._make_tooltip_text_layer(layers['points'], nearest, click_selection)
         if self.get('tooltip_rules'):
