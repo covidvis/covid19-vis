@@ -17,6 +17,7 @@ class ChartSpec(DotDict):
     Y = 'y'
     DEFAULT_HEIGHT = 400
     DEFAULT_WIDTH = 600
+    DEFAULT_POINT_SIZE = 45
     EMPTY_SELECTION = ''
 
     def validate(self, df):
@@ -293,7 +294,11 @@ class ChartSpec(DotDict):
 
         # now the meaty layers with actual content
         layers['lines'] = self._make_line_layer(base)
-        layers['points'] = self._make_point_layer(base, point_size=45, is_fake=False)
+        layers['points'] = self._make_point_layer(
+            base,
+            point_size=self.get('point_size', self.DEFAULT_POINT_SIZE),
+            is_fake=False
+        )
 
         self._collect_tooltip_layers(layers, base, cursor)
 

@@ -224,9 +224,14 @@ class CovidChart(object):
         self.spec.facetby = col
         return self
 
+    def set_point_size(self, point_size):
+        self.spec.point_size = point_size
+        return self
+
     def set_defaults(self):
         self.spec.detailby = self.groupcol
         self.spec.colorby = self.groupcol
+        self.spec.point_size = ChartSpec.DEFAULT_POINT_SIZE
         ret = self.add_lines(
         ).add_points(
         ).set_logscale(
