@@ -1,7 +1,4 @@
-Country_ID,Country_Region,"Date 
-Enacted","Planned 
-end 
-date",Actual end date,Type,"Scope (Partial, Full)","Level (None, Encouragement, Enforcement)",(Deprecated) Level,(Deprecated) Lockdown Type,Comments,Reference,Last updated
+Country_ID,Country_Region,Date Enacted,Planned end date,Actual end date,Type,Scope,Level,(Deprecated) Level,(Deprecated) Lockdown Type,Comments,Reference,Last updated
 AF,Afghanistan,03-25-2020,,,Internal Lockdown,Partial,Enforcement,Regional,Partial,Day-time curfew in three provinces,https://www.aa.com.tr/en/asia-pacific/covid-19-afghanistan-lockdowns-frontline-provinces/1779209,03-25-2020
 AF,Afghanistan,03-27-2020,,,Internal Lockdown,Partial,Enforcement,Regional,Partial,Full lockdown in Kabul,https://en.wikipedia.org/wiki/2020_coronavirus_pandemic_in_Afghanistan#Lockdown_measures,04-04-2020
 AL,Albania,03-14-2020,,,Border Control,Full,Enforcement,,Full,,,03-25-2020
@@ -16,7 +13,7 @@ AG,"Antigua and
 Barbuda",04-02-2020,04-09-2020,,Internal Lockdown,Full,Enforcement,,None,,https://www.garda.com/crisis24/news-alerts/328036/antigua-bermuda-government-announces-seven-day-lockdown-from-april-2-update-1,03-27-2020
 AR,Argentina,03-27-2020,03-31-2020,,Border Control,Full,Enforcement,,Full,"3/16 start, 3/27 includes nationals",https://www.batimes.com.ar/news/argentina/government-closes-all-border-crossings-until-march-31.phtml,03-27-2020
 AR,Argentina,03-19-2020,04-12-2020,,Internal Lockdown,Full,Enforcement,National,Full,,https://en.wikipedia.org/wiki/National_responses_to_the_2019%E2%80%9320_coronavirus_pandemic; https://www.batimes.com.ar/news/argentina/government-planning-gradual-staggered-exit-from-lockdown.phtml,04-04-2020
-AM,Armenia,03-24-2020,,,Internal Lockdown,Full,Enforcement,National,Full,shop and mall close since 3/22,http://asbarez.com/193196/armenia-imposes-nationwide-lockdown-as-cases-increase/,03-27-2020
+AM,Armenia,03-24-2020,,,Internal Lockdown,Full,Enforcement,National,Full,Shops and malls closed since 3/22,http://asbarez.com/193196/armenia-imposes-nationwide-lockdown-as-cases-increase/,03-27-2020
 AU,Australia,03-20-2020,,,Border Control,Full,Enforcement,,Full,,,03-27-2020
 AU,Australia,03-23-2020,,,Internal Lockdown,Full,Enforcement,National,Partial,Only non-essential businesses shut; schools still open,https://en.wikipedia.org/wiki/National_responses_to_the_2019%E2%80%9320_coronavirus_pandemic,03-27-2020
 AU,Australia,03-22-2020,,,School Closure,Partial,,Regional,Full,Only a few schools closed.,https://www.weeklytimesnow.com.au/country-living/education/some-schools-to-close-their-gates-as-coronavirus-spreads/news-story/73fb181cc7a2e4e733671287c58ba0cd,03-31-2020
@@ -24,7 +21,7 @@ AT,Austria,03-20-2020,,,Border Control,Partial,Enforcement,,Partial,,,03-27-2020
 AT,Austria,03-16-2020,04-13-2020,,Internal Lockdown,Full,Enforcement,National,Full,"3/10, partial lockdown",https://en.wikipedia.org/wiki/2020_coronavirus_pandemic_in_Austria,03-27-2020
 AT,Austria,03-13-2020,,,School Closure,Full,,National,Full,,https://www.reuters.com/article/us-health-coronavirus-austria/austria-closing-schools-over-coronavirus-as-border-checks-take-effect-idUSKBN20Y2YC,03-31-2020
 AZ,Azerbaijan,02-29-2020,,,Border Control,Partial,Enforcement,,Partial,"Iran (2/29), Georgia(3/13)",https://www.reuters.com/article/chinahealth-iran-azerbaijan/azerbaijan-closes-border-with-iran-over-coronavirus-concerns-idUSL8N2AT0NF,03-27-2020
-AZ,Azerbaijan,03-23-2020,,,Internal Lockdown,Full,Enforcement,National,Partial,"malls, schools closed. A few articles use the term lockdown",https://en.trend.az/azerbaijan/politics/3211823.html,03-27-2020
+AZ,Azerbaijan,03-23-2020,,,Internal Lockdown,Full,Enforcement,National,Partial,"Malls, schools closed. A few articles use the term lockdown",https://en.trend.az/azerbaijan/politics/3211823.html,03-27-2020
 BS,Bahamas,,,,,,,,,,,
 BH,Bahrain,,,,,,,,,,,
 BD,Bangladesh,03-13-2020,04-15-2020,,Border Control,Partial,Enforcement,,,Indo-Bangladesh border closed,https://punemirror.indiatimes.com/news/india/covid-19-indo-bangladesh-border-closed-till-april-15/articleshow/74615262.cms,04-03-2020
@@ -41,7 +38,7 @@ BO,Bolivia,03-22-2020,04-04-2020,,Internal Lockdown,Full,Enforcement,National,Fu
 BA,"Bosnia and
 Herzegovina",,,,,,,,,,,
 BW,Botswana,,,,,,,,,,,
-BR,Brazil,03-17-2020,,,Internal Lockdown,Partial,Enforcement,Regional,Partial,a lot more states are added intacted by local government since 3/17,https://en.wikipedia.org/wiki/2020_coronavirus_pandemic_in_Brazil,03-27-2020
+BR,Brazil,03-17-2020,,,Internal Lockdown,Partial,Enforcement,Regional,Partial,a lot more states have been locked down by local governments since 3/17,https://en.wikipedia.org/wiki/2020_coronavirus_pandemic_in_Brazil,03-27-2020
 BN,Brunei,,,,,,,,,,,
 BG,Bulgaria,03-13-2020,,,Border Control,Partial,Enforcement,,,,https://www.reuters.com/article/us-health-coronavirus-bulgaria-emergency/bulgaria-closes-schools-restricts-travel-over-coronavirus-idUSKBN21015D,
 BG,Bulgaria,,,,Internal Lockdown,,None,,,,https://sofiaglobe.com/2020/03/19/bulgarian-pm-no-lockdown-order-for-now/,
@@ -171,14 +168,14 @@ MT,Malta,,,,,,,,,,,
 MH,Marshall Islands,,,,,,,,,,,
 MR,Mauritania,,,,,,,,,,,
 MU,Mauritius,,,,,,,,,,,
-MX,Mexico,03-13-2020,,,Internal Lockdown,Full,Enforcement,National,Partial,events and some school closed (weak lockdown),https://en.wikipedia.org/wiki/2020_coronavirus_pandemic_in_Mexico,03-27-2020
+MX,Mexico,03-13-2020,,,Internal Lockdown,Full,Enforcement,National,Partial,Events banned and some schools closed ,https://en.wikipedia.org/wiki/2020_coronavirus_pandemic_in_Mexico,03-27-2020
 FM,"Micronesia,
 Federated States of",,,,,,,,,,,
 MD,Moldova,,,,,,,,,,,
 MC,Monaco,,,,,,,,,,,
 MN,Mongolia,,,,,,,,,,,
 ME,Montenegro,,,,,,,,,,,
-MA,Morocco,03-15-2020,,,Border Control,Full,Enforcement,,Full,suspend all international flights,https://www.businessinsider.com/countries-on-lockdown-coronavirus-italy-2020-3#poland-announced-it-would-shutter-businesses-and-prohibit-international-travel-from-march-13-22,03-27-2020
+MA,Morocco,03-15-2020,,,Border Control,Full,Enforcement,,Full,Suspending all international flights,https://www.businessinsider.com/countries-on-lockdown-coronavirus-italy-2020-3#poland-announced-it-would-shutter-businesses-and-prohibit-international-travel-from-march-13-22,03-27-2020
 MA,Morocco,03-13-2020,,,Internal Lockdown,Full,Enforcement,National,Partial,School closed,https://en.wikipedia.org/wiki/2020_coronavirus_pandemic_in_Morocco,03-27-2020
 MZ,Mozambique,,,,,,,,,,,
 NA,Namibia,,,,,,,,,,,
@@ -200,7 +197,7 @@ PW,Palau,,,,,,,,,,,
 PA,Panama,03-25-2020,,,Internal Lockdown,Full,Enforcement,National,Full,,,03-27-2020
 PG,Papua New Guinea,,,,,,,,,,,
 PY,Paraguay,,,,,,,,,,,
-PE,Peru,03-16-2020,,,Border Control,Full,Enforcement,,,All international flights were cancelled.,https://www.nytimes.com/article/coronavirus-travel-restrictions.html?auth=login-email&login=email,04-03-2020
+PE,Peru,03-16-2020,,,Border Control,Full,Enforcement,,,All international flights were canceled.,https://www.nytimes.com/article/coronavirus-travel-restrictions.html?auth=login-email&login=email,04-03-2020
 PE,Peru,04-03-2020,,,Internal Lockdown,Partial,Enforcement,,,Gender based lockdown,https://www.businessinsider.com/countries-on-lockdown-coronavirus-italy-2020-3#singapore-will-close-schools-and-all-nonessential-businesses-on-tuesday-1,04-03-2020
 PE,Peru,03-11-2020,,,School Closure,Full,Enforcement,,,,https://amazonas-explorer.com/is-there-coronavirus-in-peru/,04-03-2020
 PH,Philippines,03-15-2020,,,Internal Lockdown,Partial,Enforcement,Regional,Partial,"3/15, 3/19, 3/23 three states lockdown",https://en.wikipedia.org/wiki/2020_coronavirus_pandemic_in_the_Philippines,03-27-2020
@@ -213,7 +210,7 @@ QA,Qatar,03-20-2020,,,Internal Lockdown,Partial,Enforcement,,,Largest labour cam
 QA,Qatar,03-09-2020,,,School Closure,Full,Enforcement,,,,https://www.aljazeera.com/news/2020/03/qatar-bans-travellers-14-countries-coronavirus-concerns-200309060851684.html,04-03-2020
 RO,Romania,03-25-2020,,,Internal Lockdown,Full,Enforcement,National,Full,,https://www.reuters.com/article/health-coronavirus-romania/romania-to-enforce-strict-lockdown-to-slow-coronavirus-idUSL8N2BH4LL,03-27-2020
 RU,Russia,03-18-2020,05-01-2020,,Border Control,Full,Enforcement,,Full,,https://www.independent.co.uk/news/world/europe/coronavirus-russia-border-close-flights-when-residents-latest-a9405131.html,03-27-2020
-RU,Russia,03-17-2020,,,Internal Lockdown,Full,Enforcement,National,Partial,closure of cultural insitutions and schools,https://en.wikipedia.org/wiki/2020_coronavirus_pandemic_in_Russia#Nationwide_measures,03-27-2020
+RU,Russia,03-17-2020,,,Internal Lockdown,Full,Enforcement,National,Partial,Closure of cultural insitutions and schools,https://en.wikipedia.org/wiki/2020_coronavirus_pandemic_in_Russia#Nationwide_measures,03-27-2020
 RW,Rwanda,,,,,,,,,,,
 KN,Saint Kitts and Nevis,,,,,,,,,,,
 LC,Saint Lucia,,,,,,,,,,,
@@ -242,9 +239,9 @@ LK,Sri Lanka,,,,,,,,,,,
 SD,Sudan,,,,,,,,,,,
 SR,Suriname,,,,,,,,,,,
 SE,Sweden,,,,Internal Lockdown,,None,,None,,https://www.thelocal.se/20200324/while-most-of-europe-is-in-lockdown-sweden-is-going-its-own-way,03-27-2020
-SE,Sweden,03-06-2020,,,School Closure,Partial,Encouragement,,None,The government has not yet asked schools to close but some schools in Stockholm closed due to the concerns for Coronavirus.,https://sverigesradio.se/sida/artikel.aspx?programid=2054&artikel=7422786,03-27-2020
+SE,Sweden,03-06-2020,,,School Closure,Partial,Encouragement,,None,The government has not yet asked schools to close but some schools in Stockholm closed.,https://sverigesradio.se/sida/artikel.aspx?programid=2054&artikel=7422786,03-27-2020
 CH,Switzerland,03-13-2020,,,Border Control,Partial,Enforcement,,Partial,,https://en.wikipedia.org/wiki/2020_coronavirus_pandemic_in_Switzerland,03-27-2020
-CH,Switzerland,03-20-2020,,,Internal Lockdown,Full,Enforcement,National,Partial,"all events or meetings over 5 people were prohibited, no school",https://en.wikipedia.org/wiki/2020_coronavirus_pandemic_in_Switzerland,03-27-2020
+CH,Switzerland,03-20-2020,,,Internal Lockdown,Full,Enforcement,National,Partial,"All events or meetings over 5 people were prohibited, no school",https://en.wikipedia.org/wiki/2020_coronavirus_pandemic_in_Switzerland,03-27-2020
 SY,Syria,,,,,,,,,,,
 TW,Taiwan,03-19-2020,,,Border Control,Full,Enforcement,,Full,,,03-27-2020
 TW,Taiwan,,,,Internal Lockdown,,Encouragement,,None,,,03-27-2020
@@ -258,12 +255,12 @@ TL,Timor-Leste,,,,,,,,,,,
 TG,Togo,,,,,,,,,,,
 TO,Tonga,,,,,,,,,,,
 TT,Trinidad and Tobago,,,,,,,,,,,
-TN,Tunisia,03-22-2020,,,Internal Lockdown,Full,Enforcement,National,Full,curfew was imposed a week ago,,03-27-2020
+TN,Tunisia,03-22-2020,,,Internal Lockdown,Full,Enforcement,National,Full,Curfew was imposed a week ago,,03-27-2020
 TR,Turkey,03-21-2020,,,Internal Lockdown,Full,Enforcement,National,Partial,"Curfew for over 65+, limitations in gathering before that date, more measures to come",https://en.wikipedia.org/wiki/2020_coronavirus_pandemic_in_Turkey,03-27-2020
 TM,Turkmenistan,,,,,,,,,,,
 TV,Tuvalu,,,,,,,,,,,
 UG,Uganda,,,,,,,,,,,
-UA,Ukraine,03-17-2020,,,Border Control,Full,Enforcement,,Full,Peopl can return back to Ukraine but not go out.,https://www.unian.info/politics/10914503-coronavirus-update-ukraine-to-suspend-all-air-travel-march-17.html,03-27-2020
+UA,Ukraine,03-17-2020,,,Border Control,Full,Enforcement,,Full,People can return back to Ukraine but not go out.,https://www.unian.info/politics/10914503-coronavirus-update-ukraine-to-suspend-all-air-travel-march-17.html,03-27-2020
 UA,Ukraine,03-25-2020,04-24-2020,,Internal Lockdown,Full,Enforcement,National,Full,,https://www.usnews.com/news/world/articles/2020-03-25/ukraine-government-approves-emergency-across-the-country-over-coronavirus-spread,03-27-2020
 AE,United Arab Emirates,03-19-2020,,,Border Control,Full,Enforcement,,,,https://www.cnbc.com/2020/03/18/coronavirus-uae-bans-citizens-from-traveling-mandates-14-day-quarantine-for-entrants.html,04-03-2020
 AE,United Arab Emirates,03-31-2020,,,Internal Lockdown,Partial,Enforcement,,,,https://www.straitstimes.com/world/middle-east/uae-imposes-first-lockdown-on-historic-district-to-slow-coronavirus,04-03-2020
@@ -272,7 +269,7 @@ GB,United Kingdom,,,,Border Control,Full,None,,None,,,03-31-2020
 GB,United Kingdom,03-23-2020,04-13-2020,,Internal Lockdown,Full,Enforcement,National,Full,,,03-27-2020
 GB,United Kingdom,03-20-2020,,,School Closure,Full,,National,Full,,,03-31-2020
 US,United States,02-02-2020,,,Border Control,Partial,Enforcement,,Partial,"CN (2/2), EU (3/17)",,03-27-2020
-US,United States,03-19-2020,,,Internal Lockdown,Partial,Enforcement,Regional,Partial,"State dependent, see tab two",,03-27-2020
+US,United States,03-19-2020,,,Internal Lockdown,Partial,Enforcement,Regional,Partial,State dependent,,03-27-2020
 UY,Uruguay,,,,,,,,,,,
 UZ,Uzbekistan,,,,,,,,,,,
 VU,Vanuatu,,,,,,,,,,,
