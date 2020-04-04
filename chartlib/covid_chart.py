@@ -48,15 +48,15 @@ class CovidChart(object):
             if 'lockdown_type' not in quarantine_df.columns:
                 raise ValueError('lockdown_type should be in quarantine_df columns')
 
-        self.df = df
-        self.quarantine_df = quarantine_df
-        self.groupcol = groupcol
-        self.start_criterion = start_criterion
-        self.xcol = xcol
-        self.ycol = ycol
-        self.ycol_is_cumulative = ycol_is_cumulative
-        self.top_k_groups = top_k_groups
-        self.spec = ChartSpec()
+        object.__setattr__(self, 'df', df)
+        object.__setattr__(self, 'quarantine_df', quarantine_df)
+        object.__setattr__(self, 'groupcol', groupcol)
+        object.__setattr__(self, 'start_criterion', start_criterion)
+        object.__setattr__(self, 'xcol', xcol)
+        object.__setattr__(self, 'ycol', ycol)
+        object.__setattr__(self, 'ycol_is_cumulative', ycol_is_cumulative)
+        object.__setattr__(self, 'top_k_groups', top_k_groups)
+        object.__setattr__(self, 'spec', ChartSpec())
         self.spec.detailby = groupcol
         self.spec.colorby = groupcol
         self.spec.facetby = None
@@ -72,7 +72,7 @@ class CovidChart(object):
         quarantine_df[self.lockdown_X] = quarantine_df.apply(lambda x: days_between(x['date_of_N'], x['lockdown_date']), axis=1)
 
         # only retain earliest lockdown that appears... eventually we will want to allow for multiple
-        quarantine_df = quarantine_df.loc[quarantine_df.lockdown_x > self.spec.xdomain[0]]
+        quarantine_df = quarantine_df.loc[quarantine_df.lockdown_x.between(*self.spec.xdomain, inclusive=False)]
         quarantine_df = quarantine_df.loc[quarantine_df.groupby(self.groupcol).lockdown_x.idxmin()]
         del quarantine_df['date_of_N']
         df = df.merge(quarantine_df, how='left', on=self.groupcol)
@@ -141,6 +141,14 @@ class CovidChart(object):
 
         qdf.apply(_make_info_from_row)
         return info_dict
+
+    def __getattr__(self, item):
+        if item not in self.__getattribute__('spec'):
+            raise AttributeError("Neither this object nor spec the spec contain attribute %s" % item)
+        return self.spec[item]
+
+    def __setattr__(self, key, value):
+        self.spec[key] = value
 
     def set_title(self, title):
         self.spec.title = title
