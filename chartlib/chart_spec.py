@@ -207,6 +207,9 @@ class ChartSpec(DotDict):
             ).transform_filter(
                 'datum.x >= datum.lockdown_x'
             ).transform_filter(
+                # only show the trend lines if the main lockdown rule appears after the start of the line
+                'datum.lockdown_x > datum.x_start'
+            ).transform_filter(
                 'datum.y !== null'
             ).transform_calculate(
                 model_y='datum.lockdown_y * pow(datum.lockdown_slope, datum.x - datum.lockdown_x)'

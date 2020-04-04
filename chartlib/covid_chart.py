@@ -63,6 +63,46 @@ class CovidChart(object):
         if use_defaults:
             self.set_defaults()
 
+    def _preprocess_lockdown_info(self, df) -> pd.DataFrame:
+        quarantine_df = self.quarantine_df.copy()
+        quarantine_df = quarantine_df.dropna()
+        quarantine_df = quarantine_df.merge(
+            df[[self.groupcol, 'date_of_N']], on=self.groupcol, how='inner'
+        )
+        quarantine_df[self.lockdown_X] = quarantine_df.apply(lambda x: days_between(x['date_of_N'], x['lockdown_date']), axis=1)
+
+        # only retain earliest lockdown that appears... eventually we will want to allow for multiple
+        quarantine_df = quarantine_df.loc[quarantine_df.lockdown_x > self.spec.xdomain[0]]
+        quarantine_df = quarantine_df.loc[quarantine_df.groupby(self.groupcol).lockdown_x.idxmin()]
+        del quarantine_df['date_of_N']
+        df = df.merge(quarantine_df, how='left', on=self.groupcol)
+
+        idx_before_at_lockdown = df.loc[df.x <= df.lockdown_x].groupby(df[self.groupcol]).x.idxmax()
+        df_lockdown_y = df.loc[idx_before_at_lockdown]
+        df_intercept = df.loc[df.groupby(self.groupcol).x.idxmin()]
+        df = df.merge(
+            df_intercept.rename(columns={'y': 'y_start', 'x': 'x_start'})[[self.groupcol, 'y_start', 'x_start']],
+            how='left',
+            on=self.groupcol
+        )
+        df = df.merge(
+            df_lockdown_y.rename(columns={'y': 'lockdown_y'})[[self.groupcol, 'lockdown_y']],
+            how='left',
+            on=self.groupcol
+        )
+        df['lockdown_slope'] = np.exp(np.log(df.lockdown_y / df.y_start) / (df.lockdown_x - df.x_start))
+
+        # these new rows are to ensure we have at least one point where x == lockdown_x since this is the filter
+        # used to generate lockdown rules...
+        # we need this b/c we can only attach mouseover interactions to one column, and it is already attached to x
+
+        # TODO (smacke): instead of x and lockdown_x, we should have x and x_type, where x_type can be normal,
+        # lockdown, etc... This will also generalize better if we want to change x based on e.g. a dropdown
+        new_rows = df.groupby(self.groupcol).max().reset_index()[[self.groupcol, self.lockdown_X, 'lockdown_type']]
+        new_rows['x'] = new_rows.lockdown_x
+        df = df.append(new_rows, ignore_index=True, sort=False)
+        return df
+
     def _preprocess_df(self) -> pd.DataFrame:
         df = self.df.copy()
         if self.ycol_is_cumulative:
@@ -78,51 +118,16 @@ class CovidChart(object):
             df = df.loc[df[self.groupcol].isin(top_k_groups)]
 
         df = self.start_criterion.transform(self, df)
-        if self.quarantine_df is not None:
-            quarantine_df = self.quarantine_df.copy()
-            quarantine_df = quarantine_df.dropna()
-            quarantine_df = quarantine_df.merge(
-                df[[self.groupcol, 'date_of_N']], on=self.groupcol, how='inner'
-            )
-            quarantine_df[self.lockdown_X] = quarantine_df.apply(lambda x: days_between(x['date_of_N'], x['lockdown_date']), axis=1)
-
-            # only retain earliest lockdown that appears... eventually we will want to allow for multiple
-            quarantine_df = quarantine_df.loc[quarantine_df.lockdown_x > 0]
-            quarantine_df = quarantine_df.loc[quarantine_df.groupby(self.groupcol).lockdown_x.idxmin()]
-            del quarantine_df['date_of_N']
-            df = df.merge(quarantine_df, how='left', on=self.groupcol)
-
-            idx_before_at_lockdown = df.loc[df.x <= df.lockdown_x].groupby(df[self.groupcol]).x.idxmax()
-            df_lockdown_y = df.loc[idx_before_at_lockdown]
-            df_intercept = df.loc[df.x == 0].groupby(self.groupcol).first().reset_index()
-            df = df.merge(
-                df_intercept.rename(columns={'y': 'intercept'})[[self.groupcol, 'intercept']],
-                how='left',
-                on=self.groupcol
-            )
-            df = df.merge(
-                df_lockdown_y.rename(columns={'y': 'lockdown_y'})[[self.groupcol, 'lockdown_y']],
-                how='left',
-                on=self.groupcol
-            )
-            df['lockdown_slope'] = np.exp(np.log(df.lockdown_y / df.intercept) / df.lockdown_x)
-
-            # these new rows are to ensure we have at least one point where x == lockdown_x since this is the filter
-            # used to generate lockdown rules...
-            # we need this b/c we can only attach mouseover interactions to one column, and it is already attached to x
-
-            # TODO (smacke): instead of x and lockdown_x, we should have x and x_type, where x_type can be normal,
-            # lockdown, etc... This will also generalize better if we want to change x based on e.g. a dropdown
-            new_rows = df.groupby(self.groupcol).max().reset_index()[[self.groupcol, self.lockdown_X, 'lockdown_type']]
-            new_rows['x'] = new_rows.lockdown_x
-            df = df.append(new_rows, ignore_index=True, sort=False)
 
         if 'xdomain' in self.spec:
             xmin, xmax = self.spec.xdomain[0], self.spec.xdomain[1]
-            df = df.loc[(df[self.X] >= xmin) & (df[self.X] <= xmax)]
+            df = df.loc[(df.x >= xmin) & (df.x <= xmax)]
         if 'ydomain' in self.spec:
             ymin, ymax = self.spec.ydomain[0], self.spec.ydomain[1]
-            df = df.loc[(df[self.Y] >= ymin) & (df[self.Y] <= ymax)]
+            df = df.loc[(df.y >= ymin) & (df.y <= ymax)]
+
+        if self.quarantine_df is not None:
+            df = self._preprocess_lockdown_info(df)
         return df
 
     def _make_info_dict(self, qdf):
