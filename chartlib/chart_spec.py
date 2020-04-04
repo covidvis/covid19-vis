@@ -33,6 +33,12 @@ class ChartSpec(DotDict):
             raise ValueError('dataframe should have a y column')
         if not self.get('click_selection', False) and not self.get('legend_selection', False):
             raise ValueError('one of click or legend selection should be specified')
+        colormap = self.get('colormap', None)
+        if colormap is not None:
+            if self.detailby != self.colorby:
+                raise ValueError('when colormap specified, detailby and colorby should be identical')
+            if not isinstance(colormap, dict):
+                raise ValueError('expected dictionary for colormap')
 
     def _get_x(self, shorthand='x:Q'):
         xaxis_kwargs = {}
@@ -59,7 +65,14 @@ class ChartSpec(DotDict):
 
     @property
     def _alt_color(self):
-        return alt.Color(f'{self.colorby}:N')
+        extra_color_kwargs = {}
+        colormap = self.get('colormap', None)
+        if colormap is not None:
+            extra_color_kwargs['scale'] = dict(
+                domain=list(colormap.keys()),
+                range=list(colormap.values())
+            )
+        return alt.Color(f'{self.colorby}:N', **extra_color_kwargs)
 
     @property
     def _yscale(self):

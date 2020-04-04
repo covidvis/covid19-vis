@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Union
+from typing import Union, Dict
 
 import numpy as np
 import pandas as pd
@@ -259,6 +259,10 @@ class CovidChart(object):
 
     def set_point_size(self, point_size):
         self.spec.point_size = point_size
+        return self
+
+    def set_group_colormap(self, colormap: Dict):
+        self.spec.colormap = colormap
         return self
 
     def set_defaults(self):
