@@ -12,9 +12,13 @@ class ChartSpec(DotDict):
     click = 'click'
     cursor = 'cursor'
     legend = 'legend'
-    lockdown_X = 'lockdown_x'
+    lockdown_x = 'lockdown_x'
     X = 'x'
     Y = 'y'
+    x_type = 'x_type'
+    y_type = 'y_type'
+    normal_type = 'normal'
+    lockdown_type = 'lockdown'
     DEFAULT_HEIGHT = 400
     DEFAULT_WIDTH = 600
     DEFAULT_POINT_SIZE = 45
@@ -124,6 +128,7 @@ class ChartSpec(DotDict):
             kwargs['opacity'] = alt.condition(self._in_focus_or_none_selected(), alt.value(1), alt.value(.1))
         line_layer = base.mark_line(size=3).encode(**kwargs)
         line_layer = line_layer.transform_filter('datum.y !== null')
+        line_layer = line_layer.transform_filter(f'datum.x_type == "{self.normal_type}"')
         if self._yscale == 'log':
             line_layer = line_layer.transform_filter('datum.y > 0')
         return line_layer
@@ -139,6 +144,7 @@ class ChartSpec(DotDict):
 
         point_layer = base.mark_point(size=point_size, filled=True).encode(**kwargs)
         point_layer = point_layer.transform_filter('datum.y !== null')
+        point_layer = point_layer.transform_filter(f'datum.x_type == "{self.normal_type}"')
         if self._yscale == 'log':
             point_layer = point_layer.transform_filter('datum.y > 0')
         if is_fake:
@@ -159,7 +165,7 @@ class ChartSpec(DotDict):
         return base.mark_rule(size=3, strokeDash=[7, 3]).encode(
             x='x:Q', detail=self._alt_detail, color=self._alt_color
         ).transform_filter(
-            'datum.x == datum.lockdown_x'
+            f'datum.x_type == "{self.lockdown_type}"'
         ).transform_filter(self._in_focus())
 
     def _make_lockdown_tooltips_layer(self, rules, cursor):

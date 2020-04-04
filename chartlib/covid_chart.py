@@ -17,9 +17,14 @@ class CovidChart(object):
 
     Also provides various convenience methods for setting ChartSpec state.
     """
-    lockdown_X = 'lockdown_x'
     X = 'x'
     Y = 'y'
+    lockdown_x = 'lockdown_x'
+    lockdown_y = 'lockdown_y'
+    x_type = 'x_type'
+    y_type = 'y_type'
+    normal_type = 'normal'
+    lockdown_type = 'lockdown'
 
     def __init__(
         self,
@@ -65,28 +70,39 @@ class CovidChart(object):
 
     def _preprocess_lockdown_info(self, df) -> pd.DataFrame:
         quarantine_df = self.quarantine_df.copy()
+        quarantine_df[self.x_type] = self.lockdown_type
         quarantine_df = quarantine_df.dropna()
         quarantine_df = quarantine_df.merge(
-            df[[self.groupcol, 'date_of_N']], on=self.groupcol, how='inner'
+            df[[self.groupcol, 'date_of_N']].groupby(self.groupcol).first(),
+            on=self.groupcol,
+            how='inner'
         )
-        quarantine_df[self.lockdown_X] = quarantine_df.apply(lambda x: days_between(x['date_of_N'], x['lockdown_date']), axis=1)
-
-        # only retain earliest lockdown that appears... eventually we will want to allow for multiple
-        quarantine_df = quarantine_df.loc[quarantine_df.lockdown_x.between(*self.spec.xdomain, inclusive=False)]
-        quarantine_df = quarantine_df.loc[quarantine_df.groupby(self.groupcol).lockdown_x.idxmin()]
+        quarantine_df[self.X] = quarantine_df.apply(
+            lambda x: days_between(x['date_of_N'], x['lockdown_date']), axis=1
+        )
         del quarantine_df['date_of_N']
-        df = df.merge(quarantine_df, how='left', on=self.groupcol)
+
+        # only retain lockdown events that appear in the chart domain
+        quarantine_df = quarantine_df.loc[quarantine_df.x.between(*self.spec.xdomain, inclusive=False)]
+
+        # for trends, use earliest lockdown that appears... eventually we will want to specify this somehow
+        trend_df = quarantine_df.loc[quarantine_df.groupby(self.groupcol).x.idxmin()]
+        df = df.merge(
+            trend_df.rename(columns={self.X: self.lockdown_x})[[self.groupcol, self.lockdown_x]],
+            how='left',
+            on=self.groupcol
+        )
 
         idx_before_at_lockdown = df.loc[df.x <= df.lockdown_x].groupby(df[self.groupcol]).x.idxmax()
         df_lockdown_y = df.loc[idx_before_at_lockdown]
         df_intercept = df.loc[df.groupby(self.groupcol).x.idxmin()]
         df = df.merge(
-            df_intercept.rename(columns={'y': 'y_start', 'x': 'x_start'})[[self.groupcol, 'y_start', 'x_start']],
+            df_intercept.rename(columns={self.Y: 'y_start', self.X: 'x_start'})[[self.groupcol, 'y_start', 'x_start']],
             how='left',
             on=self.groupcol
         )
         df = df.merge(
-            df_lockdown_y.rename(columns={'y': 'lockdown_y'})[[self.groupcol, 'lockdown_y']],
+            df_lockdown_y.rename(columns={self.Y: self.lockdown_y})[[self.groupcol, self.lockdown_y]],
             how='left',
             on=self.groupcol
         )
@@ -98,13 +114,17 @@ class CovidChart(object):
 
         # TODO (smacke): instead of x and lockdown_x, we should have x and x_type, where x_type can be normal,
         # lockdown, etc... This will also generalize better if we want to change x based on e.g. a dropdown
-        new_rows = df.groupby(self.groupcol).max().reset_index()[[self.groupcol, self.lockdown_X, 'lockdown_type']]
-        new_rows['x'] = new_rows.lockdown_x
+        new_rows = df.groupby(self.groupcol).max().reset_index()[[self.groupcol, self.lockdown_x]]
+        new_rows[self.X] = new_rows.lockdown_x
         df = df.append(new_rows, ignore_index=True, sort=False)
+
+        # now add lockdown info as new rows in our df
+        df = df.append(quarantine_df, ignore_index=True, sort=False)
         return df
 
     def _preprocess_df(self) -> pd.DataFrame:
         df = self.df.copy()
+        df[self.x_type] = 'normal'
         if self.ycol_is_cumulative:
             df[self.Y] = df[self.ycol]
         else:
