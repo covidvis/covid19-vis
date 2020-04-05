@@ -19,10 +19,30 @@ class ChartSpec(DotDict):
     y_type = 'y_type'
     normal_type = 'normal'
     lockdown_type = 'lockdown'
+
+    TRANSIENT = 'transient'
     DEFAULT_HEIGHT = 400
     DEFAULT_WIDTH = 600
     DEFAULT_POINT_SIZE = 45
+    DEFAULT_UNFOCUSED_OPACITY = 0.08
     EMPTY_SELECTION = ''
+    COLOR_SCHEME = [
+        'red', 'blue', 'green', 'purple', 'orange',
+    ] + list(
+        map(
+            lambda y: '#' + y,
+            filter(
+                lambda x: x != '',
+                [(
+                    "1b9e77d95f027570b3e7298a66a61ee6ab02a6761d666666"
+                    "4e79a7f28e2ce1575976b7b259a14fedc949af7aa1ff9da79c755fbab0ab"
+                    "1f77b4ff7f0e2ca02cd627289467bd8c564be377c27f7f7fbcbd2217becf"
+                    "a6cee31f78b4b2df8a33a02cfb9a99e31a1cfdbf6fff7f00cab2d66a3d9affff99b15928"
+                    "7fc97fbeaed4fdc086ffff99386cb0f0027fbf5b17666666"
+                )[i:i+6] for i in range(0, 1000, 6)]
+            )
+        )
+    )
 
     def validate(self, df):
         if 'lines' not in self and 'points' not in self:
@@ -39,6 +59,9 @@ class ChartSpec(DotDict):
                 raise ValueError('when colormap specified, detailby and colorby should be identical')
             if not isinstance(colormap, dict):
                 raise ValueError('expected dictionary for colormap')
+        if self.get('legend_selection', False):
+            if self.detailby != self.colorby:
+                raise ValueError('when legend selection enabled, detailby and colorby should be identical')
 
     def _get_x(self, shorthand='x:Q'):
         xaxis_kwargs = {}
@@ -59,6 +82,17 @@ class ChartSpec(DotDict):
             yaxis_kwargs['title'] = self.ytitle
         return alt.Y(shorthand, **yaxis_kwargs)
 
+    def _prefer_transient(self, key, default):
+        transient = self.get(self.TRANSIENT, None)
+        if transient is None:
+            return self.get(key, default)
+        else:
+            return transient.get(key, self.get(key, default))
+
+    @property
+    def _colormap(self):
+        return self._prefer_transient('colormap', None)
+
     @property
     def _alt_detail(self):
         return alt.Detail(f'{self.detailby}:N')
@@ -66,11 +100,12 @@ class ChartSpec(DotDict):
     @property
     def _alt_color(self):
         extra_color_kwargs = {}
-        colormap = self.get('colormap', None)
+        colormap = self._colormap
         if colormap is not None:
+            domain = list(colormap.keys())
+            rng = list(colormap.values())
             extra_color_kwargs['scale'] = dict(
-                domain=list(colormap.keys()),
-                range=list(colormap.values())
+                domain=domain, range=rng,
             )
         return alt.Color(f'{self.colorby}:N', **extra_color_kwargs)
 
@@ -138,7 +173,11 @@ class ChartSpec(DotDict):
         if not self.get('lines', False):
             kwargs['opacity'] = alt.value(0)
         else:
-            kwargs['opacity'] = alt.condition(self._in_focus_or_none_selected(), alt.value(1), alt.value(.1))
+            kwargs['opacity'] = alt.condition(
+                self._in_focus_or_none_selected(),
+                alt.value(1),
+                alt.value(self.get('unfocused_opacity', self.DEFAULT_UNFOCUSED_OPACITY))
+            )
         line_layer = base.mark_line(size=3).encode(**kwargs)
         line_layer = line_layer.transform_filter('datum.y !== null')
         line_layer = line_layer.transform_filter(f'datum.x_type == "{self.normal_type}"')
@@ -152,7 +191,9 @@ class ChartSpec(DotDict):
             kwargs['opacity'] = alt.value(0)
         else:
             kwargs['opacity'] = alt.condition(
-                self._in_focus_or_none_selected(), alt.value(.4), alt.value(.1)
+                self._in_focus_or_none_selected(),
+                alt.value(.4),
+                alt.value(self.get('unfocused_opacity', self.DEFAULT_UNFOCUSED_OPACITY))
             )
 
         point_layer = base.mark_point(size=point_size, filled=True).encode(**kwargs)
@@ -257,82 +298,106 @@ class ChartSpec(DotDict):
             extrap_text=f'"Original trend for " + datum.{self.detailby}'
         )
 
+    def _populate_transient_colormap(self, df):
+        colormap = self.get('colormap', None)
+        if colormap is None:
+            return
+        colormap = dict(colormap)
+        color_scheme_idx = 0
+        default_color = self.get('default_color', None)
+        for group in df[self.colorby].unique():
+            if group in colormap:
+                continue
+            elif default_color is not None:
+                colormap[group] = default_color
+                continue
+            while self.COLOR_SCHEME[color_scheme_idx] in colormap.values():
+                color_scheme_idx += 1
+            colormap[group] = self.COLOR_SCHEME[color_scheme_idx]
+            color_scheme_idx += 1
+        self[self.TRANSIENT]['colormap'] = colormap
+
     def compile(self, df):
         self.validate(df)
-        base = alt.Chart(
-            df,
-            width=self.get('width', self.DEFAULT_WIDTH),
-            height=self.get('height', self.DEFAULT_HEIGHT)
-        )
-        layers = {}
+        self[self.TRANSIENT] = DotDict()
+        try:
+            self._populate_transient_colormap(df)
+            base = alt.Chart(
+                df,
+                width=self.get('width', self.DEFAULT_WIDTH),
+                height=self.get('height', self.DEFAULT_HEIGHT)
+            )
+            layers = {}
 
-        dropdown_options = [self.EMPTY_SELECTION]
-        dropdown_name = " "
-        if self.get('click_selection', False):
-            dropdown_options.extend(list(df[self.detailby].unique()))
-            dropdown_name = f'Select {self.detailby}: '
-        dropdown = alt.binding_select(options=dropdown_options, name=dropdown_name)
-        click_selection = alt.selection_single(
-            fields=[self.detailby], on='click', name=self.click, empty='all',
-            bind=dropdown, clear='dblclick',
-        )
+            dropdown_options = [self.EMPTY_SELECTION]
+            dropdown_name = " "
+            if self.get('click_selection', False):
+                dropdown_options.extend(list(df[self.detailby].unique()))
+                dropdown_name = f'Select {self.detailby}: '
+            dropdown = alt.binding_select(options=dropdown_options, name=dropdown_name)
+            click_selection = alt.selection_single(
+                fields=[self.detailby], on='click', name=self.click, empty='all',
+                bind=dropdown, clear='dblclick',
+            )
 
-        legend_selection = alt.selection_multi(
-            fields=[self.detailby], on='click', name=self.legend, empty='all',
-            bind='legend', clear='dblclick'
-        )
+            legend_selection = alt.selection_multi(
+                fields=[self.detailby], on='click', name=self.legend, empty='all',
+                bind='legend', clear='dblclick'
+            )
 
-        # put a fake layer in first with no click selection
-        # since it has X and Y, it will help chart.interactive() to find x and y fields to bind to,
-        # allowing us to pan up and down and zoom over both axes instead of just 1.
-        layers['fake_interactive'] = base.mark_line().encode(
-            x=self._get_x(), y=self._get_y()
-        ).transform_filter('false')
+            # put a fake layer in first with no click selection
+            # since it has X and Y, it will help chart.interactive() to find x and y fields to bind to,
+            # allowing us to pan up and down and zoom over both axes instead of just 1.
+            layers['fake_interactive'] = base.mark_line().encode(
+                x=self._get_x(), y=self._get_y()
+            ).transform_filter('false')
 
-        # next goes the tooltip selector layer (needs to happen before click selection layer)
-        cursor, selectors = self._make_cursor_selection(base)
-        layers['selectors'] = selectors
+            # next goes the tooltip selector layer (needs to happen before click selection layer)
+            cursor, selectors = self._make_cursor_selection(base)
+            layers['selectors'] = selectors
 
-        # The first layer with a specified color channel is used to generate the legend.
-        # as such, we need to make sure the marks in the first layer w/ specified color channel are not translucent,
-        # otherwise we'll get a blank legend.
-        # We put a fake layer in here before we add any other layers w/ color channel specified, and we
-        # furthermore add the legend selection to it b/c it also seems like a multi-selection bound to the
-        # legend needs to be added to the layer that generates the legend.
-        layers['legend'] = base.mark_point(size=0).encode(
-            x=self._get_x(), y=self._get_y(), color=self._alt_color
-        ).add_selection(legend_selection)
+            # The first layer with a specified color channel is used to generate the legend.
+            # as such, we need to make sure the marks in the first layer w/ specified color channel are not translucent,
+            # otherwise we'll get a blank legend.
+            # We put a fake layer in here before we add any other layers w/ color channel specified, and we
+            # furthermore add the legend selection to it b/c it also seems like a multi-selection bound to the
+            # legend needs to be added to the layer that generates the legend.
+            layers['legend'] = base.mark_point(size=0).encode(
+                x=self._get_x(), y=self._get_y(), color=self._alt_color
+            ).add_selection(legend_selection)
 
-        # Put a fake layer in first to attach the click selection to. We use a fake layer for this for a few reasons.
-        # 1. It's not used as a base layer, so we won't get errors
-        #    about the spec having the selection added multiple times.
-        # 2. We need a layer that has nice fat points that are easy to click for adding the click_selection to.
-        #    Since the layer has fat points, however, the points need to be translucent, and since they
-        #    need to be translucent, this layer cannot be the first layer that specifies color channel
-        #    and similarly cannot be the layer with the legend_selection added on.
-        layers['fake_points'] = self._make_point_layer(
-            base, point_size=400, is_fake=True
-        ).add_selection(click_selection)
+            # Put a fake layer in first to attach the click selection to. We use a fake layer for this for a few reasons.
+            # 1. It's not used as a base layer, so we won't get errors
+            #    about the spec having the selection added multiple times.
+            # 2. We need a layer that has nice fat points that are easy to click for adding the click_selection to.
+            #    Since the layer has fat points, however, the points need to be translucent, and since they
+            #    need to be translucent, this layer cannot be the first layer that specifies color channel
+            #    and similarly cannot be the layer with the legend_selection added on.
+            layers['fake_points'] = self._make_point_layer(
+                base, point_size=400, is_fake=True
+            ).add_selection(click_selection)
 
-        # now the meaty layers with actual content
-        layers['lines'] = self._make_line_layer(base)
-        layers['points'] = self._make_point_layer(
-            base,
-            point_size=self.get('point_size', self.DEFAULT_POINT_SIZE),
-            is_fake=False
-        )
+            # now the meaty layers with actual content
+            layers['lines'] = self._make_line_layer(base)
+            layers['points'] = self._make_point_layer(
+                base,
+                point_size=self.get('point_size', self.DEFAULT_POINT_SIZE),
+                is_fake=False
+            )
 
-        self._collect_tooltip_layers(layers, base, cursor)
+            self._collect_tooltip_layers(layers, base, cursor)
 
-        if self.get('lockdown_extrapolation', False):
-            layers['model_lines'] = self._make_lockdown_extrapolation_layer(base)
-            layers['model_tooltip'] = self._make_extrapolation_tooltip_layer(layers['model_lines'], cursor)
+            if self.get('lockdown_extrapolation', False):
+                layers['model_lines'] = self._make_lockdown_extrapolation_layer(base)
+                layers['model_tooltip'] = self._make_extrapolation_tooltip_layer(layers['model_lines'], cursor)
 
-        layered = alt.layer(*layers.values())
-        layered = self._maybe_add_facet(layered)
-        layered = layered.configure_legend(symbolType='diamond')
-        if self.get('interactive', False):
-            layered = layered.interactive(bind_x=True, bind_y=True)
-        if self.get('title', False):
-            layered.title = self.get('title')
-        return layered
+            layered = alt.layer(*layers.values())
+            layered = self._maybe_add_facet(layered)
+            layered = layered.configure_legend(symbolType='diamond')
+            if self.get('interactive', False):
+                layered = layered.interactive(bind_x=True, bind_y=True)
+            if self.get('title', False):
+                layered.title = self.get('title')
+            return layered
+        finally:
+            del self[self.TRANSIENT]

@@ -305,12 +305,22 @@ class CovidChart(object):
         self.spec.facetby = col
         return self
 
-    def set_point_size(self, point_size):
+    def set_point_size(self, point_size: int):
         self.spec.point_size = point_size
         return self
 
-    def set_colormap(self, colormap: Dict):
+    def set_unfocused_opacity(self, opacity: float):
+        self.spec.unfocused_opacity = opacity
+        return self
+
+    def set_colormap(self, colormap: Dict = None, default_color: str = None, **kwargs):
+        if colormap is None:
+            colormap = {}
+        colormap = dict(colormap)
+        colormap.update(kwargs)
         self.spec.colormap = colormap
+        if default_color is not None:
+            self.spec.default_color = default_color
         return self
 
     def set_defaults(self):
