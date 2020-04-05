@@ -25,6 +25,7 @@ class ChartSpec(DotDict):
     DEFAULT_WIDTH = 600
     DEFAULT_POINT_SIZE = 45
     DEFAULT_UNFOCUSED_OPACITY = 0.08
+    DEFAULT_AXES_TITLE_FONTSIZE = 16
     EMPTY_SELECTION = ''
     COLOR_SCHEME = [
         'red', 'blue', 'green', 'purple', 'orange',
@@ -418,6 +419,9 @@ class ChartSpec(DotDict):
             layered = alt.layer(*layers.values())
             layered = self._maybe_add_facet(layered)
             layered = layered.configure_legend(symbolType='diamond')
+            layered = layered.configure_axis(
+                titleFontSize=self.get('axes_title_fontsize', self.DEFAULT_AXES_TITLE_FONTSIZE)
+            )
             if self.get('interactive', False):
                 layered = layered.interactive(bind_x=True, bind_y=True)
             if self.get('title', False):

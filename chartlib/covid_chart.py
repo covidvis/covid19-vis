@@ -348,6 +348,10 @@ class CovidChart(object):
             self.spec.default_color = default_color
         return self
 
+    def set_axes_title_fontsize(self, fontsize):
+        self.spec.axes_title_fontsize = fontsize
+        return self
+
     def set_defaults(self):
         self.spec.detailby = self.groupcol
         self.spec.colorby = self.groupcol
