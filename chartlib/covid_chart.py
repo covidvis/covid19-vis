@@ -309,7 +309,7 @@ class CovidChart(object):
         self.spec.point_size = point_size
         return self
 
-    def set_group_colormap(self, colormap: Dict):
+    def set_colormap(self, colormap: Dict):
         self.spec.colormap = colormap
         return self
 
