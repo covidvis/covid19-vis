@@ -32,29 +32,13 @@ class CovidChart(object):
         groupcol: str,
         start_criterion: StartCriterion,
         ycol: str,
+        level: str = 'US',  # one of: [US, USA, country]
         use_defaults: bool = True,
         ycol_is_cumulative: bool = True,
         top_k_groups: int = None,
         xcol: str = 'date',
-        quarantine_df: pd.DataFrame = None,
+        quarantine_df: Union[str, pd.DataFrame] = None,
     ):
-        if isinstance(df, str):
-            df = pd.read_csv(df, parse_dates=[xcol], infer_datetime_format=True)
-        if groupcol not in df.columns:
-            raise ValueError('grouping col should be in dataframe cols')
-        if ycol not in df.columns:
-            raise ValueError('measure col should be in dataframe cols')
-
-        if quarantine_df is not None:
-            if groupcol not in quarantine_df.columns:
-                raise ValueError('grouping col should be in dataframe cols')
-            if 'lockdown_date' not in quarantine_df.columns:
-                raise ValueError('lockdown_date should be in quarantine_df columns')
-            if 'lockdown_type' not in quarantine_df.columns:
-                raise ValueError('lockdown_type should be in quarantine_df columns')
-
-        object.__setattr__(self, 'df', df)
-        object.__setattr__(self, 'quarantine_df', quarantine_df)
         object.__setattr__(self, 'groupcol', groupcol)
         object.__setattr__(self, 'start_criterion', start_criterion)
         object.__setattr__(self, 'xcol', xcol)
@@ -62,16 +46,80 @@ class CovidChart(object):
         object.__setattr__(self, 'ycol_is_cumulative', ycol_is_cumulative)
         object.__setattr__(self, 'top_k_groups', top_k_groups)
         object.__setattr__(self, 'spec', ChartSpec())
+
+        if isinstance(df, str):
+            df = pd.read_csv(df, parse_dates=[xcol], infer_datetime_format=True)
+        self._validate_df(df)
+
+        if isinstance(quarantine_df, str):
+            if level.lower() in ['us', 'usa', 'united states']:
+                quarantine_df = self._injest_usa_quarantine_df(quarantine_df)
+            elif level == 'country':
+                quarantine_df = self._injest_country_quarantine_df(quarantine_df)
+            else:
+                raise ValueError('invalid level %s: only "US" and "country" allowed now')
+        quarantine_df = quarantine_df.dropna(subset=[groupcol, 'lockdown_date', 'lockdown_type'])
+        self._validate_quarantine_df(quarantine_df)
+
+        object.__setattr__(self, 'df', df)
+        object.__setattr__(self, 'quarantine_df', quarantine_df)
+
         self.spec.detailby = groupcol
         self.spec.colorby = groupcol
         self.spec.facetby = None
         if use_defaults:
             self.set_defaults()
 
+    def _validate_df(self, df):
+        if self.groupcol not in df.columns:
+            raise ValueError('grouping col should be in dataframe cols')
+        if self.ycol not in df.columns:
+            raise ValueError('measure col should be in dataframe cols')
+
+    def _validate_quarantine_df(self, quarantine_df):
+        if self.groupcol not in quarantine_df.columns:
+            raise ValueError('grouping col should be in dataframe cols')
+        if 'lockdown_date' not in quarantine_df.columns:
+            raise ValueError('lockdown_date should be in quarantine_df columns')
+        if 'lockdown_type' not in quarantine_df.columns:
+            raise ValueError('lockdown_type should be in quarantine_df columns')
+
+    def _injest_country_quarantine_df(self, quarantine_csv):
+        quarantine_df = pd.read_csv(quarantine_csv)
+        quarantine_df = quarantine_df.loc[quarantine_df.Level == 'Enforcement']
+        quarantine_df['Lockdown Type'] = quarantine_df.apply(
+            lambda x: x['Scope'] + ' ' + x['Type'], axis=1
+        )
+        quarantine_cols = ['Country_Region', 'Date Enacted', 'Lockdown Type']
+        quarantine_df = quarantine_df[quarantine_cols]
+        quarantine_df = quarantine_df.rename(
+            columns={'Date Enacted': 'lockdown_date', 'Lockdown Type': 'lockdown_type'}
+        )
+        return quarantine_df
+
+    def _injest_usa_quarantine_df(self, quarantine_csv):
+        quarantine_df = pd.read_csv(quarantine_csv)
+        quarantine_df_emergency = quarantine_df.copy()
+        quarantine_df = quarantine_df.loc[quarantine_df.Type == 'Level 2 Lockdown']
+        quarantine_df['Lockdown Type'] = 'Full Lockdown'
+        quarantine_cols = ['Province_State', 'Date Enacted', 'Lockdown Type']
+        quarantine_df = quarantine_df[quarantine_cols]
+        quarantine_df_emergency['Lockdown Type'] = 'Emergency Declared'
+        quarantine_df_emergency = quarantine_df_emergency.loc[quarantine_df_emergency.Regions == 'All']
+        quarantine_cols_emergency = ['Province_State', 'State of emergency declared', 'Lockdown Type']
+        quarantine_df_emergency = quarantine_df_emergency[quarantine_cols_emergency]
+        quarantine_df_emergency = quarantine_df_emergency.rename(
+            columns={'State of emergency declared': 'Date Enacted'}
+        )
+        quarantine_df = pd.concat([quarantine_df, quarantine_df_emergency])
+        quarantine_df = quarantine_df.rename(
+            columns={'Date Enacted': 'lockdown_date', 'Lockdown Type': 'lockdown_type'}
+        )
+        return quarantine_df
+
     def _preprocess_lockdown_info(self, df) -> pd.DataFrame:
         quarantine_df = self.quarantine_df.copy()
         quarantine_df[self.x_type] = self.lockdown_type
-        quarantine_df = quarantine_df.dropna()
         quarantine_df = quarantine_df.merge(
             df[[self.groupcol, 'date_of_N']].groupby(self.groupcol).first(),
             on=self.groupcol,
