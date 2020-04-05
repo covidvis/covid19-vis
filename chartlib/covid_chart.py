@@ -51,9 +51,11 @@ class CovidChart(object):
             df = pd.read_csv(df, parse_dates=[xcol], infer_datetime_format=True)
         self._validate_df(df)
 
+        readable_group_name = level
         if isinstance(quarantine_df, str):
             if level.lower() in ['us', 'usa', 'united states']:
                 quarantine_df = self._injest_usa_quarantine_df(quarantine_df)
+                readable_group_name = 'state'
             elif level == 'country':
                 quarantine_df = self._injest_country_quarantine_df(quarantine_df)
             else:
@@ -67,6 +69,7 @@ class CovidChart(object):
         self.spec.detailby = groupcol
         self.spec.colorby = groupcol
         self.spec.facetby = None
+        self.spec.readable_group_name = readable_group_name
         if use_defaults:
             self.set_defaults()
 
@@ -196,6 +199,12 @@ class CovidChart(object):
 
         if self.quarantine_df is not None:
             df = self._preprocess_lockdown_info(df)
+
+        readable_group_name = self.spec.get('readable_group_name', None)
+        if readable_group_name is not None:
+            readable_group_name = self.spec._get_legend_title()
+            df[readable_group_name] = df[self.spec.colorby]
+
         return df
 
     def _make_info_dict(self, qdf):
@@ -311,6 +320,10 @@ class CovidChart(object):
 
     def set_unfocused_opacity(self, opacity: float):
         self.spec.unfocused_opacity = opacity
+        return self
+
+    def set_readable_group_name(self, readable_name: str):
+        self.spec.readable_group_name = readable_name
         return self
 
     def set_colormap(self, colormap: Dict = None, default_color: str = None, **kwargs):

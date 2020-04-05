@@ -82,7 +82,7 @@ class ChartSpec(DotDict):
             yaxis_kwargs['title'] = self.ytitle
         return alt.Y(shorthand, **yaxis_kwargs)
 
-    def _prefer_transient(self, key, default):
+    def _prefer_transient(self, key, default=None):
         transient = self.get(self.TRANSIENT, None)
         if transient is None:
             return self.get(key, default)
@@ -90,12 +90,20 @@ class ChartSpec(DotDict):
             return transient.get(key, self.get(key, default))
 
     @property
+    def _colorby(self):
+        return self._prefer_transient('colorby')
+
+    @property
+    def _detailby(self):
+        return self._prefer_transient('detailby')
+
+    @property
     def _colormap(self):
-        return self._prefer_transient('colormap', None)
+        return self._prefer_transient('colormap')
 
     @property
     def _alt_detail(self):
-        return alt.Detail(f'{self.detailby}:N')
+        return alt.Detail(f'{self._detailby}:N')
 
     @property
     def _alt_color(self):
@@ -107,7 +115,7 @@ class ChartSpec(DotDict):
             extra_color_kwargs['scale'] = dict(
                 domain=domain, range=rng,
             )
-        return alt.Color(f'{self.colorby}:N', **extra_color_kwargs)
+        return alt.Color(f'{self._colorby}:N', **extra_color_kwargs)
 
     @property
     def _yscale(self):
@@ -119,8 +127,8 @@ class ChartSpec(DotDict):
     def _legend_is_active(self):
         conditions = [
             f'{str(self.legend_selection).lower()}',
-            f'isDefined({self.legend}.{self.detailby})',
-            f'(!isDefined({self.click}) || !isDefined({self.click}_{self.detailby}))',
+            f'isDefined({self.legend}.{self._detailby})',
+            f'(!isDefined({self.click}) || !isDefined({self.click}_{self._detailby}))',
         ]
         # TODO (smacke): legend_tuple not defined for facet charts;
         # need a more reliable way to detect if we clicked on a blank area
@@ -130,27 +138,27 @@ class ChartSpec(DotDict):
                 f'!isDefined({self.legend}_tuple.unit)',
             ])
         else:
-            conditions.append(f'isValid({self.legend}_{self.detailby}_legend)')
+            conditions.append(f'isValid({self.legend}_{self._detailby}_legend)')
         return self._ensure_parens(' && '.join(conditions))
 
     def _click_is_active(self):
         return self._ensure_parens(' && '.join([
             f'{str(self.click_selection).lower()}',
-            f'isDefined({self.click}.{self.detailby})',
-            f'isDefined({self.click}_{self.detailby})',
-            f'{self.click}.{self.detailby} != "{self.EMPTY_SELECTION}"'
+            f'isDefined({self.click}.{self._detailby})',
+            f'isDefined({self.click}_{self._detailby})',
+            f'{self.click}.{self._detailby} != "{self.EMPTY_SELECTION}"'
         ]))
 
     def _legend_focused(self):
         return self._ensure_parens(' && '.join([
             f'{self._legend_is_active()}',
-            f'indexof({self.legend}.{self.detailby}, datum.{self.detailby}) >= 0'
+            f'indexof({self.legend}.{self._detailby}, datum.{self._detailby}) >= 0'
         ]))
 
     def _click_focused(self):
         return self._ensure_parens(' && '.join([
             self._click_is_active(),
-            f'{self.click}.{self.detailby} == datum.{self.detailby}'
+            f'{self.click}.{self._detailby} == datum.{self._detailby}'
         ]))
 
     def _in_focus(self):
@@ -212,7 +220,7 @@ class ChartSpec(DotDict):
             opacity=alt.value(1),
             color=alt.value('black')
         ).transform_calculate(
-            tooltip_text=f'datum.{self.detailby} + ": " + datum.y'
+            tooltip_text=f'datum.{self._detailby} + ": " + datum.y'
         ).transform_filter(self._in_focus())
 
     def _make_lockdown_rules_layer(self, base):
@@ -227,7 +235,7 @@ class ChartSpec(DotDict):
             text=alt.condition(cursor, 'lockdown_tooltip_text:N', alt.value(' ')),
             color=alt.value('black')
         ).transform_calculate(
-            lockdown_tooltip_text=f'datum.{self.detailby} + " " + datum.lockdown_type'
+            lockdown_tooltip_text=f'datum.{self._detailby} + " " + datum.lockdown_type'
         ).transform_filter(self._in_focus())
 
     def _make_cursor_selection(self, base):
@@ -295,7 +303,7 @@ class ChartSpec(DotDict):
             opacity=alt.value(1),
             color=alt.value('black')
         ).transform_calculate(
-            extrap_text=f'"Original trend for " + datum.{self.detailby}'
+            extrap_text=f'"Original trend for " + datum.{self._detailby}'
         )
 
     def _populate_transient_colormap(self, df):
@@ -305,7 +313,7 @@ class ChartSpec(DotDict):
         colormap = dict(colormap)
         color_scheme_idx = 0
         default_color = self.get('default_color', None)
-        for group in df[self.colorby].unique():
+        for group in df[self._colorby].unique():
             if group in colormap:
                 continue
             elif default_color is not None:
@@ -317,11 +325,27 @@ class ChartSpec(DotDict):
             color_scheme_idx += 1
         self[self.TRANSIENT]['colormap'] = colormap
 
+    def _get_legend_title(self):
+        readable_group_name = self.get('readable_group_name', None)
+        if readable_group_name is not None and self.get('legend_selection', False):
+            return f'Select_{readable_group_name}'
+        elif readable_group_name is not None:
+            return readable_group_name
+        else:
+            return self.colorby
+
+    def _populate_transient_props(self, df):
+        self._populate_transient_colormap(df)
+        readable_group_name = self.get('readable_group_name', None)
+        if readable_group_name is not None and self.get('legend_selection', False):
+            self[self.TRANSIENT]['colorby'] = self._get_legend_title()
+            self[self.TRANSIENT]['detailby'] = self._get_legend_title()
+
     def compile(self, df):
         self.validate(df)
         self[self.TRANSIENT] = DotDict()
         try:
-            self._populate_transient_colormap(df)
+            self._populate_transient_props(df)
             base = alt.Chart(
                 df,
                 width=self.get('width', self.DEFAULT_WIDTH),
@@ -332,16 +356,16 @@ class ChartSpec(DotDict):
             dropdown_options = [self.EMPTY_SELECTION]
             dropdown_name = " "
             if self.get('click_selection', False):
-                dropdown_options.extend(list(df[self.detailby].unique()))
-                dropdown_name = f'Select {self.detailby}: '
+                dropdown_options.extend(list(df[self._detailby].unique()))
+                dropdown_name = f'Select {self.get("readable_group_name", self.detailby)}: '
             dropdown = alt.binding_select(options=dropdown_options, name=dropdown_name)
             click_selection = alt.selection_single(
-                fields=[self.detailby], on='click', name=self.click, empty='all',
+                fields=[self._detailby], on='click', name=self.click, empty='all',
                 bind=dropdown, clear='dblclick',
             )
 
             legend_selection = alt.selection_multi(
-                fields=[self.detailby], on='click', name=self.legend, empty='all',
+                fields=[self._colorby], on='click', name=self.legend, empty='all',
                 bind='legend', clear='dblclick'
             )
 
