@@ -326,9 +326,21 @@ class CovidChart(object):
         self.spec.readable_group_name = readable_name
         return self
 
-    def set_colormap(self, colormap: Dict = None, default_color: str = None, **kwargs):
+    def set_colormap(
+            self,
+            colormap: Union[str, pd.DataFrame, Dict] = None,
+            default_color: str = None,
+            **kwargs
+    ):
         if colormap is None:
             colormap = {}
+        if isinstance(colormap, str):
+            colormap = pd.read_csv(colormap)
+        if isinstance(colormap, pd.DataFrame):
+            keycol, valcol = colormap.columns
+            colormap = dict(colormap.set_index(keycol)[valcol])
+        if not isinstance(colormap, dict):
+            raise ValueError('expected to have a dictionary by now; something weird happened')
         colormap = dict(colormap)
         colormap.update(kwargs)
         self.spec.colormap = colormap
