@@ -1,6 +1,6 @@
 .PHONY: all
 
-all: charts web deploy
+all: charts web
 
 charts:
 	./scripts/build-charts.py

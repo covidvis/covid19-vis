@@ -32,6 +32,8 @@ Deploying to github pages consists of copying the contents of `website/_site` in
 `./scripts/deploy-web.sh`
 
 
-== End to End ==
+== Makefile for End to End Building and Deploying ==
 
-To execute all build / deploy steps end-to-end, simply type `make`.
+To execute all build steps end-to-end, simply type `make`.
+
+To deploy: `make deploy` (just a wrapper around `scripts/deploy-web.sh`)
