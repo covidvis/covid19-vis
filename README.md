@@ -2,7 +2,7 @@
 
 Building the Charts
 -------------------
-```python
+```
 pip install -r requirements.txt
 ./build-charts.py
 ```
