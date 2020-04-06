@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import sys
+sys.path.append('.')
 
 import pandas as pd
 import yaml

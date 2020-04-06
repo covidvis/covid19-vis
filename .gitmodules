@@ -1,0 +1,6 @@
+[submodule "website"]
+	path = website
+	url = git@github.com:covidvis/website
+[submodule "covidvis.github.io"]
+	path = covidvis.github.io
+	url = git@github.com:covidvis/covidvis.github.io
