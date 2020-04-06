@@ -26,24 +26,25 @@ class ChartSpec(DotDict):
     DEFAULT_POINT_SIZE = 45
     DEFAULT_UNFOCUSED_OPACITY = 0.08
     DEFAULT_AXES_TITLE_FONTSIZE = 16
+    DEFAULT_BACKGROUND_COLOR = '#F2F6F6'
     EMPTY_SELECTION = ''
-    COLOR_SCHEME = [
-        'red', 'blue', 'green', 'purple', 'orange',
-    ] + list(
+    COLOR_SCHEME = list(
         map(
             lambda y: '#' + y,
             filter(
                 lambda x: x != '',
                 [(
-                    "1b9e77d95f027570b3e7298a66a61ee6ab02a6761d666666"
                     "4e79a7f28e2ce1575976b7b259a14fedc949af7aa1ff9da79c755fbab0ab"
                     "1f77b4ff7f0e2ca02cd627289467bd8c564be377c27f7f7fbcbd2217becf"
                     "a6cee31f78b4b2df8a33a02cfb9a99e31a1cfdbf6fff7f00cab2d66a3d9affff99b15928"
                     "7fc97fbeaed4fdc086ffff99386cb0f0027fbf5b17666666"
+                    "1b9e77d95f027570b3e7298a66a61ee6ab02a6761d666666"
                 )[i:i+6] for i in range(0, 1000, 6)]
             )
         )
-    )
+    ) + [
+        'red', 'blue', 'green', 'purple', 'orange',
+    ]
 
     def validate(self, df):
         if 'lines' not in self and 'points' not in self:
@@ -426,6 +427,7 @@ class ChartSpec(DotDict):
                 layered = layered.interactive(bind_x=True, bind_y=True)
             if self.get('title', False):
                 layered.title = self.get('title')
+            layered = layered.configure(background=self.get('background', self.DEFAULT_BACKGROUND_COLOR))
             return layered
         finally:
             del self[self.TRANSIENT]
