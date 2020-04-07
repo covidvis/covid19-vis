@@ -104,13 +104,14 @@ class CovidChart(object):
 
     def _injest_usa_quarantine_df(self, quarantine_csv):
         quarantine_df = pd.read_csv(quarantine_csv)
+        # only show statewide bars for now
+        quarantine_df = quarantine_df.loc[quarantine_df.Regions == 'All']
         quarantine_df_emergency = quarantine_df.copy()
         quarantine_df = quarantine_df.loc[quarantine_df.Type == 'Level 2 Lockdown']
         quarantine_df['Lockdown Type'] = 'Full Lockdown'
         quarantine_cols = ['Province_State', 'Date Enacted', 'Lockdown Type']
         quarantine_df = quarantine_df[quarantine_cols]
         quarantine_df_emergency['Lockdown Type'] = 'Emergency Declared'
-        quarantine_df_emergency = quarantine_df_emergency.loc[quarantine_df_emergency.Regions == 'All']
         quarantine_cols_emergency = ['Province_State', 'State of emergency declared', 'Lockdown Type']
         quarantine_df_emergency = quarantine_df_emergency[quarantine_cols_emergency]
         quarantine_df_emergency = quarantine_df_emergency.rename(

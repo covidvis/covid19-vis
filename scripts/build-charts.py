@@ -52,7 +52,7 @@ def make_jhu_country_chart() -> CovidChart:
 def make_jhu_state_chart() -> CovidChart:
     jhu_df = pd.read_csv('./data/jhu-data.csv')
     # grab us-specific
-    jhu_df = jhu_df[(jhu_df.Country_Region == 'United States') & (jhu_df.Province_State.notnull())]
+    jhu_df = jhu_df[(jhu_df.Country_Region == 'United States') & jhu_df.Province_State.notnull()]
 
     days_since = 20
     chart = CovidChart(
