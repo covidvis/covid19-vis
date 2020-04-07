@@ -89,6 +89,8 @@ class CovidChart(object):
 
     def _injest_country_quarantine_df(self, quarantine_csv):
         quarantine_df = pd.read_csv(quarantine_csv)
+        # rename SK
+        quarantine_df.loc[quarantine_df.Country_Region == 'Korea, South', 'Country_Region'] = 'South Korea'
         quarantine_df = quarantine_df.loc[quarantine_df.Level == 'Enforcement']
         quarantine_df['Lockdown Type'] = quarantine_df.apply(
             lambda x: x['Scope'] + ' ' + x['Type'], axis=1

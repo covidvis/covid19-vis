@@ -10,23 +10,24 @@ from chartlib import CovidChart, DaysSinceNumReached
 
 def make_jhu_country_chart() -> CovidChart:
     jhu_df = pd.read_csv('./data/jhu-data.csv')
-    jhu_df = jhu_df[jhu_df['Province_State'].isnull()]
+    jhu_df = jhu_df[(jhu_df.Province_State.isnull()) & (jhu_df.Country_Region != 'China')]
 
+    days_since = 50
     chart = CovidChart(
         jhu_df,
         groupcol='Country_Region',
-        start_criterion=DaysSinceNumReached(50, 'Confirmed'),
+        start_criterion=DaysSinceNumReached(days_since, 'Confirmed'),
         ycol='Confirmed',
         level='country',
         xcol='Date',
-        top_k_groups=10,
+        top_k_groups=21,  # top 11 - China == top 20
         quarantine_df='./data/quarantine-activity.csv'  # should have a column with same name as `groupcol`
     )
 
     chart = chart.set_ytitle('Num Confirmed Cases (log)')
-    chart = chart.set_xtitle('Days since 50 Confirmed')
+    chart = chart.set_xtitle('Days since {} Confirmed'.format(days_since))
     chart.set_width(600).set_height(400)
-    chart.set_ydomain((100, 200000))
+    chart.set_ydomain((days_since, 200000))
     chart.set_xdomain((0, 40))
     return chart
 
@@ -34,16 +35,17 @@ def make_jhu_country_chart() -> CovidChart:
 def make_jhu_state_chart() -> CovidChart:
     jhu_df = pd.read_csv('./data/jhu-data.csv')
     # grab us-specific
-    jhu_df = jhu_df[(jhu_df['Country_Region'] == 'United States') & (jhu_df['Province_State'].notnull())]
+    jhu_df = jhu_df[(jhu_df.Country_Region == 'United States') & (jhu_df.Province_State.notnull())]
 
+    days_since = 20
     chart = CovidChart(
         jhu_df,
         groupcol='Province_State',
-        start_criterion=DaysSinceNumReached(20, 'Confirmed'),
+        start_criterion=DaysSinceNumReached(days_since, 'Confirmed'),
         ycol='Confirmed',
         level='USA',
         xcol='Date',
-        top_k_groups=10,
+        top_k_groups=20,
         quarantine_df='./data/quarantine-activity-US.csv'  # should have a column with same name as `groupcol`
     )
     chart.set_colormap()
@@ -51,8 +53,8 @@ def make_jhu_state_chart() -> CovidChart:
     chart.set_unfocused_opacity(0.05)
     chart.set_width(600).set_height(400)
     chart = chart.set_ytitle('Num Confirmed Cases (log)')
-    chart = chart.set_xtitle('Days since 20 Confirmed')
-    chart.set_xdomain((0, 30)).set_ydomain((20, 100000))
+    chart = chart.set_xtitle('Days since {} Confirmed'.format(days_since))
+    chart.set_xdomain((0, 30)).set_ydomain((days_since, 100000))
     return chart
 
 

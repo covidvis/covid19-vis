@@ -420,14 +420,14 @@ class ChartSpec(DotDict):
             layered = alt.layer(*layers.values())
             layered = self._maybe_add_facet(layered)
             layered = layered.configure_legend(symbolType='diamond')
-            layered = layered.configure_axis(
-                titleFontSize=self.get('axes_title_fontsize', self.DEFAULT_AXES_TITLE_FONTSIZE)
-            )
             if self.get('interactive', False):
                 layered = layered.interactive(bind_x=True, bind_y=True)
             if self.get('title', False):
                 layered.title = self.get('title')
             layered = layered.configure(background=self.get('background', self.DEFAULT_BACKGROUND_COLOR))
+            layered = layered.configure_axis(
+                titleFontSize=self.get('axes_title_fontsize', self.DEFAULT_AXES_TITLE_FONTSIZE)
+            )
             return layered
         finally:
             del self[self.TRANSIENT]
