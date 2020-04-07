@@ -8,6 +8,21 @@ import yaml
 from chartlib import CovidChart, DaysSinceNumReached
 
 
+def chart_configs():
+    return [
+        {
+            'name': 'jhu_country',
+            'embed_id': 'country_vis',
+            'gen': make_jhu_country_chart,
+        },
+        {
+            'name': 'jhu_state',
+            'embed_id': 'state_vis',
+            'gen': make_jhu_state_chart,
+        }
+    ]
+
+
 def make_jhu_country_chart() -> CovidChart:
     jhu_df = pd.read_csv('./data/jhu-data.csv')
     jhu_df = jhu_df[(jhu_df.Province_State.isnull()) & (jhu_df.Country_Region != 'China')]
@@ -24,6 +39,8 @@ def make_jhu_country_chart() -> CovidChart:
         quarantine_df='./data/quarantine-activity.csv'  # should have a column with same name as `groupcol`
     )
 
+    # chart.set_colormap()
+    chart.set_unfocused_opacity(0.05)
     chart = chart.set_ytitle('Num Confirmed Cases (log)')
     chart = chart.set_xtitle('Days since {} Confirmed'.format(days_since))
     chart.set_width(600).set_height(400)
@@ -48,49 +65,53 @@ def make_jhu_state_chart() -> CovidChart:
         top_k_groups=20,
         quarantine_df='./data/quarantine-activity-US.csv'  # should have a column with same name as `groupcol`
     )
-    chart.set_colormap()
-    chart.set_axes_title_fontsize(16)
+    # chart.set_colormap()
     chart.set_unfocused_opacity(0.05)
-    chart.set_width(600).set_height(400)
     chart = chart.set_ytitle('Num Confirmed Cases (log)')
     chart = chart.set_xtitle('Days since {} Confirmed'.format(days_since))
+    chart.set_width(600).set_height(400)
     chart.set_xdomain((0, 30)).set_ydomain((days_since, 100000))
     return chart
 
 
-def export_charts():
-    jhu_country = make_jhu_country_chart()
-    jhu_country.export('./website/scripts/jhu_country.js', 'jhu_country')
-    jhu_state = make_jhu_state_chart()
-    jhu_state.export('./website/scripts/jhu_state.js', 'jhu_state')
+def export_charts(configs):
+    for config in configs:
+        name = config['name']
+        chart = config['gen']()
+        chart.export(f'./website/scripts/{name}.js', f'{name}')
 
 
-def make_vega_embed_script():
+def make_vega_embed_script(configs):
     script = """
-(function(vegaEmbed) {
-  var embedOpt = {"mode": "vega-lite"};
-  vegaEmbed("#country_vis", jhu_country, embedOpt)
-  vegaEmbed("#state_vis", jhu_state, embedOpt)
-})(vegaEmbed);
+(function(vegaEmbed) {{
+  var embedOpt = {{"mode": "vega-lite"}};
+{embed_calls}
+}})(vegaEmbed);
     """
+    embed_calls = []
+    for config in configs:
+        embed_calls.append(f'  vegaEmbed("#{config["embed_id"]}", {config["name"]}, embedOpt);')
+    embed_calls = '\n'.join(embed_calls)
+    script = script.format(embed_calls=embed_calls)
     with open('./website/scripts/vega_embed.js', 'w') as f:
         f.write(script)
 
 
-def make_jekyll_config(chart_scripts):
+def make_jekyll_config(configs):
     with open('./website/_config.in.yml', 'r') as f:
-        config = yaml.load(f.read(), yaml.SafeLoader)
-    for script in chart_scripts:
-        config['head_scripts'].append(f'scripts/{script}')
-    config['footer_scripts'] = ['scripts/vega_embed.js']
+        jekyll_config = yaml.load(f.read(), yaml.SafeLoader)
+    for config in configs:
+        jekyll_config['head_scripts'].append(f'scripts/{config["name"]}.js')
+    jekyll_config['footer_scripts'] = ['scripts/vega_embed.js']
     with open('./website/_config.yml', 'w') as f:
-        yaml.dump(config, f)
+        yaml.dump(jekyll_config, f)
 
 
 def main():
-    export_charts()
-    make_vega_embed_script()
-    make_jekyll_config(['jhu_country.js', 'jhu_state.js'])
+    configs = chart_configs()
+    export_charts(configs)
+    make_vega_embed_script(configs)
+    make_jekyll_config(configs)
 
 
 if __name__ == '__main__':
