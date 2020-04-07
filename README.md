@@ -12,7 +12,7 @@ Now the charts have been added to the website. (Try cd'ing into `website` and do
 Building the Website
 --------------------
 
-Building the website requires ruby and bundler. To grab website dependencies, do the following from the `website` directory:
+Make sure that you have Ruby version >= 2.4. Building the website requires ruby and bundler. To grab website dependencies, do the following from the `website` directory:
 
 ```
 gem install bundler
