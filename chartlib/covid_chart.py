@@ -176,6 +176,13 @@ class CovidChart(object):
         new_rows[self.X] = new_rows.lockdown_x
         df = df.append(new_rows, ignore_index=True, sort=False)
 
+        # make sure the new rows have lockdown_x and lockdown_y
+        quarantine_df = quarantine_df.merge(
+            df[[self.groupcol, self.lockdown_x, self.lockdown_y]].groupby(self.groupcol).first(),
+            on=self.groupcol,
+            how='inner'
+        )
+
         # now add lockdown info as new rows in our df
         df = df.append(quarantine_df, ignore_index=True, sort=False)
         return df
