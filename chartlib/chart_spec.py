@@ -239,7 +239,7 @@ class ChartSpec(DotDict):
         if self.get('only_show_lockdown_tooltip_on_hover', False):
             text = alt.condition(cursor, text, alt.value(' ')),
         return rules.mark_text(align='left', dx=15, dy=0).encode(
-            y='lockdown_y:Q',
+            y=self._get_y('y:Q'),
             text=text,
             color=alt.value('black')
         ).transform_calculate(

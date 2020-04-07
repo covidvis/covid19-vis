@@ -102,6 +102,9 @@ class CovidChart(object):
         quarantine_df = quarantine_df.rename(
             columns={'Date Enacted': 'lockdown_date', 'Lockdown Type': 'lockdown_type'}
         )
+        quarantine_df.loc[
+            quarantine_df.lockdown_type == 'Partial Internal Lockdown', 'lockdown_type'
+        ] = 'Region-Specific Countermeasures Begin'
         return quarantine_df
 
     def _injest_usa_quarantine_df(self, quarantine_csv):
@@ -176,11 +179,13 @@ class CovidChart(object):
         new_rows[self.X] = new_rows.lockdown_x
         df = df.append(new_rows, ignore_index=True, sort=False)
 
-        # make sure the new rows have lockdown_x and lockdown_y
+        # make sure the new rows have Y, lockdown_x, and lockdown_y
         quarantine_df = quarantine_df.merge(
-            df[[self.groupcol, self.lockdown_x, self.lockdown_y]].groupby(self.groupcol).first(),
-            on=self.groupcol,
-            how='inner'
+            df[[
+                self.groupcol, self.X, self.Y, self.lockdown_x, self.lockdown_y
+            ]].groupby([self.groupcol, self.X]).first(),
+            on=[self.groupcol, self.X],
+            how='left'
         )
 
         # now add lockdown info as new rows in our df
