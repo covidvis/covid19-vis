@@ -4,7 +4,7 @@ Building the Charts
 -------------------
 ```
 pip install -r requirements.txt
-./build-charts.py
+./scripts/build-charts.py
 ```
 
 Now the charts have been added to the website. (Try cd'ing into `website` and doing `git status` after making a change to the charts.)
