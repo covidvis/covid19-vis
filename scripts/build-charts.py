@@ -16,10 +16,20 @@ def chart_configs():
             'gen': make_jhu_country_chart,
         },
         {
+            'name': 'jhu_country_death',
+            'embed_id': 'country_death_vis',
+            'gen': make_jhu_country_death_chart,
+        },
+        {
             'name': 'jhu_state',
             'embed_id': 'state_vis',
             'gen': make_jhu_state_chart,
-        }
+        },
+        {
+            'name': 'jhu_state_death',
+            'embed_id': 'state_death_vis',
+            'gen': make_jhu_state_death_chart,
+        },
     ]
 
 
@@ -35,7 +45,7 @@ def make_jhu_country_chart() -> CovidChart:
         ycol='Confirmed',
         level='country',
         xcol='Date',
-        top_k_groups=21,  # top 11 - China == top 20
+        top_k_groups=20,
         quarantine_df='./data/quarantine-activity.csv'  # should have a column with same name as `groupcol`
     )
 
@@ -46,6 +56,52 @@ def make_jhu_country_chart() -> CovidChart:
     chart.set_width(600).set_height(400)
     chart.set_ydomain((days_since, 200000))
     chart.set_xdomain((0, 40))
+    return chart
+
+
+def make_jhu_country_death_chart() -> CovidChart:
+    jhu_df = pd.read_csv("./data/jhu-data.csv")
+    jhu_df = jhu_df.loc[(jhu_df.Country_Region != 'China') & jhu_df.Province_State.isnull()]
+
+    chart = CovidChart(
+        jhu_df,
+        groupcol='Country_Region',
+        start_criterion=DaysSinceNumReached(10, 'Deaths'),
+        ycol='Deaths',
+        xcol='Date',
+        level='country',
+        top_k_groups=20,
+        quarantine_df='./data/quarantine-activity.csv'  # should have a column with same name as `groupcol`
+    )
+
+    chart = chart.set_ytitle('Number of Deaths (log)')
+    chart = chart.set_xtitle('Days since 10 Deaths')
+    chart.set_width(600).set_height(400)
+    chart.set_ydomain((10, 10000))
+    chart.set_xdomain((0, 35)).compile()
+    return chart
+
+
+def make_jhu_state_death_chart() -> CovidChart:
+    jhu_df = pd.read_csv('./data/jhu-data.csv')
+    jhu_df = jhu_df.loc[(jhu_df.Country_Region == 'United States') & jhu_df.Province_State.notnull()]
+
+    chart = CovidChart(
+        jhu_df,
+        groupcol='Province_State',
+        start_criterion=DaysSinceNumReached(10, 'Deaths'),
+        ycol='Deaths',
+        xcol='Date',
+        level='usa',
+        top_k_groups=20,
+        quarantine_df='./data/quarantine-activity-us.csv' # should have a column with same name as `groupcol`
+    )
+
+    chart = chart.set_ytitle('Number of Deaths (log)')
+    chart = chart.set_xtitle('Days since 10 Deaths')
+    chart.set_width(600).set_height(400)
+    chart.set_ydomain((10, 1000))
+    chart.set_xdomain((0, 25)).compile()
     return chart
 
 
