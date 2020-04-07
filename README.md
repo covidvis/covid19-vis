@@ -19,15 +19,15 @@ gem install bundler
 bundle install
 ```
 
-Now it should be possible to preview changes using jekyll:
+Now it should be possible to preview changes using jekyll (from `website` subdirectory):
 
 `bundle exec jekyll serve`
 
-To build without previewing execute the following:
+To build without previewing execute the following (again, from `website` subdirectory):
 
 `bundle exec jekyll build`
 
-Or simply run the convenience script:
+Or simply run the convenience script (from the root directory):
 
 `./scripts/build-web.sh`
 
