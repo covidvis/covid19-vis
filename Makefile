@@ -8,5 +8,8 @@ charts:
 web:
 	./scripts/build-web.sh
 
+serve:
+	./scripts/serve-web.sh
+
 deploy:
 	./scripts/deploy-web.sh
