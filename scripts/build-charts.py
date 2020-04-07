@@ -51,7 +51,7 @@ def make_jhu_country_chart() -> CovidChart:
 
     # chart.set_colormap()
     chart.set_unfocused_opacity(0.05)
-    chart = chart.set_ytitle('Num Confirmed Cases (log)')
+    chart = chart.set_ytitle('Number of Confirmed Cases (log)')
     chart = chart.set_xtitle('Days since {} Confirmed'.format(days_since))
     chart.set_width(600).set_height(400)
     chart.set_ydomain((days_since, 200000))
@@ -123,12 +123,37 @@ def make_jhu_state_chart() -> CovidChart:
     )
     # chart.set_colormap()
     chart.set_unfocused_opacity(0.05)
-    chart = chart.set_ytitle('Num Confirmed Cases (log)')
+    chart = chart.set_ytitle('Number of Confirmed Cases (log)')
     chart = chart.set_xtitle('Days since {} Confirmed'.format(days_since))
     chart.set_width(600).set_height(400)
     chart.set_xdomain((0, 30)).set_ydomain((days_since, 100000))
     return chart
 
+def make_jhu_selected_state_chart() -> CovidChart:
+    jhu_df = pd.read_csv('./data/jhu-data.csv')
+    # grab us-specific
+    jhu_df = jhu_df[(jhu_df.Country_Region == 'United States') & jhu_df.Province_State.notnull()]
+    
+    # jhu_df[(nyt_df["state"]=="Illinois")|(nyt_df["state"]=="New York")| (nyt_df["state"]=="New Jersey")| (nyt_df["state"]=="Washington")| (nyt_df["state"]=="Michigan")]
+    days_since = 20
+    chart = CovidChart(
+        jhu_df,
+        groupcol='Province_State',
+        start_criterion=DaysSinceNumReached(days_since, 'Confirmed'),
+        ycol='Confirmed',
+        level='USA',
+        xcol='Date',
+        top_k_groups=20,
+        quarantine_df='./data/quarantine-activity-US.csv'  # should have a column with same name as `groupcol`
+    )
+    # chart.set_colormap()
+    chart.set_unfocused_opacity(0.05)
+    chart = chart.set_ytitle('Number of Confirmed Cases (log)')
+    chart = chart.set_xtitle('Days since {} Confirmed'.format(days_since))
+    chart.set_width(250).set_height(400)
+    chart.set_xdomain((0, 35)).set_ydomain((days_since, 100000))
+    chart.set_title("States With Significant Rate Decreases")
+    return chart
 
 def export_charts(configs):
     for config in configs:
