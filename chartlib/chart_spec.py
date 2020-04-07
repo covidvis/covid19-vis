@@ -237,7 +237,7 @@ class ChartSpec(DotDict):
             text=alt.condition(cursor, 'lockdown_tooltip_text:N', alt.value(' ')),
             color=alt.value('black')
         ).transform_calculate(
-            lockdown_tooltip_text=f'datum.{self._detailby} + " " + datum.lockdown_type'
+            lockdown_tooltip_text=f'datum.{self._detailby} + " " + datum.lockdown_type+ " " +"("+ datum.lockdown_date + ")"'
         ).transform_filter(self._in_focus())
 
     def _make_cursor_selection(self, base):
