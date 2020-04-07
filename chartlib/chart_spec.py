@@ -15,6 +15,7 @@ class ChartSpec(DotDict):
     lockdown_x = 'lockdown_x'
     X = 'x'
     Y = 'y'
+    xmax = 'xmax'
     x_type = 'x_type'
     y_type = 'y_type'
     normal_type = 'normal'
@@ -223,6 +224,7 @@ class ChartSpec(DotDict):
             color=alt.value('black')
         ).transform_calculate(
             tooltip_text=f'datum.{self._detailby} + ": " + datum.y'
+            # tooltip_text='datum.y'
         ).transform_filter(self._in_focus())
 
     def _make_lockdown_rules_layer(self, base):
@@ -233,8 +235,11 @@ class ChartSpec(DotDict):
         ).transform_filter(self._in_focus())
 
     def _make_lockdown_tooltips_layer(self, rules, cursor):
-        return rules.mark_text(align='left', dx=5, dy=-200).encode(
-            text=alt.condition(cursor, 'lockdown_tooltip_text:N', alt.value(' ')),
+        text = 'lockdown_tooltip_text:N'
+        if self.get('only_show_lockdown_tooltip_on_hover', False):
+            text = alt.condition(cursor, text, alt.value(' ')),
+        return rules.mark_text(align='left', dx=5, dy=0).encode(
+            text=text,
             color=alt.value('black')
         ).transform_calculate(
             lockdown_tooltip_text=f'datum.{self._detailby} + " " + datum.lockdown_type+ " " +"("+ datum.lockdown_date + ")"'
@@ -247,27 +252,27 @@ class ChartSpec(DotDict):
             x='x:Q', opacity=alt.value(0),
         ).add_selection(cursor)
 
-    def _collect_tooltip_layers(self, layers, base, nearest):
+    def _collect_tooltip_layers(self, layers, base, cursor):
         if not self.get('has_tooltips', False):
             return
         if self.get('tooltip_points', False):
             layers['tooltip_points'] = layers['points'].mark_point(filled=True).encode(
-                opacity=alt.condition(nearest, alt.value(1), alt.value(0))
+                opacity=alt.condition(cursor, alt.value(1), alt.value(0))
             ).transform_filter(self._in_focus())
         if self.get('tooltip_text', False):
-            layers['tooltip_text'] = self._make_tooltip_text_layer(layers['points'], nearest)
+            layers['tooltip_text'] = self._make_tooltip_text_layer(layers['points'], cursor)
         if self.get('tooltip_rules'):
             layers['tooltip_rules'] = base.mark_rule(
                 color='gray'
             ).encode(
                 x='x:Q'
             ).transform_filter(
-                nearest
+                cursor
             ).transform_filter(self._someone_has_focus())
         if self.get('lockdown_rules', False):
             layers['lockdown_rules'] = self._make_lockdown_rules_layer(base)
             layers['lockdown_tooltips'] = self._make_lockdown_tooltips_layer(
-                layers['lockdown_rules'], nearest
+                layers['lockdown_rules'], cursor
             )
 
     def _make_lockdown_extrapolation_layer(self, base):
@@ -299,13 +304,25 @@ class ChartSpec(DotDict):
         ret = ret.transform_filter(self._in_focus())
         return ret
 
-    def _make_extrapolation_tooltip_layer(self, extrap, nearest):
+    def _make_extrapolation_tooltip_layer(self, extrap, cursor):
+        text = 'extrap_text:N'
+        x, y = 'x', 'model_y'
+        no_max_template = '{}:Q'
+        max_template = 'max({}):Q'
+        if self.get('only_show_extrapolation_tooltip_on_hover', False):
+            text = alt.condition(cursor, text, alt.value(' '))
+            x, y = no_max_template.format(x), no_max_template.format(y)
+        else:
+            x, y = max_template.format(x), max_template.format(y)
         return extrap.mark_text(align='left', dx=5, dy=-20).encode(
-            text=alt.condition(nearest, 'extrap_text:N', alt.value(' ')),
+            x=self._get_x(x),
+            y=self._get_y(y),
+            text=text,
             opacity=alt.value(1),
             color=alt.value('black')
         ).transform_calculate(
-            extrap_text=f'"Original trend for " + datum.{self._detailby}'
+            #extrap_text=f'"Original trend for " + datum.{self._detailby}'
+            extrap_text='"Original trend"'
         )
 
     def _populate_transient_colormap(self, df):

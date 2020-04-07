@@ -21,6 +21,7 @@ class CovidChart(object):
     Y = 'y'
     lockdown_x = 'lockdown_x'
     lockdown_y = 'lockdown_y'
+    xmax = 'xmax'
     x_type = 'x_type'
     y_type = 'y_type'
     normal_type = 'normal'
@@ -92,6 +93,7 @@ class CovidChart(object):
         # rename SK
         quarantine_df.loc[quarantine_df.Country_Region == 'Korea, South', 'Country_Region'] = 'South Korea'
         quarantine_df = quarantine_df.loc[quarantine_df.Level == 'Enforcement']
+        quarantine_df = quarantine_df.loc[quarantine_df.Type != 'Border Control']
         quarantine_df['Lockdown Type'] = quarantine_df.apply(
             lambda x: x['Scope'] + ' ' + x['Type'], axis=1
         )
@@ -107,7 +109,7 @@ class CovidChart(object):
         # only show statewide bars for now
         quarantine_df = quarantine_df.loc[quarantine_df.Regions == 'All']
         quarantine_df_emergency = quarantine_df.copy()
-        quarantine_df = quarantine_df.loc[quarantine_df.Type == 'Level 2 Lockdown']
+        quarantine_df = quarantine_df.loc[(quarantine_df.Type == 'Level 2 Lockdown') | (quarantine_df.Type == 'Level 1 Lockdown')]
         quarantine_df['Lockdown Type'] = 'Full Lockdown'
         quarantine_cols = ['Province_State', 'Date Enacted', 'Lockdown Type']
         quarantine_df = quarantine_df[quarantine_cols]
@@ -127,7 +129,7 @@ class CovidChart(object):
         quarantine_df = self.quarantine_df.copy()
         quarantine_df[self.x_type] = self.lockdown_type
         quarantine_df = quarantine_df.merge(
-            df[[self.groupcol, 'date_of_N']].groupby(self.groupcol).first(),
+            df[[self.groupcol, 'date_of_N', self.xmax]].groupby(self.groupcol).first(),
             on=self.groupcol,
             how='inner'
         )
@@ -135,12 +137,14 @@ class CovidChart(object):
             lambda x: days_between(x['date_of_N'], x['lockdown_date']), axis=1
         )
         del quarantine_df['date_of_N']
+        if self.spec.get('filter_lockdown_rules_beyond_xmax', True):
+            quarantine_df = quarantine_df.loc[quarantine_df.x <= quarantine_df.xmax]
 
         # only retain lockdown events that appear in the chart domain
         quarantine_df = quarantine_df.loc[quarantine_df.x.between(*self.spec.xdomain, inclusive=False)]
 
         # for trends, use earliest lockdown that appears... eventually we will want to specify this somehow
-        trend_df = quarantine_df.loc[quarantine_df.groupby(self.groupcol).x.idxmin()]
+        trend_df = quarantine_df.loc[quarantine_df.groupby(self.groupcol).x.idxmax()]
         df = df.merge(
             trend_df.rename(columns={self.X: self.lockdown_x})[[self.groupcol, self.lockdown_x]],
             how='left',
@@ -199,6 +203,14 @@ class CovidChart(object):
         if 'ydomain' in self.spec:
             ymin, ymax = self.spec.ydomain[0], self.spec.ydomain[1]
             df = df.loc[(df.y >= ymin) & (df.y <= ymax)]
+
+        # populate each group with max x value appearing in domain
+        xmax = df.loc[df.groupby(self.groupcol).x.idxmax()]
+        df = df.merge(
+            xmax.rename(columns={self.X: self.xmax})[[self.groupcol, self.xmax]],
+            how='left',
+            on=self.groupcol
+        )
 
         if self.quarantine_df is not None:
             df = self._preprocess_lockdown_info(df)
@@ -359,6 +371,10 @@ class CovidChart(object):
         self.spec.background = color
         return self
 
+    def set_extrap_clip_to_ydomain(self, clip=True):
+        self.spec.extrap_clip_to_ydomain = clip
+        return self
+
     def set_defaults(self):
         self.spec.detailby = self.groupcol
         self.spec.colorby = self.groupcol
@@ -370,6 +386,7 @@ class CovidChart(object):
         ).set_legend_selection(
         ).add_all_tooltips(
         ).add_lockdown_extrapolation(
+        ).set_extrap_clip_to_ydomain(
         ).set_interactive(False).set_width(
             self.spec.DEFAULT_WIDTH
         ).set_height(
