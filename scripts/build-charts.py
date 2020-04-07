@@ -90,7 +90,9 @@ def make_vega_embed_script(configs):
     """
     embed_calls = []
     for config in configs:
-        embed_calls.append(f'  vegaEmbed("#{config["embed_id"]}", {config["name"]}, embedOpt);')
+        embed_calls.append(
+            f'  vegaEmbed("#{config.get("embed_id", config["name"])}", {config["name"]}, embedOpt);'
+        )
     embed_calls = '\n'.join(embed_calls)
     script = script.format(embed_calls=embed_calls)
     with open('./website/scripts/vega_embed.js', 'w') as f:
