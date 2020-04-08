@@ -5,5 +5,6 @@ mv website/_site/* covidvis.github.io
 pushd covidvis.github.io
 git add .
 git commit -m "deploy"
-git push
+#git push
+git push origin HEAD:master
 popd
