@@ -186,7 +186,6 @@ def make_jekyll_config(configs):
         jekyll_config = yaml.load(f.read(), yaml.SafeLoader)
     for config in configs:
         jekyll_config['head_scripts'].append(f'scripts/{config["name"]}.js')
-    jekyll_config['footer_scripts'] = ['scripts/vega_embed.js']
     with open('./website/_config.yml', 'w') as f:
         yaml.dump(jekyll_config, f)
 
