@@ -100,7 +100,7 @@ def make_jhu_state_death_chart() -> CovidChart:
     chart = chart.set_ytitle('Number of Deaths (log)')
     chart = chart.set_xtitle('Days since 10 Deaths')
     chart.set_width(600).set_height(400)
-    chart.set_ydomain((10, 1000))
+    chart.set_ydomain((10, 10000))
     chart.set_xdomain((0, 25)).compile()
     return chart
 
