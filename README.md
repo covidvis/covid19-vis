@@ -46,6 +46,9 @@ To execute all build steps end-to-end, simply type `make`.
 
 To deploy: `make deploy` (just a wrapper around `scripts/deploy-web.sh`)
 
+* NOTE: the deploy script only pushes the built website. To save your edits,
+  you still need to `cd` into `website` and commit / push there.
+
 
 Editing the Website
 -------------------
