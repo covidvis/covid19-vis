@@ -52,4 +52,6 @@ To deploy: `make deploy` (just a wrapper around `scripts/deploy-web.sh`)
 
 Editing the Website
 -------------------
-`website/index.markdown` contains the actual content. `website/assets/css/main.scss` contains styling.
+`website/index.markdown` contains the actual content.
+`website/assets/css/main.scss` contains styling.
+Edit `website/_includes/head.html` for anything that needs to go between `<head>` and `</head>` tags.
