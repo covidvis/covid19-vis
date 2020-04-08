@@ -1,0 +1,119 @@
+I"�#<h2 id="about">About</h2>
+<p>The rapid spread of SARS-CoV-2 has led many countries and regions to enact various interventions, such as social
+distancing, school closures, and border control, in order to mitigate the growth of infection rates. Understanding the effects
+of these policies is particularly important since every intervention strategy comes with its side effects.
+We wanted to understand the impact of strategies and their combinations on the disease spread.
+After collecting data at the country and state levels for various types of interventions, we overlaid
+them on the disease growth curves, shown below.</p>
+
+<div class="tabs">
+
+    <div class="tab">
+        <input type="radio" id="tab-1" name="tab-group-1" checked="" />
+        <label for="tab-1">World: Cases</label>
+
+        <div class="tab-content">
+            <h2 class="centered">Country Trends</h2>
+            <div id="country_vis"></div>
+        </div>
+    </div>
+    
+    <div class="tab">
+        <input type="radio" id="tab-2" name="tab-group-1" />
+        <label for="tab-2">World: Deaths</label>
+
+        <div class="tab-content">
+            <h2 class="centered">Country Trends</h2>
+            <div id="country_death_vis"></div>
+        </div>
+    </div>
+
+    <div class="tab">
+        <input type="radio" id="tab-3" name="tab-group-1" />
+        <label for="tab-3">USA: Cases</label>
+
+        <div class="tab-content">
+            <h2 class="centered">State Trends</h2>
+            <div id="state_vis"></div>
+        </div>
+    </div>
+
+    <div class="tab">
+        <input type="radio" id="tab-4" name="tab-group-1" />
+        <label for="tab-4">USA: Deaths</label>
+
+        <div class="tab-content">
+            <h2 class="centered">State Trends</h2>
+            <div id="state_death_vis"></div>
+        </div>
+    </div>
+
+</div>
+<p>(<b>Disclaimer</b>: There is danger in
+extrapolating too much from limited historical data, especially since many of the case numbers are subjected to
+other confounds, such as the amount and availability of tests. We will be keeping the dashboard up-to-date with
+the latest data to see how these trends unfold.)</p>
+
+<h2 id="lockdown_section">Effect of lockdown</h2>
+<p>
+    First, we plot the log of the number confirmed cases across the top ten countries with the highest number of cases. We
+    overlaid SARS-CoV-2 trends with various countermeasures taken by governing entities. We invite the reader to reveal
+    such measures in the chart by clicking the legend, the dropdown below the chart, or the chart itself.
+</p>
+
+<p>
+    A lockdown can be a full lockdown in that there is a nation-wide declaration of a lockdown.
+    On the other hand, a partial lockdown means that some but not all
+    regions within the country that have declared a lockdown, such as in case of the United States. We also plot a
+    projection line for the original trajectory of the trend before the lockdown date. The projection extrapolates the
+    growth curve based on the slope computed up until the lockdown date. This projection is based on the simple
+    assumption that the growth rate stays fixed throughout the entire period of time, which is not always a valid
+    assumption for a number of reasons. For example, as the number of infected individuals increases, the
+    <a href="https://www.washingtonpost.com/graphics/2020/world/corona-simulator/">
+    growth will likely slow
+    </a>
+    due to the growing number of recovered people with immunity. Nevertheless, this serves as one comparison point that
+    we can use to understand the effects of these interventions in slowing the infection rates.
+</p>
+
+<h2 id="team">Team</h2>
+<p>Covidvis is a collaborative effort across epidemiology, public health, and visualization researchers at UC Berkeley (<a href="https://eecs.berkeley.edu/">EECS</a>, <a href="https://www.ischool.berkeley.edu/">School of Information</a>, and <a href="https://publichealth.berkeley.edu/">School of Public Health</a>), University of Illinois (<a href="https://www.cs.illinois.edu/">Computer Science</a>), and Georgia Tech (<a href="https://cse.gatech.edu/">Computational Science and Engineering</a>). 
+From the visualization side, the team includes <a href="http://dorisjunglinlee.com/">Doris Jung-Lin Lee</a> (UC Berkeley School of Information); <a href="https://smacke.net/">Stephen Macke</a> (University of Illinois Computer Science and UC Berkeley EECS); <a href="https://tichung.com/">Ti-Chung Cheng</a>, <a href="https://www.linkedin.com/in/tanawattanawaroon/">Tana Wattanawaroon</a>, and Pingjing Yang (University of Illinois Computer Science); and <a href="https://people.eecs.berkeley.edu/~adityagp/">Aditya Parameswaran</a> (UC Berkeley School of Information and EECS).
+From the public health and epidemiology side, the team includes <a href="https://publichealth.berkeley.edu/people/ziad-obermeyer/">Ziad Obermeyer</a> (UC Berkeley School of Public Health) and <a href="http://www.cc.gatech.edu/~badityap">B Aditya Prakash</a> (Georgia Tech Computational Science and Engineering).</p>
+
+<h2 id="acknowledgments">Acknowledgments</h2>
+<p>We draw on data regarding COVID-19 cases and deaths from <a href="https://coronavirus.jhu.edu/data">JHU Coronavirus Resource Center</a> as well as the <a href="https://github.com/nytimes/covid-19-data">New York Times US dataset</a>.  We draw on data regarding national and regional interventions from <a href="https://en.wikipedia.org/wiki/National_responses_to_the_2019%E2%80%9320_coronavirus_pandemic">Wikpedia</a> as well as the <a href="https://github.com/nytimes/covid-19-data">New York Times</a>. 
+There are many visualizations of COVID-19 growth curves online that we draw on for inspiration. We are fans of visualizations from <a href="https://www.ft.com/john-burn-murdoch">John Burn-Murdoch, Financial Times</a>, such as <a href="https://www.ft.com/coronavirus-latest">this one</a>, as well as the <a href="https://www.nytimes.com/news-event/coronavirus">New York Times</a>, such as <a href="https://www.nytimes.com/interactive/2020/04/06/us/coronavirus-deaths-united-states.html">this</a>, <a href="https://www.nytimes.com/interactive/2020/world/coronavirus-maps.html">this</a>, <a href="https://www.nytimes.com/interactive/2020/04/03/upshot/coronavirus-metro-area-tracker.html">this</a>, and <a href="https://www.nytimes.com/interactive/2020/us/coronavirus-stay-at-home-order.html">this</a>. We drew on data preprocessing scripts from <a href="https://waf.cs.illinois.edu/">Wade Fagen</a>’s excellent <a href="http://91-divoc.com/">“Flip the script on COVID-19” dashboard</a>. 
+Our visualization dashboard employs many popular open-source packages, including
+<a href="https://altair-viz.github.io/">Altair</a> and <a href="https://vega.github.io/vega-lite/">Vega-Lite</a>, for visualization,
+<a href="https://pandas.pydata.org/">Pandas</a> for data processing, and <a href="https://jupyter.org/">Jupyter</a> for sharing code and visualizations. 
+We furthermore build on the preprocessing script by
+<a href="https://github.com/wadefagen/91-DIVOC/blob/master/pages/covid-visualization/processData.py">Wade Fagen</a>
+for this work.</p>
+
+<h2 id="faqs">FAQs</h2>
+<ul>
+  <li><em>Why build yet another COVID-19 visualization?</em></li>
+</ul>
+
+<p>While there are many COVID-19 visualization dashboards, including those that employ helpful log-linear extrapolation to understand the trends in various regions, we haven’t found any dashboards that try to visualize the overlaid visual impact of various intervention measures, apart from anecdotal reports of the <a href="https://www.nytimes.com/article/flatten-curve-coronavirus.html">curve being flattened</a> thanks to interventions. If there are any visualization dashboards that we should be aware of and can link to, please share them with us at <a href="mailto:covidvis@berkeley.edu">covidvis@berkeley.edu</a>.</p>
+
+<ul>
+  <li><em>What’s next for the project?</em></li>
+</ul>
+
+<p>The dashboards above simply scratch the surface of what can be and what needs to be done for this project. Apart from keeping our dashboards up-to-date on a regular basis, we’re in the process of collecting, studying, and visualizing the impact of fine-grained interventions (specifically, the impact of various combinations of interventions, such as school closures, banning of gatherings, non-essential business closures, and so on). Beyond Wikipedia, we are aware of other data-gathering efforts on this front, such as those from <a href="https://www.keystonestrategy.com/coronavirus-covid19-intervention-dataset-model/">Keystone</a> and <a href="https://socialdistancing.stanford.edu/">Stanford</a>. We hope to leverage these datasets as well as others we manually collect to perform these analyses.</p>
+
+<ul>
+  <li><em>How can we reproduce the charts above?</em></li>
+</ul>
+
+<p>Our Jupyter notebooks and processing scripts are online on <a href="https://github.com/covidvis/covid19-vis">GitHub</a>. We also plan to make our intervention data available soon.</p>
+
+<ul>
+  <li><em>How can I contribute?</em></li>
+</ul>
+
+<p>Please write to us at <a href="mailto:covidvis@berkeley.edu">covidvis@berkeley.edu</a></p>
+
+:ET
