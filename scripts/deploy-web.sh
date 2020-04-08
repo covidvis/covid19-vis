@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
-rm -r covidvis.github.io/*
-mv website/_site/* covidvis.github.io
 pushd covidvis.github.io
+git pull
+rm -r *
+mv ../website/_site/* .
 git add .
 git commit -m "deploy"
-#git push
 git push origin HEAD:master
 popd
