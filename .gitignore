@@ -2,5 +2,6 @@
 .jekyll-cache/
 .DS_Store
 covidvis.github.io/
+covidvis.github.io
 *.pyc
 *.js
