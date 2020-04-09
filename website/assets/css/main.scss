@@ -1,0 +1,154 @@
+---
+# Only the main Sass file needs front matter (the dashes are enough)
+---
+
+@charset "utf-8";
+
+@import "minimal-mistakes/skins/{{ site.minimal_mistakes_skin | default: 'default' }}"; // skin
+@import "minimal-mistakes"; // main partials
+
+// your styles here
+
+body {
+    //color: #40514e;
+    font-family: 'Khula', sans-serif, -apple-system,BlinkMacSystemFont,"Roboto","Segoe UI","Helvetica Neue","Lucida Grande",Arial,sans-serif;
+    line-height: 1.5;
+    background-color: rgb(256, 256, 256);
+}
+
+
+html {
+    background-color: rgb(256, 256, 256);
+}
+
+.page__outer {
+    background-color: rgb(256, 256, 256);
+}
+
+.page__inner-wrap {
+    background-color: rgb(256, 256, 256);
+}
+
+.page__meta {
+    background-color: rgb(256, 256, 256);
+}
+
+
+main {
+    background-color: rgb(256, 256, 256);
+}
+
+h2 {
+    font-size: 1.25em;
+    font-family: 'Khula', sans-serif, -apple-system,BlinkMacSystemFont,"Roboto","Segoe UI","Helvetica Neue","Lucida Grande",Arial,sans-serif;
+}
+
+.masthead__menu {
+    font-family: 'Khula', sans-serif, -apple-system,BlinkMacSystemFont,"Roboto","Segoe UI","Helvetica Neue","Lucida Grande",Arial,sans-serif;
+}
+
+footer {
+    font-family: 'Khula', sans-serif, -apple-system,BlinkMacSystemFont,"Roboto","Segoe UI","Helvetica Neue","Lucida Grande",Arial,sans-serif;
+}
+
+canvas {
+    background-color: rgb(256, 256, 256);
+}
+
+.masthead {
+    background:#000000;
+    min-width: 864px;
+}
+.site-logo img{
+    max-height: 2.5rem;
+}
+.greedy-nav { background: #000000; }
+.greedy-nav a { color: rgb(242,246,246); }
+.greedy-nav a:hover { color: rgb(242,246,246); }
+
+.page {
+    width: calc(100% - #{$right-sidebar-width-narrow});
+    min-width: 864px;
+    background-color: rgb(256, 256, 256);
+}
+
+#footer.page__footer {
+    min-width: 864px;
+}
+
+.overflow-center {
+}
+
+@media only screen and (min-width: 864px) {
+    .overflow-center {
+        margin-left: 50%;
+        transform: translateX(-50%);
+    }
+}
+
+.chart-grid {
+    display: grid;
+    justify-content: center;
+    grid-template-columns: 1fr 1fr; /* fraction*/
+}
+
+.centered {
+    text-align: center;
+}
+
+.page__footer {
+    background:#000000; 
+}
+
+
+@media only screen and (max-width: 1300px) {
+    .github-corner {
+        display: none;
+    }
+}
+
+.tabbed-ui {
+  width: 850px;
+}
+
+/* Style the tab */
+.tab {
+    overflow: hidden;
+    border: 1px solid #ccc;
+    background-color: #f1f1f1;
+}
+
+/* Style the buttons that are used to open the tab content */
+.tab button {
+    font-family: 'Khula', sans-serif, -apple-system,BlinkMacSystemFont,"Roboto","Segoe UI","Helvetica Neue","Lucida Grande",Arial,sans-serif;
+    background-color: inherit;
+    float: left;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 7px 16px;
+    transition: 0.3s;
+}
+
+.button-group {
+    float: left;
+    border: 1px solid #0a5c5f;
+}
+
+/* Change background color of buttons on hover */
+.tab button:hover {
+    background-color: #ddd;
+}
+
+/* Create an active/current tablink class */
+.tab button.active {
+    background-color: #ccc;
+}
+
+/* Style the tab content */
+.tab-content {
+    display: none;
+    padding: 6px 12px;
+    border: 1px solid #ccc;
+    border-top: none;
+}

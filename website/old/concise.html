@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    .error {
+        color: red;
+    }
+    pre {
+	  white-space: pre-wrap;
+	  word-break: keep-all;
+	}
+  </style>
+  <script src="https://distill.pub/template.v2.js"></script>
+  <link rel="stylesheet" type="text/css" href="main.css">
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm//vega@5"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm//vega-lite@4.0.2"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm//vega-embed@6"></script>
+  <!-- Load in JSON for charts -->
+  <script type="text/javascript" src="jhu_country.js"></script>
+  <script type="text/javascript" src="nyt_state.js"></script>
+  <script type="text/javascript" src="state_minimal_changes.js"></script>
+  <script type="text/javascript" src="state_big_changes.js"></script>
+  <script type="text/javascript" src="change_by_state.js"></script>
+  <script type="text/javascript" src="change_by_country.js"></script>
+  <script type="text/javascript" src="deaths_by_country.js"></script>
+  <script type="text/javascript" src="deaths_by_state.js"></script>
+</head>
+
+<!-- For reference on the special divs we can use in the distill template, see: https://distill.pub/guide/ (not this is template.v1.js, make everything dt-* into d-*)
+Example article: https://distill.pub/2020/circuits/zoom-in/ -->
+<distill-header>
+
+	<div class="content">
+	  <a href="/" class="logo">
+	    <svg viewBox="-607 419 64 64">
+	  <path d="M-573.4,478.9c-8,0-14.6-6.4-14.6-14.5s14.6-25.9,14.6-40.8c0,14.9,14.6,32.8,14.6,40.8S-565.4,478.9-573.4,478.9z"></path>
+	</svg>
+	    Distill
+	  </a>
+	  <nav class="nav">
+	  </nav>
+	</div>
+</distill-header>
+
+<d-title>
+	<h1>Effects of Interventions Strategies for COVID-19</h1>
+	<p></p>
+</d-title>
+
+<d-article>
+	<p>
+	The rapid spread of COVID-19 have led many countries and regions to enact various interventions, such as social distancing, school closure, and border control, to mitigate the growth of infection rates. Understanding the effects of these policies is particularly important since every intervention strategy comes with its side effects. For example, in addition to the economic impact to businesses, there are <a href="https://www.thelancet.com/journals/lancet/article/PIIS0140-6736(20)30460-8/fulltext">negative mental health implications</a> to self-isolation and quarantine. To this end, in this project, we wanted to understand the impact of strategies and their combinations on the disease spread, by looking at how the growth curve evolves. We have been manually collecting data at the country, state, and county level for various types of interventions to understand their effects. (<b>Disclaimer</b>: There is danger in extrapolating too much from limited historical data, especially since many of the case numbers are subjected to other confounds, such as the amount and availability of tests. We will be keeping the dashboard up-to-date with latest data to see how these trends unfold.)
+	</p>
+<!-- <pre>
+Introduction: 
+- Say something about every policy measure has a side effect. For example, in addition to the economic impact to businesses, quarantine also has negative long term mental health implications (https://www.thelancet.com/journals/lancet/article/PIIS0140-6736(20)30460-8/fulltext). 
+- So our goal is to investigate the effects of these measures to better understand what tradeoffs can be made and what potential gains. 
+- Also state warning or precautionary message and say there is danger in extrapolating too much from limited historical data. We will be keeping the dashboard up-to-date with latest data to see how these trends unfold.
+</pre> -->
+<h2>Effects of Lockdown on Countries</h2>
+<p>First, we look at the growth curve of confirmed cases across the top ten countries with highest number of cases. Since the growth in number of cases is exponential, the y-axes is plotted logarithmically to show the trend more effectively. By clicking on the curve of a specific country, let's say Italy, you will find a vertical dashed line indicating the date when the country implemented a lockdown. </p>
+<!-- df['lockdown_slope'] = np.exp(np.log(df.lockdown_y / df.y_start) / (df.lockdown_x - df.x_start)) -->
+<!-- <pre>
+We first look at the growth curve of confirmed cases across countries. 
+- describe what we mean by full or partial lockdown
+- describe the simple model we use for extrapolation
+</pre> -->
+
+	<figure class="l-body-outset">
+	  <div id="vis" ></div>
+	  <figcaption>
+          caption
+      </figcaption>
+	</figure>
+<p>A lockdown can be a full lockdown in that there is a nation-wide declaration of a lockdown (level of enforcement? or simply stay-at-home-order?). On the other hand, a partial lockdown means that some but not all regions within the country that have declared a lockdown, such as in case of the United States. We also plot a projection line for the original trajectory of the trend before the lockdown date. The projection extrapolates the growth curve  based on the slope computed up until the lockdown date. This projection is based on the simple assumption that the growth rate stays fixed throughout the entire period of time, which is not always a valid assumption for a number of reasons. For example, as the number of infected individuals increases, the <a href="https://www.washingtonpost.com/graphics/2020/world/corona-simulator/">growth will likely slow</a> due to the growing number of recovered people with immunity. Nevertheless, this serves as one comparison point that we can use to understand the effects of these interventions in slowing the infection rates.</p>
+
+<pre>
+- We take a look at specific countries where the lockdown seems to have an effect. 
+- We note that there are many possible effect that could have contributed to the decrease. 
+- Also note one would expect there to be a lag between the lockdown date and the decrease in growth of cases. There are often soft measures as well as population-level behavioral changes leading up to the lockdown date, which is why sometimes we see decreases right away.
+<h2>Effects of Lockdown on States</h2>
+
+
+</pre>
+ 	<figure class="l-body-outset">
+ 		<div style="display: inline-block;">
+		 	<div id="state_vis"></div>
+		 </div>
+		 <figcaption>
+          caption
+        </figcaption>
+	 </figure>
+<pre>
+The trends for US states are less clear. For some states, such as New York and Illinois, there are visible decreases in growth of the number of confirmed cases. But for other states, such as California and Pennsylvania, the trend is less clear. We note that this does not mean that stay-at-home policies are less ineffective in these region. There are many potential reasons why: 
+- Variation in the availability of level of testing across states.
+	- Stay-at-home order are less strict than full lockdown (in some of the country data, esp European and Asian countries). It might take more time for the data to show decreases.
+- TODO: Make colors for each state unique and consistent across all views. Do not use red as a color.
+- TODO: Possibly remove interactions and keep prediction lines to be shown by default
+</pre>
+	<figure class="l-body-outset">
+        <div style="display: inline-block;">
+			<div id="state_big_changes" style="width: 40%;"></div>
+			<div id="state_minimal_changes" style="width: 40%;"></div>
+		</div>
+        <figcaption>
+          caption
+        </figcaption>
+    </figure>
+We look at specific countries that implemented X, Y, Z policies in series. Explain the policies that they took and possibly what motivated them to implement stricter measures.
+<figure class="l-body-outset">
+    <div style="display: inline-block;">
+		<img src="multipleLinesCountryExample.jpeg">
+	</div>
+    <figcaption>
+      Placeholder Image + Caption
+    </figcaption>
+  </figure>
+
+<h2>Effect of Different Types of Lockdown</h2>
+<pre>
+- Using "Lockdown Type", there is no clear effect between full/partial lockdown type
+- Using the "World" data sheet, look at effect of Type (Internal, School Closure, Border) and Level (National, Regional)
+</pre>
+
+<h2>Death, Rate of Change, and other charts</h2>
+<figure class="l-body-outset">
+		<div id="change_by_country"></div>
+		<div id="change_by_state"></div>
+		
+        <div id="deaths_by_country"></div>
+		<div id="deaths_by_state"></div>
+		
+        <figcaption>
+          caption
+        </figcaption>
+    </figure>
+
+</d-article>
+
+<d-appendix>
+	<h3>Data</h3> 
+	<p>We are using data from <a href="https://github.com/CSSEGISandData/COVID-19">Johns Hopkins CSSE</a> for the country-level data and <a href="https://www.nytimes.com/article/coronavirus-county-data-us.html">New York Times</a> for the state-level data. We build on the preprocessing script by <a href="https://github.com/wadefagen/91-DIVOC/blob/master/pages/covid-visualization/processData.py">Wade Fagen</a> for this work.</p>
+	
+	<h3>Acknowledgments</h3>
+		<p>section content</p>
+		
+	<d-citation-list distill-prerendered="true"> 
+		<h3 id="references">Sources</h3>
+		
+		<ol id="references-list" class="references">
+			<li id="wiki_national_response"><span class="title">Wikipedia: National responses to the 2019–20 coronavirus pandemic</span> <a href="https://en.wikipedia.org/wiki/National_responses_to_the_2019%E2%80%9320_coronavirus_pandemic">[link]</a></li>
+			
+		</ol>
+	</d-citation-list>
+	
+</d-appendix>
+
+
+<distill-footer>
+	<div class="footer-container">
+
+	  <a href="/" class="logo">
+	    <svg viewBox="-607 419 64 64">
+	  <path d="M-573.4,478.9c-8,0-14.6-6.4-14.6-14.5s14.6-25.9,14.6-40.8c0,14.9,14.6,32.8,14.6,40.8S-565.4,478.9-573.4,478.9z"></path>
+	</svg>
+
+	    Distill
+	  </a> is dedicated to clear explanations of machine learning
+
+	  <div class="nav">
+	    <a href="https://distill.pub/about/">About</a>
+	    <a href="https://distill.pub/journal/">Submit</a>
+	    <a href="https://distill.pub/prize/">Prize</a>
+	    <a href="https://distill.pub/archive/">Archive</a>
+	    <a href="https://distill.pub/rss.xml">RSS</a>
+	    <a href="https://github.com/distillpub">GitHub</a>
+	    <a href="https://twitter.com/distillpub">Twitter</a>
+	    &nbsp;&nbsp;&nbsp;&nbsp; ISSN 2476-0757
+	  </div>
+
+	</div>
+
+</distill-footer>
+
+<script>
+(function(vegaEmbed) {
+  var embedOpt = {"mode": "vega-lite"};
+
+  vegaEmbed("#vis", jhu_country, embedOpt)
+  vegaEmbed("#state_vis", state_vis, embedOpt)
+  vegaEmbed("#state_big_changes", state_big_changes, embedOpt)
+  vegaEmbed("#state_minimal_changes", state_minimal_changes, embedOpt)
+  vegaEmbed("#deaths_by_country", deaths_by_country, embedOpt)
+  vegaEmbed("#deaths_by_state", deaths_by_state, embedOpt)
+  vegaEmbed("#change_by_country", change_by_country, embedOpt)
+  vegaEmbed("#change_by_state", change_by_state, embedOpt)
+})(vegaEmbed);
+
+</script>
+
+
+</body>
+</html>

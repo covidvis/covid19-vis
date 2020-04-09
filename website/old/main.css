@@ -1,0 +1,11 @@
+d-citation-list {
+  contain: style;
+}
+
+d-citation-list .references {
+  grid-column: text;
+}
+
+d-citation-list .references .title {
+  font-weight: 500;
+}

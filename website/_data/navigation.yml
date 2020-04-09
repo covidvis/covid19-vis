@@ -1,0 +1,5 @@
+main:
+  - title: "Lockdown Effects"
+    url: "#lockdown_section"
+  - title: "Source"
+    url: https://github.com/covidvis/covid19-vis

@@ -1,0 +1,202 @@
+algolia:
+  application_id: null
+  index_name: null
+  powered_by: null
+  search_only_api_key: null
+analytics:
+  google:
+    anonymize_ip: true
+    tracking_id: UA-163087607-1
+  provider: google-universal
+author:
+  avatar: null
+  bio: I am an **amazing** person.
+  email: null
+  links:
+  - icon: fas fa-fw fa-envelope-square
+    label: Email
+  - icon: fas fa-fw fa-link
+    label: Website
+  - icon: fab fa-fw fa-twitter-square
+    label: Twitter
+  - icon: fab fa-fw fa-facebook-square
+    label: Facebook
+  - icon: fab fa-fw fa-github
+    label: GitHub
+  - icon: fab fa-fw fa-instagram
+    label: Instagram
+  location: Somewhere
+  name: Your Name
+baseurl: null
+bing_site_verification: null
+category_archive:
+  path: /categories/
+  type: liquid
+comments:
+  discourse:
+    server: null
+  disqus:
+    shortname: null
+  facebook:
+    appid: null
+    colorscheme: null
+    num_posts: null
+  provider: null
+  staticman:
+    branch: null
+    endpoint: null
+  utterances:
+    issue_term: null
+    theme: null
+compress_html:
+  clippings: all
+  ignore:
+    envs: development
+defaults:
+- scope:
+    path: ''
+    type: posts
+  values:
+    author_profile: true
+    comments: null
+    layout: single
+    read_time: true
+    related: true
+    share: true
+description: Visualizing SARS-CoV-2 trends with overlaid countermeasures.
+encoding: utf-8
+excerpt_separator: '
+
+
+  '
+exclude:
+- '*.sublime-project'
+- '*.sublime-workspace'
+- old
+- _posts
+- vendor
+- .asset-cache
+- .bundle
+- .jekyll-assets-cache
+- .sass-cache
+- assets/js/plugins
+- assets/js/_main.js
+- assets/js/vendor
+- Capfile
+- CHANGELOG
+- config
+- Gemfile
+- Gruntfile.js
+- gulpfile.js
+- LICENSE
+- log
+- node_modules
+- package.json
+- package-lock.json
+- Rakefile
+- README
+- tmp
+- /docs
+- /test
+facebook:
+  app_id: null
+  publisher: null
+  username: null
+footer:
+  links:
+  - icon: fab fa-fw fa-twitter-square
+    label: Twitter
+  - icon: fab fa-fw fa-facebook-square
+    label: Facebook
+  - icon: fab fa-fw fa-github
+    label: GitHub
+  - icon: fab fa-fw fa-gitlab
+    label: GitLab
+  - icon: fab fa-fw fa-bitbucket
+    label: Bitbucket
+  - icon: fab fa-fw fa-instagram
+    label: Instagram
+footer_scripts:
+- scripts/vega_embed.js
+- scripts/chart_ui.js
+google:
+  instant_search: null
+  search_engine_id: null
+google_site_verification: null
+head_scripts:
+- https://cdn.jsdelivr.net/npm//vega@5
+- https://cdn.jsdelivr.net/npm//vega-lite@4.0.2
+- https://cdn.jsdelivr.net/npm//vega-embed@6
+- https://code.jquery.com/jquery-3.4.1.slim.min.js
+- scripts/jhu_country.js
+- scripts/jhu_country_death.js
+- scripts/jhu_state.js
+- scripts/jhu_state_death.js
+highlighter: rouge
+include:
+- .htaccess
+- _pages
+incremental: false
+keep_files:
+- .git
+- .svn
+kramdown:
+  auto_ids: true
+  enable_coderay: false
+  entity_output: as_char
+  footnote_nr: 1
+  hard_wrap: false
+  input: GFM
+  smart_quotes: lsquo,rsquo,ldquo,rdquo
+  toc_levels: 1..6
+locale: en-US
+logo: /assets/logo.png
+lsi: false
+markdown: kramdown
+markdown_ext: markdown,mkdown,mkdn,mkd,md
+masthead_title: null
+minimal_mistakes_skin: mint
+name: ''
+naver_site_verification: null
+og_image: null
+permalink: /:categories/:title/
+plugins:
+- jekyll-paginate
+- jekyll-sitemap
+- jekyll-gist
+- jekyll-feed
+- jekyll-include-cache
+reCaptcha:
+  secret: null
+  siteKey: null
+repository: covidvis/covidvis.github.io
+sass:
+  sass_dir: _sass
+  style: compressed
+search: null
+search_full_content: null
+search_provider: null
+social:
+  links: null
+  name: null
+  type: null
+subtitle: null
+tag_archive:
+  path: /tags/
+  type: liquid
+teaser: null
+theme: minimal-mistakes-jekyll
+timezone: null
+title: ''
+title_separator: '-'
+twitter:
+  username: null
+url: https://covidvis.github.io
+whitelist:
+- jekyll-paginate
+- jekyll-sitemap
+- jekyll-gist
+- jekyll-feed
+- jekyll-include-cache
+words_per_minute: 200
+yandex_site_verification: null
