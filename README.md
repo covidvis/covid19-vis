@@ -62,10 +62,15 @@ followed by commiting and pushing. The command for this is as follows:
 `make stage` also works.
 
 * NOTE: this script assumes that the repo `../covidvis-staging` exists in the
-  parent directory. It may be necessary to first clone (following command run
-  from the parent directory):
+  parent directory. It may be necessary to first clone and check out the
+  `gh-pages` branch. The following commands should be run from the parent
+  directory:
 
-`git clone git@github.com:covidvis/covidvis-staging`
+```
+git clone git@github.com:covidvis/covidvis-staging
+cd covidvis-staging
+git checkout gh-pages
+```
 
 
 Makefile for End to End Building and Deploying
