@@ -405,7 +405,7 @@ class CovidChart(object):
             self.spec.DEFAULT_WIDTH
         ).set_height(
             self.spec.DEFAULT_HEIGHT
-        )
+        ).set_colormap()
         if self.quarantine_df is not None:
             ret = ret.add_lockdown_rules()
         return ret
