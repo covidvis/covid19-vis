@@ -174,6 +174,9 @@ class ChartSpec(DotDict):
     def _in_focus_or_none_selected(self):
         return self._ensure_parens(f'{self._in_focus()} || !{self._someone_has_focus()}')
 
+    def _show_trends(self):
+        return '!isValid(trends_tuple) || trends_tuple.values[0]'
+
     def _maybe_add_facet(self, base):
         facetby = self.get('facetby', None)
         if facetby is not None:
@@ -277,9 +280,11 @@ class ChartSpec(DotDict):
                 layers['lockdown_rules'], cursor
             )
 
-    def _make_lockdown_extrapolation_layer(self, base):
+    def _make_lockdown_extrapolation_layer(self, base, trend_select):
         def _add_model_transformation_fields(base_chart):
             ret = base_chart.transform_filter(
+                self._show_trends()
+            ).transform_filter(
                 'datum.lockdown_x != null'
             ).transform_filter(
                 'datum.x >= datum.lockdown_x'
@@ -306,7 +311,7 @@ class ChartSpec(DotDict):
         ret = ret.transform_filter(self._in_focus())
         return ret
 
-    def _make_extrapolation_tooltip_layer(self, extrap, cursor):
+    def _make_extrapolation_tooltip_layer(self, extrap, cursor, trend_select):
         text = 'extrap_text:N'
         x, y = 'x', 'model_y'
         no_max_template = '{}:Q'
@@ -322,10 +327,12 @@ class ChartSpec(DotDict):
             text=text,
             opacity=alt.value(1),
             color=alt.value('black')
+        ).transform_filter(
+            self._show_trends()
         ).transform_calculate(
             #extrap_text=f'"Original trend for " + datum.{self._detailby}'
             extrap_text='"Original trend"'
-        )
+        ).add_selection(trend_select)
 
     def _populate_transient_colormap(self, df):
         colormap = self.get('colormap', None)
@@ -433,8 +440,12 @@ class ChartSpec(DotDict):
             self._collect_tooltip_layers(layers, base, cursor)
 
             if self.get('lockdown_extrapolation', False):
-                layers['model_lines'] = self._make_lockdown_extrapolation_layer(base)
-                layers['model_tooltip'] = self._make_extrapolation_tooltip_layer(layers['model_lines'], cursor)
+                trend_checkbox = alt.binding_checkbox(name='Show trend lines for selected ')
+                trend_select = alt.selection_single(bind=trend_checkbox, name='trends', init={'values': True})
+                layers['model_lines'] = self._make_lockdown_extrapolation_layer(base, trend_select)
+                layers['model_tooltip'] = self._make_extrapolation_tooltip_layer(
+                    layers['model_lines'], cursor, trend_select
+                )
 
             layered = alt.layer(*layers.values())
             layered = self._maybe_add_facet(layered)
