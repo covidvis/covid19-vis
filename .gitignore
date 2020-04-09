@@ -1,5 +1,6 @@
 .ipynb_checkpoints/
 .jekyll-cache/
 .DS_Store
+covidvis.github.io/
 *.pyc
 *.js
