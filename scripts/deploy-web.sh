@@ -1,13 +1,33 @@
 #!/usr/bin/env bash
 
-if [ -z "$(ls -A website/_site)" ]; then
+# ref: https://vaneyckt.io/posts/safer_bash_scripts_with_set_euxo_pipefail/
+set -euxo pipefail
+
+WEBDIR=$(realpath website)
+DEPLOYDIR=$1
+shift
+BRANCH=$1
+shift
+if [[ -z "${DEPLOYDIR}" ]]; then
+    DEPLOYDIR=covidvis.github.io
+fi
+if [[ -z "${BRANCH}" ]]; then
+    BRANCH=master
+fi
+if [[ ! -d $DEPLOYDIR ]]; then
+    DEPLOYDIR="../${DEPLOYDIR}"
+fi
+if [[ ! -d $DEPLOYDIR ]]; then
+    >&2 echo "Unable to find ${DEPLOYDIR}; please make sure it exists before deploying"
+fi
+if [[ -z "$(ls -A website/_site)" ]]; then
     make
 fi
-pushd covidvis.github.io
+pushd "${DEPLOYDIR}"
 git pull
 rm -r *
-mv ../website/_site/* .
+mv "${WEBDIR}"/_site/* .
 git add .
 git commit -m "deploy"
-git push origin HEAD:master
+git push origin $BRANCH
 popd
