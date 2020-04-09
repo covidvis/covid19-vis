@@ -25,7 +25,7 @@ if [[ -z "$(ls -A website/_site)" ]]; then
 fi
 pushd "${DEPLOYDIR}"
 git pull
-rm -r *
+git rm -r * && rm -rf *
 mv "${WEBDIR}"/_site/* .
 git add .
 git commit -m "deploy"
