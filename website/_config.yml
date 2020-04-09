@@ -191,7 +191,7 @@ title: ''
 title_separator: '-'
 twitter:
   username: null
-url: https://covidvis.github.io
+url: https://covidvis.github.io/
 whitelist:
 - jekyll-paginate
 - jekyll-sitemap

@@ -24,13 +24,13 @@ negative mental health implications
 <div class="tabbed-ui overflow-center">
 <div class="tab">
 <span class="button-group">
-  <button class="tablinks default-open" onclick="openTabs(event, '.tab-content-world')">World</button>
-  <button class="tablinks" onclick="openTabs(event, '.tab-content-usa')">USA</button>
+  <button class="button-left tablinks default-open" onclick="openTabs(event, '.tab-content-world')">World</button>
+  <button class="button-right tablinks" onclick="openTabs(event, '.tab-content-usa')">USA</button>
 </span>
-<span style="width: 1px; float: left;">&nbsp;</span>
+<span style="width: 5px; float: left;">&nbsp;</span>
 <span class="button-group">
-  <button class="tablinks default-open" onclick="openTabs(event, '.tab-content-cases')">Cases</button>
-  <button class="tablinks" onclick="openTabs(event, '.tab-content-deaths')">Deaths</button>
+  <button class="button-left tablinks default-open" onclick="openTabs(event, '.tab-content-cases')">Cases</button>
+  <button class="button-right tablinks" onclick="openTabs(event, '.tab-content-deaths')">Deaths</button>
 </span>
 </div>
 
