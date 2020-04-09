@@ -45,6 +45,9 @@ as follows:
 
 `./scripts/deploy-web.sh`
 
+* NOTE: this script assumes that the repo `../covidvis.github.io` exists in the
+  outer directory.
+
 
 Makefile for End to End Building and Deploying
 ----------------------------------------------
