@@ -40,13 +40,32 @@ Deploying
 ---------
 
 Deploying to github pages consists of copying the contents of `website/_site`
-into `covidvis.github.io`, commiting, and pushing. The convenience for this is
+into `covidvis.github.io`, commiting, and pushing. The command for this is
 as follows:
 
 `./scripts/deploy-web.sh`
 
+`make depoy` also works.
+
 * NOTE: this script assumes that the repo `../covidvis.github.io` exists in the
-  outer directory.
+  parent directory.
+
+Staging
+---------
+
+Deploying to the staging repo consists of copying the contents of
+`website/_site` into the `gh-pages` of the `covidvis-staging` repository,
+followed by commiting and pushing. The command for this is as follows:
+
+`./scripts/deploy-web.sh ../covidvis-staging gh-pages`
+
+`make stage` also works.
+
+* NOTE: this script assumes that the repo `../covidvis-staging` exists in the
+  parent directory. It may be necessary to first clone (following command run
+  from the parent directory):
+
+`git clone git@github.com:covidvis/covidvis-staging`
 
 
 Makefile for End to End Building and Deploying
@@ -54,7 +73,8 @@ Makefile for End to End Building and Deploying
 
 To execute all build steps end-to-end, simply type `make`.
 
-To deploy: `make deploy` (just a wrapper around `scripts/deploy-web.sh`)
+To deploy: `make stage` (just a wrapper around `scripts/deploy-web.sh`)
+To deploy: `make deploy` (another wrapper around `scripts/deploy-web.sh`)
 
 * NOTE: the deploy script only pushes the built website. To save your edits,
   you still need to commit / push changes made in the covid19-vis repo.
