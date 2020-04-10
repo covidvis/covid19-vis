@@ -3,6 +3,27 @@ import altair as alt
 from .dot_dict import DotDict
 
 
+def _fontSettings():
+    font = 'Khula'  # 'sans-serif'
+    return {
+        "config": {
+            "title": {'font': font},
+            "axis": {
+                "labelFont": font,
+                "titleFont": font
+            },
+            "header": {
+                "labelFont": font,
+                "titleFont": font
+            },
+            "legend": {
+                "labelFont": font,
+                "titleFont": font
+            }
+        }
+    }
+
+
 class ChartSpec(DotDict):
     """
     A wrapper around a dictionary capturing all the state that determines how
@@ -467,6 +488,8 @@ class ChartSpec(DotDict):
                 titleFontSize=self.get('axes_title_fontsize', self.DEFAULT_AXES_TITLE_FONTSIZE)
             )
             layered = layered.configure_legend(symbolType='diamond')
+            alt.themes.register('customFont', _fontSettings)
+            alt.themes.enable('customFont')
             return layered
         finally:
             del self[self.TRANSIENT]
