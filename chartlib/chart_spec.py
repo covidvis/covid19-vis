@@ -392,14 +392,18 @@ class ChartSpec(DotDict):
                 dropdown_options.extend(list(df[self._detailby].unique()))
                 dropdown_name = f'Select {self.get("readable_group_name", self.detailby)}: '
             dropdown = alt.binding_select(options=dropdown_options, name=dropdown_name)
+            extra_click_selection_kwargs = {}
+            click_init = self.get('click_selection_init', None)
+            if click_init is not None:
+                extra_click_selection_kwargs['init'] = {self._detailby: click_init}
             click_selection = alt.selection_single(
                 fields=[self._detailby], on='click', name=self.click, empty='all',
-                bind=dropdown, clear='dblclick',
+                bind=dropdown, clear='dblclick', **extra_click_selection_kwargs
             )
 
             legend_selection = alt.selection_multi(
                 fields=[self._colorby], on='click', name=self.legend, empty='all',
-                bind='legend', clear='dblclick'
+                bind='legend', clear='dblclick',
             )
 
             # put a fake layer in first with no click selection

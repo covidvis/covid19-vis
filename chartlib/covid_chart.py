@@ -33,7 +33,7 @@ class CovidChart(object):
         groupcol: str,
         start_criterion: StartCriterion,
         ycol: str,
-        level: str = 'US',  # one of: [US, USA, country]
+        chart_type: str = 'US',  # one of: [US, USA, country]
         use_defaults: bool = True,
         ycol_is_cumulative: bool = True,
         top_k_groups: int = None,
@@ -44,6 +44,7 @@ class CovidChart(object):
         object.__setattr__(self, 'start_criterion', start_criterion)
         object.__setattr__(self, 'xcol', xcol)
         object.__setattr__(self, 'ycol', ycol)
+        object.__setattr__(self, 'chart_type', chart_type)
         object.__setattr__(self, 'ycol_is_cumulative', ycol_is_cumulative)
         object.__setattr__(self, 'top_k_groups', top_k_groups)
         object.__setattr__(self, 'spec', ChartSpec())
@@ -52,15 +53,15 @@ class CovidChart(object):
             df = pd.read_csv(df, parse_dates=[xcol], infer_datetime_format=True)
         self._validate_df(df)
 
-        readable_group_name = level
+        readable_group_name = chart_type
         if isinstance(quarantine_df, str):
-            if level.lower() in ['us', 'usa', 'united states']:
+            if chart_type.lower() in ['us', 'usa', 'united states', 'united_states']:
                 quarantine_df = self._injest_usa_quarantine_df(quarantine_df)
                 readable_group_name = 'state'
-            elif level == 'country':
+            elif chart_type.lower() in ('country', 'world'):
                 quarantine_df = self._injest_country_quarantine_df(quarantine_df)
             else:
-                raise ValueError('invalid level %s: only "US" and "country" allowed now')
+                raise ValueError('invalid chart_type %s: only "US" and "country" allowed now')
         quarantine_df = quarantine_df.dropna(subset=[groupcol, 'lockdown_date', 'lockdown_type'])
         self._validate_quarantine_df(quarantine_df)
 
@@ -389,10 +390,18 @@ class CovidChart(object):
         self.spec.extrap_clip_to_ydomain = clip
         return self
 
+    def set_initial_click_selection(self, val):
+        self.spec.click_selection_init = val
+        return self
+
     def set_defaults(self):
         self.spec.detailby = self.groupcol
         self.spec.colorby = self.groupcol
         self.spec.point_size = ChartSpec.DEFAULT_POINT_SIZE
+        if self.chart_type.lower() in ('country', 'world'):
+            self.spec.click_selection_init = 'Austria'
+        elif self.chart_type.lower() in ('us', 'usa', 'united states', 'united_states'):
+            self.spec.click_selection_init = 'California'
         ret = self.add_lines(
         ).add_points(
         ).set_logscale(

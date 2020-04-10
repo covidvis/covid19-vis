@@ -43,7 +43,7 @@ def make_jhu_country_chart() -> CovidChart:
         groupcol='Country_Region',
         start_criterion=DaysSinceNumReached(days_since, 'Confirmed'),
         ycol='Confirmed',
-        level='country',
+        chart_type='country',
         xcol='Date',
         top_k_groups=20,
         quarantine_df='./data/quarantine-activity.csv'  # should have a column with same name as `groupcol`
@@ -69,7 +69,7 @@ def make_jhu_country_death_chart() -> CovidChart:
         start_criterion=DaysSinceNumReached(10, 'Deaths'),
         ycol='Deaths',
         xcol='Date',
-        level='country',
+        chart_type='country',
         top_k_groups=20,
         quarantine_df='./data/quarantine-activity.csv'  # should have a column with same name as `groupcol`
     )
@@ -92,7 +92,7 @@ def make_jhu_state_death_chart() -> CovidChart:
         start_criterion=DaysSinceNumReached(10, 'Deaths'),
         ycol='Deaths',
         xcol='Date',
-        level='usa',
+        chart_type='usa',
         top_k_groups=20,
         quarantine_df='./data/quarantine-activity-us.csv' # should have a column with same name as `groupcol`
     )
@@ -116,7 +116,7 @@ def make_jhu_state_chart() -> CovidChart:
         groupcol='Province_State',
         start_criterion=DaysSinceNumReached(days_since, 'Confirmed'),
         ycol='Confirmed',
-        level='USA',
+        chart_type='USA',
         xcol='Date',
         top_k_groups=20,
         quarantine_df='./data/quarantine-activity-US.csv'  # should have a column with same name as `groupcol`
@@ -141,7 +141,7 @@ def make_jhu_selected_state_chart() -> CovidChart:
         groupcol='Province_State',
         start_criterion=DaysSinceNumReached(days_since, 'Confirmed'),
         ycol='Confirmed',
-        level='USA',
+        chart_type='USA',
         xcol='Date',
         top_k_groups=20,
         quarantine_df='./data/quarantine-activity-US.csv'  # should have a column with same name as `groupcol`
