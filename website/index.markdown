@@ -174,5 +174,5 @@ Covidvis is a collaborative effort across computational epidemiology, public hea
 
 From the visualization side, the team includes [Doris Jung-Lin Lee](http://dorisjunglinlee.com/) (UC Berkeley School of Information); [Stephen Macke](https://smacke.net/) (University of Illinois Computer Science and UC Berkeley EECS); [Ti-Chung Cheng](https://tichung.com/), [Tana Wattanawaroon](https://www.linkedin.com/in/tanawattanawaroon/), and Pingjing Yang (University of Illinois Computer Science); and [Aditya Parameswaran](https://people.eecs.berkeley.edu/~adityagp/) (UC Berkeley School of Information and EECS).
 
-From the public health and epidemiology side, the team includes [Ziad Obermeyer](https://publichealth.berkeley.edu/people/ziad-obermeyer/) (UC Berkeley School of Public Health) and [B Aditya Prakash](http://www.cc.gatech.edu/~badityap) (Georgia Tech Computational Science and Engineering).
+From the public health and epidemiology side, the team includes [B Aditya Prakash](http://www.cc.gatech.edu/~badityap) (Georgia Tech Computational Science and Engineering). We've also benefited enormously from ideas and input from [Ziad Obermeyer](https://publichealth.berkeley.edu/people/ziad-obermeyer/) (UC Berkeley School of Public Health). 
 
