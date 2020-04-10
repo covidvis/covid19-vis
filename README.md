@@ -1,4 +1,6 @@
-# covid19-vis
+# [covidvis](https://covidvis.berkeley.edu)
+
+[![Go to the website](assets/img/screenshot.png)](https://covidvis.berkeley.edu)
 
 Building the Charts
 -------------------
