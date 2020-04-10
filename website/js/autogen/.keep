@@ -1,0 +1,2 @@
+# this file does nothing except prevent git from removing an empty directory,
+# which will contained auto-generated charts

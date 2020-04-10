@@ -21,8 +21,8 @@ head_scripts:
   - https://code.jquery.com/jquery-3.4.1.slim.min.js
 
 footer_scripts:
-  - scripts/vega_embed.js
-  - scripts/chart_ui.js
+  - js/autogen/vega_embed.js
+  - js/chart_ui.js
 
 # Site Settings
 locale                   : "en-US"

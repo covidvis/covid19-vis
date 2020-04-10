@@ -160,7 +160,7 @@ def export_charts(configs):
     for config in configs:
         name = config['name']
         chart = config['gen']()
-        chart.export(f'./website/scripts/{name}.js', f'{name}')
+        chart.export(f'./website/js/autogen/{name}.js', f'{name}')
 
 
 def make_vega_embed_script(configs):
@@ -177,7 +177,7 @@ def make_vega_embed_script(configs):
         )
     embed_calls = '\n'.join(embed_calls)
     script = script.format(embed_calls=embed_calls)
-    with open('./website/scripts/vega_embed.js', 'w') as f:
+    with open('./website/js/autogen/vega_embed.js', 'w') as f:
         f.write(script)
 
 
@@ -185,7 +185,7 @@ def make_jekyll_config(configs):
     with open('./website/_config.in.yml', 'r') as f:
         jekyll_config = yaml.load(f.read(), yaml.SafeLoader)
     for config in configs:
-        jekyll_config['head_scripts'].append(f'scripts/{config["name"]}.js')
+        jekyll_config['head_scripts'].append(f'js/autogen/{config["name"]}.js')
     with open('./website/_config.yml', 'w') as f:
         yaml.dump(jekyll_config, f)
 
