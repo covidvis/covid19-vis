@@ -78,7 +78,7 @@ Makefile for End to End Building and Deploying
 
 To execute all build steps end-to-end, simply type `make`.
 
-To deploy: `make stage` (just a wrapper around `scripts/deploy-web.sh`)
+To stage: `make stage` (just a wrapper around `scripts/deploy-web.sh`)
 To deploy: `make deploy` (another wrapper around `scripts/deploy-web.sh`)
 
 * NOTE: the deploy script only pushes the built website. To save your edits,
