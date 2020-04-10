@@ -235,6 +235,8 @@ class CovidChart(object):
             readable_group_name = self.spec._get_legend_title()
             df[readable_group_name] = df[self.spec.colorby]
 
+        # needed to get alphabetic legend
+        df = df.sort_values(by=[self.groupcol, self.X])
         return df
 
     def _make_info_dict(self, qdf):
