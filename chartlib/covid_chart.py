@@ -358,6 +358,10 @@ class CovidChart(object):
         self.spec.readable_group_name = readable_name
         return self
 
+    def set_font(self, font: str):
+        self.spec.font = font
+        return self
+
     def set_colormap(
             self,
             colormap: Union[str, pd.DataFrame, Dict] = None,

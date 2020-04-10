@@ -3,9 +3,8 @@ import altair as alt
 from .dot_dict import DotDict
 
 
-def _fontSettings():
-    font = 'Khula'  # 'sans-serif'
-    return {
+def _fontSettings(font):
+    return lambda: {
         "config": {
             "title": {'font': font},
             "axis": {
@@ -51,6 +50,7 @@ class ChartSpec(DotDict):
     #DEFAULT_BACKGROUND_COLOR = '#F2F6F6'
     DEFAULT_BACKGROUND_COLOR = 'white'
     DEFAULT_MIN_TREND_LINE_DAYS = 5
+    DEFAULT_FONT = 'Khula'
     EMPTY_SELECTION = ''
     COLOR_SCHEME = list(
         map(
@@ -114,6 +114,10 @@ class ChartSpec(DotDict):
             return self.get(key, default)
         else:
             return transient.get(key, self.get(key, default))
+
+    @property
+    def _font(self):
+        return self.get('font', self.DEFAULT_FONT)
 
     @property
     def _colorby(self):
@@ -244,7 +248,9 @@ class ChartSpec(DotDict):
         return point_layer
 
     def _make_tooltip_text_layer(self, point_layer, cursor):
-        return point_layer.mark_text(align='left', dx=5, dy=-5).encode(
+        return point_layer.mark_text(
+            align='left', dx=5, dy=-5, font=self._font
+        ).encode(
             text=alt.condition(cursor, 'tooltip_text:N', alt.value(' ')),
             opacity=alt.value(1),
             color=alt.value('black')
@@ -264,7 +270,9 @@ class ChartSpec(DotDict):
         text = 'lockdown_tooltip_text:N'
         if self.get('only_show_lockdown_tooltip_on_hover', False):
             text = alt.condition(cursor, text, alt.value(' ')),
-        return rules.mark_text(align='left', dx=15, dy=0).encode(
+        return rules.mark_text(
+            align='left', dx=15, dy=0, font=self._font
+        ).encode(
             y=self._get_y('y:Q'),
             text=text,
             color=alt.value('black')
@@ -347,7 +355,9 @@ class ChartSpec(DotDict):
             x, y = no_max_template.format(x), no_max_template.format(y)
         else:
             x, y = max_template.format(x), max_template.format(y)
-        return extrap.mark_text(align='center', dx=0, dy=-5).encode(
+        return extrap.mark_text(
+            align='center', dx=0, dy=-5, font=self._font
+        ).encode(
             x=self._get_x(x),
             y=self._get_y(y),
             text=text,
@@ -488,7 +498,7 @@ class ChartSpec(DotDict):
                 titleFontSize=self.get('axes_title_fontsize', self.DEFAULT_AXES_TITLE_FONTSIZE)
             )
             layered = layered.configure_legend(symbolType='diamond')
-            alt.themes.register('customFont', _fontSettings)
+            alt.themes.register('customFont', _fontSettings(self._font))
             alt.themes.enable('customFont')
             return layered
         finally:
