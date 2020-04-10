@@ -18,7 +18,7 @@ fi
 pushd "${DEPLOYDIR}"
 git pull
 git rm -r * && rm -rf *
-mv "${WEBDIR}"/_site/* .
+cp -r "${WEBDIR}"/_site/* .
 git add .
 git commit -m "deploy"
 git push origin $BRANCH
