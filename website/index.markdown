@@ -56,16 +56,24 @@ negative mental health implications
 As a first step towards understanding the impact of interventions, the
 visualization above shows the logarithm of the number of confirmed cases 
 over time, for the 20 countries with the most confirmed cases of SARS-CoV-2.
-Selecting the <i>World: Deaths</i> tab will
-lead to a similar visualization for deaths in countries,
-while selecting the <i>USA</i> tabs show the confirmed cases
-or deaths across US states. 
-We overlaid our trends with various countermeasures 
+We have overlaid our trends with various countermeasures 
 taken by the governing entities. 
 We invite the reader to reveal
 such measures on a per-region basis
 in the chart by clicking the legend (recommended), 
 the dropdown below the chart, or the chart itself.
+You can switch between the visualizations for countries
+or US states by switching between the
+<i>World</i> or <i>USA</i> tabs,
+and between the visualizations for
+confirmed cases or deaths 
+by switching between the <i>Cases</i>
+or <i>Deaths</i> tabs.
+
+Selecting the <i>Deaths</i> tab will
+lead to a similar visualization for deaths in countries,
+while selecting the <i>USA</i> tab will show the cases
+or deaths across US states. 
 </p>
 
 
@@ -157,7 +165,7 @@ Sources
 
 Acknowledgments
 ----------------
-We draw on data regarding COVID-19 cases and deaths from [JHU Coronavirus Resource Center](https://coronavirus.jhu.edu/data) as well as the [New York Times US dataset](https://github.com/nytimes/covid-19-data).  We draw on data regarding national and regional interventions from [Wikpedia](https://en.wikipedia.org/wiki/National_responses_to_the_2019%E2%80%9320_coronavirus_pandemic) as well as the [New York Times](https://github.com/nytimes/covid-19-data). 
+We draw on data regarding COVID-19 cases and deaths from [JHU Coronavirus Resource Center](https://coronavirus.jhu.edu/data) as well as the [New York Times US dataset](https://github.com/nytimes/covid-19-data).  We draw on data regarding national and regional interventions from [Wikipedia](https://en.wikipedia.org/wiki/National_responses_to_the_2019%E2%80%9320_coronavirus_pandemic) as well as the [New York Times](https://github.com/nytimes/covid-19-data). 
 
 There are many visualizations of COVID-19 growth curves online that we draw on for inspiration. We are fans of visualizations from [John Burn-Murdoch, Financial Times](https://www.ft.com/john-burn-murdoch), such as [this one](https://www.ft.com/coronavirus-latest), as well as the [New York Times](https://www.nytimes.com/news-event/coronavirus), such as [this](https://www.nytimes.com/interactive/2020/04/06/us/coronavirus-deaths-united-states.html), [this](https://www.nytimes.com/interactive/2020/world/coronavirus-maps.html), [this](https://www.nytimes.com/interactive/2020/04/03/upshot/coronavirus-metro-area-tracker.html), and [this](https://www.nytimes.com/interactive/2020/us/coronavirus-stay-at-home-order.html). We drew on data preprocessing scripts from [Wade Fagen](https://waf.cs.illinois.edu/)'s excellent ["Flip the script on COVID-19" dashboard](http://91-divoc.com/). 
 
