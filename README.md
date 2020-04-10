@@ -7,7 +7,7 @@ pip install -r requirements.txt
 ./scripts/build-charts.py
 ```
 
-Now the charts have been added to the website. (Try cd'ing into `website` and
+Now the charts have been added to the website. (Try
 doing `git status` after making a change to the charts.)
 
 Building the Website
