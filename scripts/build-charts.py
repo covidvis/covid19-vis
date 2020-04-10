@@ -165,15 +165,17 @@ def export_charts(configs):
 
 def make_vega_embed_script(configs):
     script = """
-(function(vegaEmbed) {{
+function startVegaEmbedding() {{
   var embedOpt = {{"mode": "vega-lite"}};
+  $(document).ready(function() {{
 {embed_calls}
-}})(vegaEmbed);
+  }});
+}};
     """
     embed_calls = []
     for config in configs:
         embed_calls.append(
-            f'  vegaEmbed("#{config.get("embed_id", config["name"])}", {config["name"]}, embedOpt);'
+            f'    vegaEmbed("#{config.get("embed_id", config["name"])}", {config["name"]}, embedOpt);'
         )
     embed_calls = '\n'.join(embed_calls)
     script = script.format(embed_calls=embed_calls)
@@ -185,7 +187,7 @@ def make_jekyll_config(configs):
     with open('./website/_config.in.yml', 'r') as f:
         jekyll_config = yaml.load(f.read(), yaml.SafeLoader)
     for config in configs:
-        jekyll_config['head_scripts'].append(f'js/autogen/{config["name"]}.js')
+        jekyll_config['footer_scripts'].append(f'js/autogen/{config["name"]}.js')
     with open('./website/_config.yml', 'w') as f:
         yaml.dump(jekyll_config, f)
 
