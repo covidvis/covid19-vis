@@ -69,11 +69,6 @@ and between the visualizations for
 confirmed cases or deaths 
 by switching between the <i>Cases</i>
 or <i>Deaths</i> tabs.
-
-Selecting the <i>Deaths</i> tab will
-lead to a similar visualization for deaths in countries,
-while selecting the <i>USA</i> tab will show the cases
-or deaths across US states. 
 </p>
 
 
