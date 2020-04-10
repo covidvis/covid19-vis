@@ -18,13 +18,14 @@ directory of this repo).
 
 Building the Charts
 -------------------
+Note that Python 3 is required.
 ```
 pip install -r requirements.txt
 ./scripts/build-charts.py
 ```
 
-Now the charts have been added to the website. (Try
-doing `git status` after making a change to the charts.)
+Now the charts have been added to the website.
+(Try `ls website/js/autogen`).
 
 Building the Website
 --------------------
