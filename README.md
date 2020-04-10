@@ -2,6 +2,20 @@
 
 [![Click to visit website](assets/img/screenshot.png)](https://covidvis.berkeley.edu)
 
+Build Process Summary
+---------------------
+
+TL;DR: There’s 3 steps. The first step (`scripts/build-charts.py`) builds
+charts and spits out `website/_config.yml` to include paths to the javascript
+for the charts. The second step is the jekyll build step
+(`scripts/build-web.sh`, or `cd website && bundle exec jekyll build`), which
+takes `website/_config.yml` and generates the website from all the liquid
+templates and markdown in the `website/` directory (compiled website is output
+to `website/_site`). The 3rd step (`scripts/deploy-web.sh`) copies
+`website/_site` into `../covidvis.github.io`, overwriting everything that was
+there before and pushing. Steps 1 & 2: `make`. Step 3: `make deploy` (from root
+directory of this repo).
+
 Building the Charts
 -------------------
 ```
