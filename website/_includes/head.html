@@ -6,7 +6,9 @@
 {% include seo.html %}
 
 
+{% comment %}
 <link href="https://fonts.googleapis.com/css2?family=Khula:wght@300&display=swap" rel="stylesheet"/>
+{% endcomment %}
 
 <!-- https://t.co/dKP3o1e -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -39,3 +41,9 @@
   {% endfor %}
 {% endif %}
 
+
+{% if site.defer_head_scripts %}
+  {% for script in site.defer_head_scripts %}
+    <script src="{{ script | relative_url }}" defer></script>
+  {% endfor %}
+{% endif %}

@@ -4,16 +4,8 @@
 set -euxo pipefail
 
 WEBDIR=$(realpath website)
-DEPLOYDIR=$1
-shift
-BRANCH=$1
-shift
-if [[ -z "${DEPLOYDIR}" ]]; then
-    DEPLOYDIR=covidvis.github.io
-fi
-if [[ -z "${BRANCH}" ]]; then
-    BRANCH=master
-fi
+DEPLOYDIR=${1:-covidvis.github.io}
+BRANCH=${2-master}
 if [[ ! -d $DEPLOYDIR ]]; then
     DEPLOYDIR="../${DEPLOYDIR}"
 fi
