@@ -206,8 +206,12 @@ class CovidChart(object):
                 df.loc[pred, self.Y] = df.loc[pred, self.ycol].cumsum()
 
         if self.top_k_groups is not None:
-            # force showing India
-            top_k_groups = list(df.groupby(self.groupcol)[self.Y].max().nlargest(self.top_k_groups).index) + ['India']
+            # force showing India and Greece
+            top_k_groups = list(
+                set(
+                    df.groupby(self.groupcol)[self.Y].max().nlargest(self.top_k_groups).index
+                ) | {'India', 'Greece'}
+            )
             df = df.loc[df[self.groupcol].isin(top_k_groups)]
 
         df = self.start_criterion.transform(self, df)
