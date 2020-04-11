@@ -11,7 +11,7 @@
 
 $covidvis-fonts: 'Khula', sans-serif, -apple-system,BlinkMacSystemFont,"Roboto","Segoe UI","Helvetica Neue","Lucida Grande",Arial,sans-serif !important;
 
-body, h2, h3, footer, button, selector .masthead__menu, .page__footer-copyright, {
+body, h1, h2, h3, footer, button, select, .masthead__menu, .page__footer-copyright, {
     font-family: $covidvis-fonts;
 }
 
@@ -29,7 +29,6 @@ h2 {
 .masthead {
     background:#000000;
 }
-
 .page__footer {
     background:#000000;
 }
@@ -135,4 +134,35 @@ h2 {
 .tab-content {
     display: none;
     padding: 6px 12px;
+}
+
+input[type=checkbox] {
+    position: relative;
+    cursor: pointer;
+}
+input[type=checkbox]:before {
+    content: "";
+    display: block;
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 0;
+    left: 0;
+    border: 2px solid #555555;
+    border-radius: 3px;
+    background-color: white;
+}
+input[type=checkbox]:checked:after {
+    content: "";
+    display: block;
+    width: 5px;
+    height: 10px;
+    border: solid black;
+    border-width: 0 2px 2px 0;
+    -webkit-transform: rotate(45deg);
+    -ms-transform: rotate(45deg);
+    transform: rotate(45deg);
+    position: absolute;
+    top: 2px;
+    left: 6px;
 }
