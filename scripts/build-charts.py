@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import sys
 sys.path.append('.')
+from datetime import datetime
 
 import pandas as pd
 import yaml
@@ -186,6 +187,7 @@ function startVegaEmbedding() {{
 def make_jekyll_config(configs):
     with open('./website/_config.in.yml', 'r') as f:
         jekyll_config = yaml.load(f.read(), yaml.SafeLoader)
+    jekyll_config['date_last_modified'] = datetime.now().strftime('%B %d, %Y')
     for config in configs:
         jekyll_config['footer_scripts'].append(f'js/autogen/{config["name"]}.js')
     with open('./website/_config.yml', 'w') as f:
