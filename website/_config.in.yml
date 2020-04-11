@@ -156,6 +156,7 @@ include:
   - .htaccess
   - _pages
 exclude:
+  - .idea
   - "*.sublime-project"
   - "*.sublime-workspace"
   - old
