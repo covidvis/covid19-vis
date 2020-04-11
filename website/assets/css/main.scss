@@ -7,6 +7,10 @@
 @import "minimal-mistakes/skins/{{ site.minimal_mistakes_skin | default: 'default' }}"; // skin
 @import "minimal-mistakes"; // main partials
 
+// to import additional css / scss, add to _sass directory.
+// Example: if _sass/file.css exists, we can input it here as follows:
+// @import "file.css";
+
 // your styles here
 
 $covidvis-fonts: 'Khula', sans-serif, -apple-system,BlinkMacSystemFont,"Roboto","Segoe UI","Helvetica Neue","Lucida Grande",Arial,sans-serif !important;
