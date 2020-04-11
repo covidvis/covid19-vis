@@ -7,11 +7,11 @@
 @import "minimal-mistakes/skins/{{ site.minimal_mistakes_skin | default: 'default' }}"; // skin
 @import "minimal-mistakes"; // main partials
 
-// to import additional css / scss, add to _sass directory.
+// To import additional css / scss, add to _sass directory.
 // Example: if _sass/file.css exists, we can input it here as follows:
 // @import "file.css";
 
-// your styles here
+// Place additional styles below.
 
 $covidvis-fonts: 'Khula', sans-serif, -apple-system,BlinkMacSystemFont,"Roboto","Segoe UI","Helvetica Neue","Lucida Grande",Arial,sans-serif !important;
 
@@ -20,23 +20,20 @@ body, h1, h2, h3, footer, button, select, .masthead__menu, .page__footer-copyrig
 }
 
 .layout--single {
-    background-color: rgb(256, 256, 256);
+    background-color: white;
     line-height: 1.5;
     min-width: 864px;
     //color: #40514e;
+}
+
+.masthead, .page__footer, .greedy-nav {
+    background-color: black;
 }
 
 h2 {
     font-size: 1.25em;
 }
 
-.masthead {
-    background:#000000;
-}
-.page__footer {
-    background:#000000;
-}
-.greedy-nav { background: #000000; }
 .greedy-nav a { color: rgb(242,246,246); }
 .greedy-nav a:hover { color: rgb(242,246,246); }
 
@@ -148,20 +145,28 @@ input[type=checkbox]:before {
     content: "";
     display: block;
     position: absolute;
-    width: 16px;
-    height: 16px;
+    width: 20px;
+    height: 20px;
     top: 0;
     left: 0;
-    border: 2px solid #555555;
-    border-radius: 3px;
-    background-color: white;
+    background-color:#e9e9e9;
+}
+input[type=checkbox]:checked:before {
+    content: "";
+    display: block;
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    top: 0;
+    left: 0;
+    background-color:#1E80EF;
 }
 input[type=checkbox]:checked:after {
     content: "";
     display: block;
     width: 5px;
     height: 10px;
-    border: solid black;
+    border: solid white;
     border-width: 0 2px 2px 0;
     -webkit-transform: rotate(45deg);
     -ms-transform: rotate(45deg);
