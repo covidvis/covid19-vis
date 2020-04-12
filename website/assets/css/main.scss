@@ -51,8 +51,12 @@ h2 {
 }
 
 @media only screen and (max-width: 450px) {
+    $mobile-offset: 24px;
     .tabbed-ui > [class$="-mobile"] {
-        margin-left: -20px;
+        margin-left: -$mobile-offset;
+    }
+    .tabbed-ui div.vega-bind {
+        margin-left: $mobile-offset;
     }
 }
 
