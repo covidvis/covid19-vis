@@ -2,6 +2,9 @@ $('.default-open').addClass('active').click();
 
 function openTabs(evt, tabs_class) {
     // Get all elements at same level with class='tab-content' and hide them
+    if ($(window).width() <= 800) {
+        tabs_class += '-mobile';
+    }
     $(tabs_class).parent().children('.tab-content').css('display', 'none');
 
     // Get all elements in this button group remove the class 'active'

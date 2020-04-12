@@ -14,6 +14,8 @@
 // Place additional styles below.
 
 $covidvis-fonts: 'Khula', sans-serif, -apple-system,BlinkMacSystemFont,"Roboto","Segoe UI","Helvetica Neue","Lucida Grande",Arial,sans-serif !important;
+$nav-link-color: rgb(242,246,246);
+$ui-width: 850px;
 
 body, h1, h2, h3, footer, button, select, .masthead__menu, .page__footer-copyright, {
     font-family: $covidvis-fonts;
@@ -22,7 +24,7 @@ body, h1, h2, h3, footer, button, select, .masthead__menu, .page__footer-copyrig
 .layout--single {
     background-color: white;
     line-height: 1.5;
-    min-width: 864px;
+//    min-width: $layout-min-width;
     //color: #40514e;
 }
 
@@ -34,28 +36,58 @@ h2 {
     font-size: 1.25em;
 }
 
-.greedy-nav a { color: rgb(242,246,246); }
-.greedy-nav a:hover { color: rgb(242,246,246); }
+.greedy-nav a { color: $nav-link-color; }
+.greedy-nav a:hover { color: $nav-link-color; }
 
 .site-logo img{
     max-height: 2.5rem;
 }
 
-.page {
-    width: calc(100% - #{$right-sidebar-width-narrow});
+.tabbed-ui {
+    width: $ui-width;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    border-top: none;
 }
 
-@media only screen and (min-width: 864px) {
+@media only screen and (max-width: 450px) {
+    .tabbed-ui > [class$="-mobile"] {
+        margin-left: -20px;
+    }
+}
+
+@media only screen and (min-width: 1024px) {
+    .page {
+        width: calc(100% - #{$right-sidebar-width-narrow});
+    }
+
     .overflow-center {
         margin-left: 50%;
         transform: translateX(-50%);
     }
+
 }
 
-.chart-grid {
-    display: grid;
-    justify-content: center;
-    grid-template-columns: 1fr 1fr; /* fraction*/
+@media only screen and (max-width: $ui-width) {
+    .layout--single {
+        width: 100%;
+    }
+
+    article.page {
+        width: 100%;
+    }
+
+    .page__content {
+        width: 100%;
+    }
+
+    .page__inner-wrap {
+        width: 100%;
+    }
+
+    .tabbed-ui {
+        width: 100%;
+    }
 }
 
 .centered {
@@ -67,13 +99,6 @@ h2 {
     .github-corner {
         display: none;
     }
-}
-
-.tabbed-ui {
-    width: 850px;
-    border: 1px solid #ccc;
-    border-radius: 10px;
-    border-top: none;
 }
 
 /* Style the tab */

@@ -93,8 +93,9 @@ class ChartSpec(DotDict):
         xaxis_kwargs = {}
         if 'xdomain' in self:
             xaxis_kwargs['scale'] = alt.Scale(domain=self.xdomain)
-        if 'xtitle' in self:
-            xaxis_kwargs['title'] = self.xtitle
+        xtitle = self.get('xtitle', None)
+        if xtitle is not None:
+            xaxis_kwargs['title'] = xtitle
         return alt.X(shorthand, **xaxis_kwargs)
 
     def _get_y(self, shorthand='y:Q'):
@@ -104,8 +105,9 @@ class ChartSpec(DotDict):
             yaxis_kwargs['scale'] = alt.Scale(type=yscale, domain=self.ydomain)
         else:
             yaxis_kwargs['scale'] = alt.Scale(type=yscale)
-        if 'ytitle' in self:
-            yaxis_kwargs['title'] = self.ytitle
+        ytitle = self.get('ytitle', None)
+        if ytitle is not None:
+            yaxis_kwargs['title'] = ytitle
         return alt.Y(shorthand, **yaxis_kwargs)
 
     def _prefer_transient(self, key, default=None):

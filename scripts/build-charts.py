@@ -10,31 +10,53 @@ from chartlib import CovidChart, DaysSinceNumReached
 
 
 def chart_configs():
+    mobile_override_props = {
+        'width': 200,
+        'ytitle': '',
+    }
     return [
         {
-            'name': 'jhu_country',
-            'embed_id': 'country_vis',
-            'gen': make_jhu_country_chart,
+            'name': 'jhu_world_cases',
+            'gen': make_jhu_country_cases_chart,
         },
         {
-            'name': 'jhu_country_death',
-            'embed_id': 'country_death_vis',
-            'gen': make_jhu_country_death_chart,
+            'name': 'jhu_world_deaths',
+            'gen': make_jhu_country_deaths_chart,
         },
         {
-            'name': 'jhu_state',
-            'embed_id': 'state_vis',
-            'gen': make_jhu_state_chart,
+            'name': 'jhu_us_cases',
+            'gen': make_jhu_state_cases_chart,
         },
         {
-            'name': 'jhu_state_death',
-            'embed_id': 'state_death_vis',
-            'gen': make_jhu_state_death_chart,
+            'name': 'jhu_us_deaths',
+            'gen': make_jhu_state_deaths_chart,
+        },
+
+        # mobile-friendly versions below
+        {
+            'name': 'jhu_world_cases_mobile',
+            'gen': make_jhu_country_cases_chart,
+            'override_props': mobile_override_props,
+        },
+        {
+            'name': 'jhu_world_deaths_mobile',
+            'gen': make_jhu_country_deaths_chart,
+            'override_props': mobile_override_props,
+        },
+        {
+            'name': 'jhu_us_cases_mobile',
+            'gen': make_jhu_state_cases_chart,
+            'override_props': mobile_override_props,
+        },
+        {
+            'name': 'jhu_us_deaths_mobile',
+            'gen': make_jhu_state_deaths_chart,
+            'override_props': mobile_override_props,
         },
     ]
 
 
-def make_jhu_country_chart() -> CovidChart:
+def make_jhu_country_cases_chart(override_props) -> CovidChart:
     jhu_df = pd.read_csv('./data/jhu-data.csv')
     jhu_df = jhu_df[(jhu_df.Province_State.isnull()) & (jhu_df.Country_Region != 'China')]
 
@@ -57,10 +79,11 @@ def make_jhu_country_chart() -> CovidChart:
     chart.set_width(600).set_height(400)
     chart.set_ydomain((days_since, 200000))
     chart.set_xdomain((0, 40))
+    chart.spec.update(override_props)
     return chart
 
 
-def make_jhu_country_death_chart() -> CovidChart:
+def make_jhu_country_deaths_chart(override_props) -> CovidChart:
     jhu_df = pd.read_csv("./data/jhu-data.csv")
     jhu_df = jhu_df.loc[(jhu_df.Country_Region != 'China') & jhu_df.Province_State.isnull()]
 
@@ -80,33 +103,11 @@ def make_jhu_country_death_chart() -> CovidChart:
     chart.set_width(600).set_height(400)
     chart.set_ydomain((10, 10000))
     chart.set_xdomain((0, 35)).compile()
+    chart.spec.update(override_props)
     return chart
 
 
-def make_jhu_state_death_chart() -> CovidChart:
-    jhu_df = pd.read_csv('./data/jhu-data.csv')
-    jhu_df = jhu_df.loc[(jhu_df.Country_Region == 'United States') & jhu_df.Province_State.notnull()]
-
-    chart = CovidChart(
-        jhu_df,
-        groupcol='Province_State',
-        start_criterion=DaysSinceNumReached(10, 'Deaths'),
-        ycol='Deaths',
-        xcol='Date',
-        chart_type='usa',
-        top_k_groups=20,
-        quarantine_df='./data/quarantine-activity-us.csv' # should have a column with same name as `groupcol`
-    )
-
-    chart = chart.set_ytitle('Number of Deaths (log)')
-    chart = chart.set_xtitle('Days since 10 Deaths')
-    chart.set_width(600).set_height(400)
-    chart.set_ydomain((10, 10000))
-    chart.set_xdomain((0, 25)).compile()
-    return chart
-
-
-def make_jhu_state_chart() -> CovidChart:
+def make_jhu_state_cases_chart(override_props) -> CovidChart:
     jhu_df = pd.read_csv('./data/jhu-data.csv')
     # grab us-specific
     jhu_df = jhu_df[(jhu_df.Country_Region == 'United States') & jhu_df.Province_State.notnull()]
@@ -128,10 +129,35 @@ def make_jhu_state_chart() -> CovidChart:
     chart = chart.set_xtitle('Days since {} Confirmed'.format(days_since))
     chart.set_width(600).set_height(400)
     chart.set_xdomain((0, 30)).set_ydomain((days_since, 100000))
+    chart.spec.update(override_props)
     return chart
 
 
-def make_jhu_selected_state_chart() -> CovidChart:
+def make_jhu_state_deaths_chart(override_props) -> CovidChart:
+    jhu_df = pd.read_csv('./data/jhu-data.csv')
+    jhu_df = jhu_df.loc[(jhu_df.Country_Region == 'United States') & jhu_df.Province_State.notnull()]
+
+    chart = CovidChart(
+        jhu_df,
+        groupcol='Province_State',
+        start_criterion=DaysSinceNumReached(10, 'Deaths'),
+        ycol='Deaths',
+        xcol='Date',
+        chart_type='usa',
+        top_k_groups=20,
+        quarantine_df='./data/quarantine-activity-us.csv' # should have a column with same name as `groupcol`
+    )
+
+    chart = chart.set_ytitle('Number of Deaths (log)')
+    chart = chart.set_xtitle('Days since 10 Deaths')
+    chart.set_width(600).set_height(400)
+    chart.set_ydomain((10, 10000))
+    chart.set_xdomain((0, 25)).compile()
+    chart.spec.update(override_props)
+    return chart
+
+
+def make_jhu_selected_state_chart(override_props) -> CovidChart:
     jhu_df = pd.read_csv('./data/jhu-data.csv')
     # grab us-specific
     jhu_df = jhu_df[(jhu_df.Country_Region == 'United States') & jhu_df.Province_State.notnull()]
@@ -154,13 +180,14 @@ def make_jhu_selected_state_chart() -> CovidChart:
     chart.set_width(250).set_height(400)
     chart.set_xdomain((0, 35)).set_ydomain((days_since, 100000))
     chart.set_title("States With Significant Rate Decreases")
+    chart.spec.update(override_props)
     return chart
 
 
 def export_charts(configs):
     for config in configs:
         name = config['name']
-        chart = config['gen']()
+        chart = config['gen'](config.get('override_props', {}))
         chart.export(f'./website/js/autogen/{name}.js', f'{name}')
 
 
