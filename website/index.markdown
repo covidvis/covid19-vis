@@ -60,8 +60,8 @@ negative mental health implications
 <h2 id="lockdown_section">Effects of Lockdowns</h2>
 <p>
 As a first step towards understanding the impact of interventions, the
-visualization above shows the logarithm of the number of confirmed cases 
-over time, for the 20 countries with the most confirmed cases of SARS-CoV-2.
+visualization above shows the number of confirmed cases over time (on a
+log scale), for the 20 countries with the most confirmed cases of SARS-CoV-2.
 We have overlaid our trends with various countermeasures 
 taken by the governing entities. 
 We invite the reader to reveal

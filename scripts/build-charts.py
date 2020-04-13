@@ -74,7 +74,7 @@ def make_jhu_country_cases_chart(override_props) -> CovidChart:
 
     # chart.set_colormap()
     chart.set_unfocused_opacity(0.05)
-    chart = chart.set_ytitle('Number of Confirmed Cases (log)')
+    chart = chart.set_ytitle('Number of Confirmed Cases (log scale)')
     chart = chart.set_xtitle('Days since {} Confirmed'.format(days_since))
     chart.set_width(600).set_height(400)
     chart.set_ydomain((days_since, 200000))
@@ -98,7 +98,7 @@ def make_jhu_country_deaths_chart(override_props) -> CovidChart:
         quarantine_df='./data/quarantine-activity.csv'  # should have a column with same name as `groupcol`
     )
 
-    chart = chart.set_ytitle('Number of Deaths (log)')
+    chart = chart.set_ytitle('Number of Deaths (log scale)')
     chart = chart.set_xtitle('Days since 10 Deaths')
     chart.set_width(600).set_height(400)
     chart.set_ydomain((10, 10000))
@@ -125,7 +125,7 @@ def make_jhu_state_cases_chart(override_props) -> CovidChart:
     )
     # chart.set_colormap()
     chart.set_unfocused_opacity(0.05)
-    chart = chart.set_ytitle('Number of Confirmed Cases (log)')
+    chart = chart.set_ytitle('Number of Confirmed Cases (log scale)')
     chart = chart.set_xtitle('Days since {} Confirmed'.format(days_since))
     chart.set_width(600).set_height(400)
     chart.set_xdomain((0, 30)).set_ydomain((days_since, 100000))
@@ -148,7 +148,7 @@ def make_jhu_state_deaths_chart(override_props) -> CovidChart:
         quarantine_df='./data/quarantine-activity-us.csv' # should have a column with same name as `groupcol`
     )
 
-    chart = chart.set_ytitle('Number of Deaths (log)')
+    chart = chart.set_ytitle('Number of Deaths (log scale)')
     chart = chart.set_xtitle('Days since 10 Deaths')
     chart.set_width(600).set_height(400)
     chart.set_ydomain((10, 10000))
@@ -175,7 +175,7 @@ def make_jhu_selected_state_chart(override_props) -> CovidChart:
     )
     # chart.set_colormap()
     chart.set_unfocused_opacity(0.05)
-    chart = chart.set_ytitle('Number of Confirmed Cases (log)')
+    chart = chart.set_ytitle('Number of Confirmed Cases (log scale)')
     chart = chart.set_xtitle('Days since {} Confirmed'.format(days_since))
     chart.set_width(250).set_height(400)
     chart.set_xdomain((0, 35)).set_ydomain((days_since, 100000))
