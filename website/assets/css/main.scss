@@ -24,7 +24,6 @@ body, h1, h2, h3, footer, button, select, .masthead__menu, .page__footer-copyrig
 .layout--single {
     background-color: white;
     line-height: 1.5;
-//    min-width: $layout-min-width;
     //color: #40514e;
 }
 
@@ -44,19 +43,28 @@ h2 {
 }
 
 .tabbed-ui {
+    min-width: 375px;
     width: $ui-width;
     border: 1px solid #ccc;
     border-radius: 10px;
     border-top: none;
 }
 
-@media only screen and (max-width: 450px) {
-    $mobile-offset: 24px;
-    .tabbed-ui > [class$="-mobile"] {
-        margin-left: -$mobile-offset;
+$mobile-offset: 24px;
+.if-mobile {
+    margin-left: -$mobile-offset;
+    display: none;
+}
+.if-mobile div.vega-bind {
+    margin-left: $mobile-offset;
+}
+
+@media only screen and (max-width: 800px) {
+    .if-mobile {
+        display: block;
     }
-    .tabbed-ui div.vega-bind {
-        margin-left: $mobile-offset;
+    .if-desktop {
+        display: none;
     }
 }
 

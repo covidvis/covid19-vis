@@ -35,23 +35,25 @@ negative mental health implications
 </div>
 
 <div class="tab-content tab-content-world" id="world-tab">
+<div class="if-desktop">
     <div class="tab-content tab-content-cases" id="jhu_world_cases"></div>
     <div class="tab-content tab-content-deaths" id="jhu_world_deaths"></div>
 </div>
+<div class="if-mobile">
+    <div class="tab-content tab-content-cases" id="jhu_world_cases_mobile"></div>
+    <div class="tab-content tab-content-deaths" id="jhu_world_deaths_mobile"></div>
+</div>
+</div>
 
 <div class="tab-content tab-content-usa" id="usa-tab">
+<div class="if-desktop">
     <div class="tab-content tab-content-cases" id="jhu_us_cases"></div>
     <div class="tab-content tab-content-deaths" id="jhu_us_deaths"></div>
 </div>
-
-<div class="tab-content tab-content-world-mobile" id="world-tab-mobile">
-    <div class="tab-content tab-content-cases-mobile" id="jhu_world_cases_mobile"></div>
-    <div class="tab-content tab-content-deaths-mobile" id="jhu_world_deaths_mobile"></div>
+<div class="if-mobile">
+    <div class="tab-content tab-content-cases" id="jhu_us_cases_mobile"></div>
+    <div class="tab-content tab-content-deaths" id="jhu_us_deaths_mobile"></div>
 </div>
-
-<div class="tab-content tab-content-usa-mobile" id="usa-tab-mobile">
-    <div class="tab-content tab-content-cases-mobile" id="jhu_us_cases_mobile"></div>
-    <div class="tab-content tab-content-deaths-mobile" id="jhu_us_deaths_mobile"></div>
 </div>
 </div>
 
