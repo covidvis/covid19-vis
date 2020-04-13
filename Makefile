@@ -1,6 +1,6 @@
 .PHONY: all charts web serve deploy stage
 
-all: charts web
+all: web
 
 charts:
 	./scripts/build-charts.py
@@ -11,7 +11,7 @@ web: charts
 serve: charts
 	./scripts/serve-web.sh
 
-deploy: charts web
+deploy: web
 	./scripts/deploy-web.sh
 
 stage: charts

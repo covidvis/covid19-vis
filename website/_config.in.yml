@@ -80,7 +80,7 @@ naver_site_verification  :
 
 # Social Sharing
 twitter:
-  username               :
+  username               : covidvis
 facebook:
   username               :
   app_id                 :
@@ -89,9 +89,21 @@ og_image                 : # Open Graph/Twitter default site image
 # For specifying social profiles
 # - https://developers.google.com/structured-data/customize/social-profiles
 social:
-  type                   : # Person or Organization (defaults to Person)
-  name                   : # If the user or organization name differs from the site's name
+  type                   : Organization
+  name                   : Covidvis
   links: # An array of links to social media profiles
+    - label: "Email"
+      icon: "fas fa-fw fa-envelope-square"
+      url: "mailto:covidvis@berkeley.edu"
+    - label: "Website"
+      icon: "fas fa-fw fa-link"
+      url: "https://covidvis.berkeley.edu"
+    - label: "Twitter"
+      icon: "fab fa-fw fa-twitter-square"
+      url: "https://twitter.com/covidvis"
+    - label: "GitHub"
+      icon: "fab fa-fw fa-github"
+      url: "https://github.com/covidvis"
 
 # Analytics
 analytics:
@@ -103,27 +115,27 @@ analytics:
 
 # Site Author
 author:
-  name             : "Your Name"
+  name             :
   avatar           : # path of avatar image, e.g. "/assets/images/bio-photo.jpg"
-  bio              : "I am an **amazing** person."
-  location         : "Somewhere"
-  email            :
+  bio              :
+  location         : "Berkeley, CA"
+  email            : "covidvis@berkeley.edu"
   links:
     - label: "Email"
       icon: "fas fa-fw fa-envelope-square"
-      # url: mailto:your.name@email.com
+      url: "mailto:covidvis@berkeley.edu"
     - label: "Website"
       icon: "fas fa-fw fa-link"
-      # url: "https://your-website.com"
+      url: "https://covidvis.berkeley.edu"
     - label: "Twitter"
       icon: "fab fa-fw fa-twitter-square"
-      # url: "https://twitter.com/"
+      url: "https://twitter.com/covidvis"
     - label: "Facebook"
       icon: "fab fa-fw fa-facebook-square"
       # url: "https://facebook.com/"
     - label: "GitHub"
       icon: "fab fa-fw fa-github"
-      # url: "https://github.com/"
+      url: "https://github.com/covidvis"
     - label: "Instagram"
       icon: "fab fa-fw fa-instagram"
       # url: "https://instagram.com/"
@@ -133,13 +145,13 @@ footer:
   links:
     - label: "Twitter"
       icon: "fab fa-fw fa-twitter-square"
-      # url:
+      # url: "https://twitter.com/covidvis"
     - label: "Facebook"
       icon: "fab fa-fw fa-facebook-square"
       # url:
     - label: "GitHub"
       icon: "fab fa-fw fa-github"
-      # url:
+      # url: "https://github.com/covidvis"
     - label: "GitLab"
       icon: "fab fa-fw fa-gitlab"
       # url:
