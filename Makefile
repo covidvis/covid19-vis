@@ -2,11 +2,17 @@
 
 all: web
 
-charts:
+.empty-targets/charts: scripts/build-charts.py Makefile
 	./scripts/build-charts.py
+	touch ./.empty-targets/charts
 
-web: charts
+charts: .empty-targets/charts
+
+.empty-targets/web: .empty-targets/charts Makefile
 	./scripts/build-web.sh
+	touch ./.empty-targets/web
+
+web: .empty-targets/web
 
 serve: charts
 	./scripts/serve-web.sh
