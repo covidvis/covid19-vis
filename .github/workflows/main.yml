@@ -65,6 +65,8 @@ jobs:
     - run: ls
     - run: |
         echo "hello" >> test.txt
+        git config --global user.email "dorisjunglinlee@gmail.com"
+        git config --global user.name "Doris Lee"
         git add .
         git commit -m "deploy"
         git push origin master
