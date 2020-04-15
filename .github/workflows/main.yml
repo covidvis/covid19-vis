@@ -35,26 +35,38 @@ jobs:
 
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - uses: actions/checkout@v2
+   
+    # - run: |
+    #     gem install bundler
+    #     bundle install
+    #   working-directory: ./website
+     
+    # - run: git clone https://github.com/CSSEGISandData/COVID-19.git
+
+    # - uses: actions/setup-python@v1
+    #   with:
+    #     python-version: '3.x' # Version range or exact version of a Python version to use, using SemVer's version range syntax
+    #     architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
+    # - run: pip install -r requirements.txt
+    # - run: python processData.py
+    #   working-directory: ./data
+    
+    # - run: ls
+    # # - run: make deploy
+    # - run: python ./scripts/build-charts.py
+    # - run: ./scripts/build-web.sh
+    # # - run: git clone https://github.com/covidvis/covidvis.github.io.git
+
+    - uses: actions/checkout@v2
+      with:
+        repository: covidvis/covidvis.github.io
+        path: covidvis.github.io
+      run: |
+        echo "hello" >> test.txt
+        git add .
+        git commit -m "deploy"
+        git push origin master
+        
     - run: ls
     - run: ls ./website
-    - run: |
-        gem install bundler
-        bundle install
-      working-directory: ./website
-     
-    - run: git clone https://github.com/CSSEGISandData/COVID-19.git
-
-    - uses: actions/setup-python@v1
-      with:
-        python-version: '3.x' # Version range or exact version of a Python version to use, using SemVer's version range syntax
-        architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
-    - run: pip install -r requirements.txt
-    - run: python processData.py
-      working-directory: ./data
-    
-    - run: ls
-    # - run: make deploy
-    - run: python ./scripts/build-charts.py
-    - run: ./scripts/build-web.sh
-    - run: git clone https://github.com/covidvis/covidvis.github.io.git
     - run: ./scripts/deploy-web.sh
