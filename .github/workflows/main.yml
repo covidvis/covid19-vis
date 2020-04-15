@@ -5,17 +5,19 @@ name: CI
 # Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the master branch
 on:
-  schedule:
-      # ┌───────────── minute (0 - 59)
-      # │ ┌───────────── hour (0 - 23)
-      # │ │ ┌───────────── day of the month (1 - 31)
-      # │ │ │ ┌───────────── month (1 - 12 or JAN-DEC)
-      # │ │ │ │ ┌───────────── day of the week (0 - 6 or SUN-SAT)
-      # │ │ │ │ │                                   
-      # │ │ │ │ │
-      # │ │ │ │ │
-      # * * * * *
-    - cron:  '*/1 * * * *'
+  # schedule:
+  #     # ┌───────────── minute (0 - 59)
+  #     # │ ┌───────────── hour (0 - 23)
+  #     # │ │ ┌───────────── day of the month (1 - 31)
+  #     # │ │ │ ┌───────────── month (1 - 12 or JAN-DEC)
+  #     # │ │ │ │ ┌───────────── day of the week (0 - 6 or SUN-SAT)
+  #     # │ │ │ │ │                                   
+  #     # │ │ │ │ │
+  #     # │ │ │ │ │
+  #     # * * * * *
+  #   - cron:  '*/1 * * * *'
+  push:
+    branches: [ master ]
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
@@ -37,7 +39,7 @@ jobs:
     # Runs a single command using the runners shell
     - name: Run a one-line script
       run: echo Hello, world!
-      
+
     - run: cd data
 
     - uses: actions/setup-python@v1
