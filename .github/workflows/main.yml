@@ -35,10 +35,12 @@ jobs:
 
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - uses: actions/checkout@v2
+    - run: ls
+    - run: ls ./website
     - run: |
         gem install bundler
         bundle install
-        working-directory: ./website
+      working-directory: ./website
      
     - run: git clone https://github.com/CSSEGISandData/COVID-19.git
 
