@@ -61,12 +61,11 @@ jobs:
       with:
         repository: covidvis/covidvis.github.io
         path: covidvis.github.io
-      run: |
+    - run: |
+        ls
         echo "hello" >> test.txt
         git add .
         git commit -m "deploy"
         git push origin master
         
-    - run: ls
-    - run: ls ./website
     - run: ./scripts/deploy-web.sh
