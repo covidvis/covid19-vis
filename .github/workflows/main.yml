@@ -5,11 +5,17 @@ name: CI
 # Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the master branch
 on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
-
+  schedule:
+      # ┌───────────── minute (0 - 59)
+      # │ ┌───────────── hour (0 - 23)
+      # │ │ ┌───────────── day of the month (1 - 31)
+      # │ │ │ ┌───────────── month (1 - 12 or JAN-DEC)
+      # │ │ │ │ ┌───────────── day of the week (0 - 6 or SUN-SAT)
+      # │ │ │ │ │                                   
+      # │ │ │ │ │
+      # │ │ │ │ │
+      # * * * * *
+    - cron:  '*/1 * * * *'
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
@@ -23,7 +29,7 @@ jobs:
       uses: actions/setup-ruby@v1.0.0
       with:
         # Version range or exact version of a Ruby version to use.
-        version: >=2.3 # optional, default is >= 2.4
+        version: >=2.3 
 
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - uses: actions/checkout@v2
