@@ -26,6 +26,7 @@ class CovidChart(object):
     y_type = 'y_type'
     normal_type = 'normal'
     lockdown_type = 'lockdown'
+    lockdown_idx = 'lockdown_idx'
 
     def __init__(
         self,
@@ -130,7 +131,7 @@ class CovidChart(object):
         )
         return quarantine_df
 
-    def _preprocess_lockdown_info(self, df) -> pd.DataFrame:
+    def _preprocess_quarantine_df(self, df) -> pd.DataFrame:
         quarantine_df = self.quarantine_df.copy()
         quarantine_df[self.x_type] = self.lockdown_type
         quarantine_df = quarantine_df.merge(
@@ -148,6 +149,13 @@ class CovidChart(object):
         # only retain lockdown events that appear in the chart domain
         quarantine_df = quarantine_df.loc[quarantine_df.x.between(*self.spec.xdomain, inclusive=False)]
 
+        # enrich lockdown events with the chronological index of when they occur
+        # (might be useful for downstream vega stuff)
+        quarantine_df[self.lockdown_idx] = quarantine_df.sort_values(self.X).groupby(self.groupcol).cumcount()
+        return quarantine_df
+
+    def _preprocess_lockdown_info(self, df) -> pd.DataFrame:
+        quarantine_df = self._preprocess_quarantine_df(df)
         # for trends, use earliest lockdown that appears... eventually we will want to specify this somehow
         trend_df = quarantine_df.loc[quarantine_df.groupby(self.groupcol).x.idxmax()]
         df = df.merge(
