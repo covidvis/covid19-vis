@@ -49,9 +49,10 @@ jobs:
     - run: pip install -r requirements.txt
     - run: python processData.py
       working-directory: ./data
-    # - run: git clone git@github.com:covidvis/covidvis.github.io.git
+    
     - run: ls
     # - run: make deploy
     - run: python ./scripts/build-charts.py
     - run: ./scripts/build-web.sh
+    - run: git clone https://github.com/covidvis/covidvis.github.io.git
     - run: ./scripts/deploy-web.sh
