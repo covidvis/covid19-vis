@@ -5,19 +5,19 @@ name: CI
 # Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the master branch
 on:
-  # schedule:
-  #     # ┌───────────── minute (0 - 59)
-  #     # │ ┌───────────── hour (0 - 23)
-  #     # │ │ ┌───────────── day of the month (1 - 31)
-  #     # │ │ │ ┌───────────── month (1 - 12 or JAN-DEC)
-  #     # │ │ │ │ ┌───────────── day of the week (0 - 6 or SUN-SAT)
-  #     # │ │ │ │ │                                   
-  #     # │ │ │ │ │
-  #     # │ │ │ │ │
-  #     # * * * * *
-  #   - cron:  '*/1 * * * *'
-  push:
-    branches: [ master ]
+  schedule:
+      # ┌───────────── minute (0 - 59)
+      # │ ┌───────────── hour (0 - 23)
+      # │ │ ┌───────────── day of the month (1 - 31)
+      # │ │ │ ┌───────────── month (1 - 12 or JAN-DEC)
+      # │ │ │ │ ┌───────────── day of the week (0 - 6 or SUN-SAT)
+      # │ │ │ │ │                                   
+      # │ │ │ │ │
+      # │ │ │ │ │
+      # * * * * *
+    - cron:  '*/1 * * * *'
+  # push:
+  #   branches: [ master ]
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
@@ -50,7 +50,13 @@ jobs:
     - run: pip install -r requirements.txt
     - run: python processData.py
       working-directory: ./data
-    
+    - run: |
+        git config --global user.email "dorisjunglinlee@gmail.com"
+        git config --global user.name "Doris Lee"
+    - run: |
+        git add data/jhu-data.csv
+        git commit -m "update jhu data"
+        git push
     - run: ls
     # - run: make deploy
     - run: python ./scripts/build-charts.py
@@ -62,9 +68,7 @@ jobs:
         repository: covidvis/covidvis.github.io
         token: ${{ secrets.GITHUBPAT }} # `GitHub_PAT` is a secret that contains your PAT
         path: covidvis.github.io
-    - run: |
-        git config --global user.email "dorisjunglinlee@gmail.com"
-        git config --global user.name "Doris Lee"
+    
     - run: ls
     # - run: |
     #     cd covidvis.github.io
