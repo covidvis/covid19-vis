@@ -64,6 +64,7 @@ jobs:
         path: covidvis.github.io
     - run: ls
     - run: |
+        cd covidvis.github.io
         echo "hello" >> test.txt
         git config --global user.email "dorisjunglinlee@gmail.com"
         git config --global user.name "Doris Lee"
