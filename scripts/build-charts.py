@@ -145,7 +145,7 @@ def make_jhu_state_deaths_chart(override_props) -> CovidChart:
         xcol='Date',
         chart_type='usa',
         top_k_groups=20,
-        quarantine_df='./data/quarantine-activity-us.csv' # should have a column with same name as `groupcol`
+        quarantine_df='./data/quarantine-activity-US.csv' # should have a column with same name as `groupcol`
     )
 
     chart = chart.set_ytitle('Number of Deaths (log scale)')
