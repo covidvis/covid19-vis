@@ -36,26 +36,26 @@ jobs:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - uses: actions/checkout@v2
    
-    # - run: |
-    #     gem install bundler
-    #     bundle install
-    #   working-directory: ./website
+    - run: |
+        gem install bundler
+        bundle install
+      working-directory: ./website
      
-    # - run: git clone https://github.com/CSSEGISandData/COVID-19.git
+    - run: git clone https://github.com/CSSEGISandData/COVID-19.git
 
-    # - uses: actions/setup-python@v1
-    #   with:
-    #     python-version: '3.x' # Version range or exact version of a Python version to use, using SemVer's version range syntax
-    #     architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
-    # - run: pip install -r requirements.txt
-    # - run: python processData.py
-    #   working-directory: ./data
+    - uses: actions/setup-python@v1
+      with:
+        python-version: '3.x' # Version range or exact version of a Python version to use, using SemVer's version range syntax
+        architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
+    - run: pip install -r requirements.txt
+    - run: python processData.py
+      working-directory: ./data
     
-    # - run: ls
-    # # - run: make deploy
-    # - run: python ./scripts/build-charts.py
-    # - run: ./scripts/build-web.sh
-    # # - run: git clone https://github.com/covidvis/covidvis.github.io.git
+    - run: ls
+    # - run: make deploy
+    - run: python ./scripts/build-charts.py
+    - run: ./scripts/build-web.sh
+    # - run: git clone https://github.com/covidvis/covidvis.github.io.git
 
     - uses: actions/checkout@v2
       with:
@@ -63,13 +63,13 @@ jobs:
         token: ${{ secrets.GITHUBPAT }} # `GitHub_PAT` is a secret that contains your PAT
         path: covidvis.github.io
     - run: ls
-    - run: |
-        cd covidvis.github.io
-        echo "hello" >> test.txt
-        git config --global user.email "dorisjunglinlee@gmail.com"
-        git config --global user.name "Doris Lee"
-        git add .
-        git commit -m "deploy"
-        git push origin master
+    # - run: |
+    #     cd covidvis.github.io
+    #     echo "hello" >> test.txt
+    #     git config --global user.email "dorisjunglinlee@gmail.com"
+    #     git config --global user.name "Doris Lee"
+    #     git add .
+    #     git commit -m "deploy"
+    #     git push origin master
         
     - run: ./scripts/deploy-web.sh
