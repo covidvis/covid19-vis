@@ -40,7 +40,7 @@ jobs:
     - name: Run a one-line script
       run: echo Hello, world!
      
-    - run: git clone git@github.com:CSSEGISandData/COVID-19.git
+    - run: git clone https://github.com/CSSEGISandData/COVID-19.git
     
     - uses: actions/setup-python@v1
       with:
