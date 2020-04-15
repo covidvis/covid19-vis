@@ -49,8 +49,6 @@ jobs:
     - run: pip install -r requirements.txt
     - run: python processData.py
       working-directory: ./data
-
-    # Runs a set of commands using the runners shell
-    - name: Make Stage
-      run: 
-        make stage
+    - run: git clone git@github.com:covidvis/covidvis.github.io.git
+    - run: ls
+    - run: make deploy

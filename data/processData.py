@@ -81,3 +81,5 @@ for key in stateReplacement:
 
 #print(df)
 df.to_csv('jhu-data.csv')
+
+print ('Completed processData')
