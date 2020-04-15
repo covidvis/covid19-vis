@@ -62,6 +62,9 @@ jobs:
         repository: covidvis/covidvis.github.io
         token: ${{ secrets.GITHUBPAT }} # `GitHub_PAT` is a secret that contains your PAT
         path: covidvis.github.io
+    - run: |
+        git config --global user.email "dorisjunglinlee@gmail.com"
+        git config --global user.name "Doris Lee"
     - run: ls
     # - run: |
     #     cd covidvis.github.io
