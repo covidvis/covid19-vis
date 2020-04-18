@@ -271,15 +271,14 @@ class ChartSpec(DotDict):
     def _make_lockdown_tooltips_layer(self, rules, cursor):
         text = 'lockdown_tooltip_text:N'
         if self.get('only_show_lockdown_tooltip_on_hover', False):
-            text = alt.condition(cursor, text, alt.value(' ')),
-        return rules.mark_text(
-            align='left', dx=15, dy=0, font=self._font
-        ).encode(
+            text = alt.condition(cursor, text, alt.value(' '))
+        return rules.mark_text(align='left', dx=15, dy=0).encode(
             y=self._get_y('y:Q'),
             text=text,
             color=alt.value('black')
         ).transform_calculate(
-            lockdown_tooltip_text=f'datum.{self._detailby} + " " + datum.lockdown_type+ " " +"("+ datum.lockdown_date + ")"'
+# AGP        lockdown_tooltip_text=f'datum.{self._detailby} + " " + datum.lockdown_type+ " " +"("+ datum.lockdown_date + ")"'
+             lockdown_tooltip_text=f'datum.lockdown_type+ " " +"("+ datum.lockdown_date + ")"'
         ).transform_filter(self._in_focus())
 
     def _make_cursor_selection(self, base):

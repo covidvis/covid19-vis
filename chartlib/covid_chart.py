@@ -34,7 +34,7 @@ class CovidChart(object):
         groupcol: str,
         start_criterion: StartCriterion,
         ycol: str,
-        chart_type: str = 'US',  # one of: [US, USA, country]
+        level: str = 'US',  # one of: [US, USA, country]
         use_defaults: bool = True,
         ycol_is_cumulative: bool = True,
         top_k_groups: int = None,
@@ -45,7 +45,6 @@ class CovidChart(object):
         object.__setattr__(self, 'start_criterion', start_criterion)
         object.__setattr__(self, 'xcol', xcol)
         object.__setattr__(self, 'ycol', ycol)
-        object.__setattr__(self, 'chart_type', chart_type)
         object.__setattr__(self, 'ycol_is_cumulative', ycol_is_cumulative)
         object.__setattr__(self, 'top_k_groups', top_k_groups)
         object.__setattr__(self, 'spec', ChartSpec())
@@ -54,15 +53,15 @@ class CovidChart(object):
             df = pd.read_csv(df, parse_dates=[xcol], infer_datetime_format=True)
         self._validate_df(df)
 
-        readable_group_name = chart_type
+        readable_group_name = level
         if isinstance(quarantine_df, str):
-            if chart_type.lower() in ['us', 'usa', 'united states', 'united_states']:
+            if level.lower() in ['us', 'usa', 'united states']:
                 quarantine_df = self._injest_usa_quarantine_df(quarantine_df)
                 readable_group_name = 'state'
-            elif chart_type.lower() in ('country', 'world'):
+            elif level == 'country':
                 quarantine_df = self._injest_country_quarantine_df(quarantine_df)
             else:
-                raise ValueError('invalid chart_type %s: only "US" and "country" allowed now')
+                raise ValueError('invalid level %s: only "US" and "country" allowed now')
         quarantine_df = quarantine_df.dropna(subset=[groupcol, 'lockdown_date', 'lockdown_type'])
         self._validate_quarantine_df(quarantine_df)
 
@@ -94,11 +93,10 @@ class CovidChart(object):
         quarantine_df = pd.read_csv(quarantine_csv)
         # rename SK
         quarantine_df.loc[quarantine_df.Country_Region == 'Korea, South', 'Country_Region'] = 'South Korea'
-        quarantine_df = quarantine_df.loc[quarantine_df.Display == 1]
-        # quarantine_df = quarantine_df.loc[quarantine_df.Level == 'Enforcement']
-        # quarantine_df = quarantine_df.loc[quarantine_df.Type != 'Border Control']
+        quarantine_df = quarantine_df.loc[quarantine_df.Level == 'Enforcement']
+        quarantine_df = quarantine_df.loc[quarantine_df.Type != 'Border Control']
         quarantine_df['Lockdown Type'] = quarantine_df.apply(
-            lambda x: '{} {}'.format(x['Scope'], x['Type']), axis=1
+            lambda x: x['Scope'] + ' ' + x['Type'], axis=1
         )
         quarantine_cols = ['Country_Region', 'Date Enacted', 'Lockdown Type']
         quarantine_df = quarantine_df[quarantine_cols]
@@ -110,25 +108,88 @@ class CovidChart(object):
         ] = 'Region-Specific Countermeasures Begin'
         return quarantine_df
 
+
+    
     def _injest_usa_quarantine_df(self, quarantine_csv):
         quarantine_df = pd.read_csv(quarantine_csv)
-        # only show statewide bars for now
-        quarantine_df = quarantine_df.loc[quarantine_df.Regions == 'All']
-        quarantine_df_emergency = quarantine_df.copy()
-        quarantine_df = quarantine_df.loc[(quarantine_df.Type == 'Level 2 Lockdown') | (quarantine_df.Type == 'Level 1 Lockdown')]
-        quarantine_df['Lockdown Type'] = 'Full Lockdown'
-        quarantine_cols = ['Province_State', 'Date Enacted', 'Lockdown Type']
+
+        def create_lockdown_type (x):
+            s = ""
+            r = ""
+            closure_flag = 0
+            flag = 0
+            if (x['Coverage'] != 'State-wide'):
+                r = 'Regional'
+            if (x['State of Emergency Declaration'] == "State of Emergency declared"):
+                s = s + " Declaration of Emergency"
+                flag = 1
+            if (x['Travel Restrictions'] == x['Travel Restrictions']):
+                if (flag == 1):
+                    s = s + ","
+                s = s + " Border Closure/Visitor Quarantine"
+                flag = 1
+            if (x['Shelter-in-place Order'] == x['Shelter-in-place Order']):
+                if (flag == 1):
+                    s = s + ","
+                if (x['Shelter-in-place Order'] == "Shelter-in-place order"):
+                    s = s + " Stay-at-home Order"
+                if (x['Shelter-in-place Order'] == "Night-time curfew"):
+                    s = s + " Curfew"
+                flag = 1
+            if (x['Banning Gatherings of a Certain Size'] == x['Banning Gatherings of a Certain Size']):
+                if (flag == 1):
+                    s = s + ","
+                s = s + " Gatherings (>"+str(int(x['Banning Gatherings of a Certain Size']))+") Banned"
+                flag = 1
+            if (x['K-12 School Closure'] == x['K-12 School Closure']):
+                if (flag == 1):
+                    s = s + ","
+                s = s + " Closure of Schools"
+                closure_flag = 1
+                flag = 1
+            if (x['Bar and Dine-in Restaurant Closure'] == x['Bar and Dine-in Restaurant Closure']):
+                if (flag == 1):
+                    s = s + ","
+                if (closure_flag == 0):
+                    s = s + " Closure of Restaurants"
+                else:
+                    s = s + " Restaurants"
+                closure_flag = 1
+                flag = 1
+            if (x['Non-essential Businesses Closure'] == x['Non-essential Businesses Closure']):
+                if (flag == 1):
+                    s = s + ","
+                if (closure_flag == 0):
+                    s = s + " Closure of Non-essential Businesses"
+                else:
+                    s = s + " Non-essential Businesses"
+                closure_flag = 1
+                flag = 1
+            if (s == ""):
+                return s
+            return (r + s).strip()
+        
+        quarantine_df = quarantine_df.rename(columns={'State': 'Province_State', 'Effective Date': 'lockdown_date'})
+        quarantine_df['lockdown_type'] = quarantine_df.apply(lambda x: create_lockdown_type(x), axis=1)
+        quarantine_cols = ['Province_State', 'lockdown_date', 'lockdown_type']
         quarantine_df = quarantine_df[quarantine_cols]
-        quarantine_df_emergency['Lockdown Type'] = 'Emergency Declared'
-        quarantine_cols_emergency = ['Province_State', 'State of emergency declared', 'Lockdown Type']
-        quarantine_df_emergency = quarantine_df_emergency[quarantine_cols_emergency]
-        quarantine_df_emergency = quarantine_df_emergency.rename(
-            columns={'State of emergency declared': 'Date Enacted'}
-        )
-        quarantine_df = pd.concat([quarantine_df, quarantine_df_emergency])
-        quarantine_df = quarantine_df.rename(
-            columns={'Date Enacted': 'lockdown_date', 'Lockdown Type': 'lockdown_type'}
-        )
+        # only show statewide bars for now
+#         quarantine_df = quarantine_df.loc[quarantine_df.Regions == 'All']
+#         quarantine_df_emergency = quarantine_df.copy()
+#         quarantine_df = quarantine_df.loc[(quarantine_df.Type == 'Level 2 Lockdown') | (quarantine_df.Type == 'Level 1 Lockdown')]
+#         quarantine_df['Lockdown Type'] = 'Full Lockdown'
+#         quarantine_cols = ['Province_State', 'Date Enacted', 'Lockdown Type']
+#         quarantine_df = quarantine_df[quarantine_cols]
+#         quarantine_df_emergency['Lockdown Type'] = 'Emergency Declared'
+#         quarantine_cols_emergency = ['Province_State', 'State of emergency declared', 'Lockdown Type']
+#         quarantine_df_emergency = quarantine_df_emergency[quarantine_cols_emergency]
+#         quarantine_df_emergency = quarantine_df_emergency.rename(
+#             columns={'State of emergency declared': 'Date Enacted'}
+#         )
+#         quarantine_df = pd.concat([quarantine_df, quarantine_df_emergency])
+#         quarantine_df = quarantine_df.rename(
+#             columns={'Date Enacted': 'lockdown_date', 'Lockdown Type': 'lockdown_type'}
+#         )
         return quarantine_df
 
     def _preprocess_quarantine_df(self, df) -> pd.DataFrame:
@@ -408,18 +469,10 @@ class CovidChart(object):
         self.spec.extrap_clip_to_ydomain = clip
         return self
 
-    def set_initial_click_selection(self, val):
-        self.spec.click_selection_init = val
-        return self
-
     def set_defaults(self):
         self.spec.detailby = self.groupcol
         self.spec.colorby = self.groupcol
         self.spec.point_size = ChartSpec.DEFAULT_POINT_SIZE
-        if self.chart_type.lower() in ('country', 'world'):
-            self.spec.click_selection_init = 'Austria'
-        elif self.chart_type.lower() in ('us', 'usa', 'united states', 'united_states'):
-            self.spec.click_selection_init = 'California'
         ret = self.add_lines(
         ).add_points(
         ).set_logscale(
