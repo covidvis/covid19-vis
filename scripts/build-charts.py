@@ -66,7 +66,7 @@ def make_jhu_country_cases_chart(override_props) -> CovidChart:
         groupcol='Country_Region',
         start_criterion=DaysSinceNumReached(days_since, 'Confirmed'),
         ycol='Confirmed',
-        chart_type='country',
+        level='country',
         xcol='Date',
         top_k_groups=20,
         quarantine_df='./data/quarantine-activity.csv'  # should have a column with same name as `groupcol`
@@ -93,7 +93,7 @@ def make_jhu_country_deaths_chart(override_props) -> CovidChart:
         start_criterion=DaysSinceNumReached(10, 'Deaths'),
         ycol='Deaths',
         xcol='Date',
-        chart_type='country',
+        level='country',
         top_k_groups=20,
         quarantine_df='./data/quarantine-activity.csv'  # should have a column with same name as `groupcol`
     )
@@ -118,7 +118,7 @@ def make_jhu_state_cases_chart(override_props) -> CovidChart:
         groupcol='Province_State',
         start_criterion=DaysSinceNumReached(days_since, 'Confirmed'),
         ycol='Confirmed',
-        chart_type='USA',
+        level='usa_old',
         xcol='Date',
         top_k_groups=20,
         quarantine_df='./data/quarantine-activity-US.csv'  # should have a column with same name as `groupcol`
@@ -143,7 +143,7 @@ def make_jhu_state_deaths_chart(override_props) -> CovidChart:
         start_criterion=DaysSinceNumReached(10, 'Deaths'),
         ycol='Deaths',
         xcol='Date',
-        chart_type='usa',
+        level='usa_old',
         top_k_groups=20,
         quarantine_df='./data/quarantine-activity-US.csv' # should have a column with same name as `groupcol`
     )
@@ -168,7 +168,7 @@ def make_jhu_selected_state_chart(override_props) -> CovidChart:
         groupcol='Province_State',
         start_criterion=DaysSinceNumReached(days_since, 'Confirmed'),
         ycol='Confirmed',
-        chart_type='USA',
+        level='USA',
         xcol='Date',
         top_k_groups=20,
         quarantine_df='./data/quarantine-activity-US.csv'  # should have a column with same name as `groupcol`

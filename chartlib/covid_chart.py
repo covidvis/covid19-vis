@@ -45,6 +45,7 @@ class CovidChart(object):
         object.__setattr__(self, 'start_criterion', start_criterion)
         object.__setattr__(self, 'xcol', xcol)
         object.__setattr__(self, 'ycol', ycol)
+        object.__setattr__(self, 'level', level)
         object.__setattr__(self, 'ycol_is_cumulative', ycol_is_cumulative)
         object.__setattr__(self, 'top_k_groups', top_k_groups)
         object.__setattr__(self, 'spec', ChartSpec())
@@ -55,7 +56,10 @@ class CovidChart(object):
 
         readable_group_name = level
         if isinstance(quarantine_df, str):
-            if level.lower() in ['us', 'usa', 'united states']:
+            if level == 'usa_old':
+                quarantine_df = self._injest_usa_quarantine_df_old(quarantine_df)
+                readable_group_name = 'state'
+            elif level.lower() in ['us', 'usa', 'united states']:
                 quarantine_df = self._injest_usa_quarantine_df(quarantine_df)
                 readable_group_name = 'state'
             elif level == 'country':
@@ -108,8 +112,26 @@ class CovidChart(object):
         ] = 'Region-Specific Countermeasures Begin'
         return quarantine_df
 
-
-    
+    def _injest_usa_quarantine_df_old(self, quarantine_csv):
+        quarantine_df = pd.read_csv(quarantine_csv)
+        # only show statewide bars for now
+        quarantine_df = quarantine_df.loc[quarantine_df.Regions == 'All']
+        quarantine_df_emergency = quarantine_df.copy()
+        quarantine_df = quarantine_df.loc[(quarantine_df.Type == 'Level 2 Lockdown') | (quarantine_df.Type == 'Level 1 Lockdown')]
+        quarantine_df['Lockdown Type'] = 'Full Lockdown'
+        quarantine_cols = ['Province_State', 'Date Enacted', 'Lockdown Type']
+        quarantine_df = quarantine_df[quarantine_cols]
+        quarantine_df_emergency['Lockdown Type'] = 'Emergency Declared'
+        quarantine_cols_emergency = ['Province_State', 'State of emergency declared', 'Lockdown Type']
+        quarantine_df_emergency = quarantine_df_emergency[quarantine_cols_emergency]
+        quarantine_df_emergency = quarantine_df_emergency.rename(
+            columns={'State of emergency declared': 'Date Enacted'}
+        )
+        quarantine_df = pd.concat([quarantine_df, quarantine_df_emergency])
+        quarantine_df = quarantine_df.rename(
+            columns={'Date Enacted': 'lockdown_date', 'Lockdown Type': 'lockdown_type'}
+        )
+        return quarantine_df
     def _injest_usa_quarantine_df(self, quarantine_csv):
         quarantine_df = pd.read_csv(quarantine_csv)
 
@@ -486,8 +508,8 @@ class CovidChart(object):
         ).set_height(
             self.spec.DEFAULT_HEIGHT
         ).set_colormap()
-        if self.quarantine_df is not None:
-            ret = ret.add_lockdown_rules()
+        # if self.quarantine_df is not None:
+        #     ret = ret.add_lockdown_rules()
         return ret
 
     def compile(self):
