@@ -261,9 +261,11 @@ class ChartSpec(DotDict):
             # tooltip_text='datum.y'
         ).transform_filter(self._in_focus())
 
-    def _make_lockdown_rules_layer(self, base):
-        return base.mark_rule(size=3, strokeDash=[7, 3]).encode(
-            x='x:Q', detail=self._alt_detail, color=self._alt_color
+    def _make_lockdown_rules_layer(self, base, do_mark=True):
+        if do_mark:
+            base = base.mark_rule(size=3, strokeDash=[7, 3])
+        return base.encode(
+            self._get_x(), detail=self._alt_detail, color=self._alt_color,
         ).transform_filter(
             f'datum.x_type == "{self.lockdown_type}"'
         ).transform_filter(self._in_focus())
@@ -405,6 +407,32 @@ class ChartSpec(DotDict):
         if readable_group_name is not None and self.get('legend_selection', False):
             self[self.TRANSIENT]['colorby'] = self._get_legend_title()
             self[self.TRANSIENT]['detailby'] = self._get_legend_title()
+
+    def _collect_info_layers(self, layers, base):
+        vert_rules = self._make_lockdown_rules_layer(base, do_mark=False)
+        vert_rules = vert_rules.mark_rule(size=3, strokeDash=[7, 3]).encode(
+            alt.Y('lockdown_rule_offset:Q'),
+            alt.Y2('rule_zero:Q')
+        ).transform_calculate(
+            lockdown_rule_offset='-7000 + datum.lockdown_idx * 3000',
+            rule_zero='{}'.format(self.ydomain[1]),
+        ).transform_filter(self._in_focus())
+
+        horizontal_rules = base.encode(
+            alt.Y('lockdown_rule_offset:Q'),
+            self._get_x(),
+            alt.X2('rule_xmax:Q'),
+            detail=self._alt_detail, color=self._alt_color,
+        ).mark_rule(
+            size=3, strokeDash=[7,3]
+        ).transform_filter(
+            f'datum.x_type == "{self.lockdown_type}"'
+        ).transform_filter(self._in_focus()).transform_calculate(
+            lockdown_rule_offset='-7000 + datum.lockdown_idx * 3000',
+            rule_xmax='{}'.format(self.xdomain[1]),
+        )
+        layers['vert_info'] = vert_rules
+        layers['horiz_info'] = horizontal_rules
 
     def compile(self, df):
         self.validate(df)
