@@ -260,7 +260,20 @@ class ChartSpec(DotDict):
             tooltip_text=f'datum.{self._detailby} + ": " + datum.y'
             # tooltip_text='datum.y'
         ).transform_filter(self._in_focus())
-
+    def _make_lockdown_icons_layer(self, rules, cursor):
+        # return rules.mark_point(size=5,color="red").encode(
+        #     x=self._get_x(), y=self._get_y()
+        # ).transform_filter(self._in_focus())
+        
+        # return rules.mark_image(size=5).encode(
+        #     x=self._get_x(), y=self._get_y(), 
+        #     url='img'
+        # ).transform_filter(self._in_focus())
+        return rules.mark_text(size=20, dx=-15).encode(
+            x=self._get_x(), y=self._get_y(), 
+            text = alt.Text('emoji:N')
+        )
+    
     def _make_lockdown_rules_layer(self, base, do_mark=True):
         if do_mark:
             base = base.mark_rule(size=3, strokeDash=[7, 3])
@@ -313,6 +326,9 @@ class ChartSpec(DotDict):
             layers['lockdown_tooltips'] = self._make_lockdown_tooltips_layer(
                 layers['lockdown_rules'], cursor
             )
+            if self.get('lockdown_icons',False):
+                layers['lockdown_icons'] = self._make_lockdown_icons_layer(layers['lockdown_rules'], cursor)
+
 
     def _make_lockdown_extrapolation_layer(self, base, trend_select):
         def _add_model_transformation_fields(base_chart):
