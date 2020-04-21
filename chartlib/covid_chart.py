@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 
 from .chart_spec import ChartSpec
-from .start_criterion import StartCriterion, DaysSinceNumReached
+from .start_criterion import StartCriterion
 from .utils import days_between
 
 
@@ -29,17 +29,17 @@ class CovidChart(object):
     lockdown_idx = 'lockdown_idx'
 
     def __init__(
-        self,
-        df: Union[str, pd.DataFrame],
-        groupcol: str,
-        start_criterion: StartCriterion,
-        ycol: str,
-        level: str = 'US',  # one of: [US, USA, country]
-        use_defaults: bool = True,
-        ycol_is_cumulative: bool = True,
-        top_k_groups: int = None,
-        xcol: str = 'date',
-        quarantine_df: Union[str, pd.DataFrame] = None,
+            self,
+            df: Union[str, pd.DataFrame],
+            groupcol: str,
+            start_criterion: StartCriterion,
+            ycol: str,
+            level: str = 'US',  # one of: [US, USA, country]
+            use_defaults: bool = True,
+            ycol_is_cumulative: bool = True,
+            top_k_groups: int = None,
+            xcol: str = 'date',
+            quarantine_df: Union[str, pd.DataFrame] = None,
     ):
         object.__setattr__(self, 'groupcol', groupcol)
         object.__setattr__(self, 'start_criterion', start_criterion)
@@ -117,7 +117,8 @@ class CovidChart(object):
         # only show statewide bars for now
         quarantine_df = quarantine_df.loc[quarantine_df.Regions == 'All']
         quarantine_df_emergency = quarantine_df.copy()
-        quarantine_df = quarantine_df.loc[(quarantine_df.Type == 'Level 2 Lockdown') | (quarantine_df.Type == 'Level 1 Lockdown')]
+        quarantine_df = quarantine_df.loc[
+            (quarantine_df.Type == 'Level 2 Lockdown') | (quarantine_df.Type == 'Level 1 Lockdown')]
         quarantine_df['Lockdown Type'] = 'Full Lockdown'
         quarantine_cols = ['Province_State', 'Date Enacted', 'Lockdown Type']
         quarantine_df = quarantine_df[quarantine_cols]
@@ -136,65 +137,84 @@ class CovidChart(object):
     def _ingest_usa_quarantine_df(self, quarantine_csv):
         quarantine_df = pd.read_csv(quarantine_csv)
 
-        def create_lockdown_type (x):
-            s = ""
-            r = ""
-            closure_flag = 0
-            flag = 0
-            if (x['Coverage'] != 'State-wide'):
+        # emergency declaration = e/E; restaurant closure = r/R
+        # border screening = b/B; travel restrictions= t/T; border closures = c/C
+        # shelter-in-place = l/L; gathering limitations= g/G; k-12 school closures = s/S
+        # non-essential business closure = n/N
+        def create_lockdown_type(x, emo_flag):
+            s = r = emo_s = ""
+            regional_flag = closure_flag = not_the_first_flag = 0
+            if x['Coverage'] != 'State-wide':
                 r = 'Regional'
-            if (x['State of Emergency Declaration'] == "State of Emergency declared"):
+                regional_flag = 1
+            if x['State of Emergency Declaration'] == "State of Emergency declared":
                 s = s + " Declaration of Emergency"
-                flag = 1
-            if (x['Travel Restrictions'] == x['Travel Restrictions']):
-                if (flag == 1):
+                not_the_first_flag = 1
+                emo_s = (emo_s + "e") if (regional_flag == 1) else (emo_s + "E")
+            if x['Travel Restrictions'] == x['Travel Restrictions']:
+                if not_the_first_flag == 1:
                     s = s + ","
+                if "Travel restrictions for out of state travelers" in x['Travel Restrictions']:
+                    emo_s = (emo_s + "t") if (regional_flag == 1) else (emo_s + "T")
+                if "Border closures" in x['Travel Restrictions']:
+                    emo_s = (emo_s + "c") if (regional_flag == 1) else (emo_s + "C")
                 s = s + " Border Closure/Visitor Quarantine"
-                flag = 1
-            if (x['Shelter-in-place Order'] == x['Shelter-in-place Order']):
-                if (flag == 1):
+                not_the_first_flag = 1
+            if x['Shelter-in-place Order'] == x['Shelter-in-place Order']:
+                if not_the_first_flag == 1:
                     s = s + ","
-                if (x['Shelter-in-place Order'] == "Shelter-in-place order"):
+                if x['Shelter-in-place Order'] == "Shelter-in-place order":
                     s = s + " Stay-at-home Order"
-                if (x['Shelter-in-place Order'] == "Night-time curfew"):
+                if x['Shelter-in-place Order'] == "Night-time curfew":
                     s = s + " Curfew"
-                flag = 1
-            if (x['Banning Gatherings of a Certain Size'] == x['Banning Gatherings of a Certain Size']):
-                if (flag == 1):
+                emo_s = (emo_s + "l") if (regional_flag == 1) else (emo_s + "L")
+                not_the_first_flag = 1
+            if x['Banning Gatherings of a Certain Size'] == x['Banning Gatherings of a Certain Size']:
+                if not_the_first_flag == 1:
                     s = s + ","
-                s = s + " Gatherings (>"+str(int(x['Banning Gatherings of a Certain Size']))+") Banned"
-                flag = 1
-            if (x['K-12 School Closure'] == x['K-12 School Closure']):
-                if (flag == 1):
+                s = s + " Gatherings (>" + str(int(x['Banning Gatherings of a Certain Size'])) + ") Banned"
+                emo_s = (emo_s + "g") if (regional_flag == 1) else (emo_s + "G")
+                not_the_first_flag = 1
+            if x['K-12 School Closure'] == x['K-12 School Closure']:
+                if not_the_first_flag == 1:
                     s = s + ","
                 s = s + " Closure of Schools"
-                closure_flag = 1
-                flag = 1
-            if (x['Bar and Dine-in Restaurant Closure'] == x['Bar and Dine-in Restaurant Closure']):
-                if (flag == 1):
+                emo_s = (emo_s + "s") if (regional_flag == 1) else (emo_s + "S")
+                closure_flag = not_the_first_flag = 1
+            if x['Bar and Dine-in Restaurant Closure'] == x['Bar and Dine-in Restaurant Closure']:
+                if not_the_first_flag == 1:
                     s = s + ","
-                if (closure_flag == 0):
-                    s = s + " Closure of Restaurants"
-                else:
-                    s = s + " Restaurants"
-                closure_flag = 1
-                flag = 1
-            if (x['Non-essential Businesses Closure'] == x['Non-essential Businesses Closure']):
-                if (flag == 1):
+                s = (s + " Closure of Restaurants") if (closure_flag == 0) else (s + " Restaurants")
+                emo_s = (emo_s + "r") if (regional_flag == 1) else (emo_s + "R")
+                closure_flag = not_the_first_flag = 1
+            if x['Non-essential Businesses Closure'] == x['Non-essential Businesses Closure']:
+                if not_the_first_flag == 1:
                     s = s + ","
-                if (closure_flag == 0):
-                    s = s + " Closure of Non-essential Businesses"
-                else:
-                    s = s + " Non-essential Businesses"
-                closure_flag = 1
-                flag = 1
-            if (s == ""):
+                s = (s + " Closure of Non-essential Businesses") if (closure_flag == 0) else (
+                            s + " Non-essential Businesses")
+                emo_s = (emo_s + "n") if (regional_flag == 1) else (emo_s + "N")
+                closure_flag = not_the_first_flag = 1
+            if emo_flag == 1:
+                return emo_s;
+            if s == "":
                 return s
             return (r + s).strip()
-        
+
         quarantine_df = quarantine_df.rename(columns={'State': 'Province_State', 'Effective Date': 'lockdown_date'})
-        quarantine_df['lockdown_type'] = quarantine_df.apply(create_lockdown_type, axis=1)
-        quarantine_cols = ['Province_State', 'lockdown_date', 'lockdown_type']
+        quarantine_df['lockdown_type'] = quarantine_df.apply(lambda x: create_lockdown_type(x, 0), axis=1)
+        quarantine_df['emoji'] = quarantine_df.apply(lambda x: create_lockdown_type(x, 1), axis=1)
+        quarantine_df['lockdown_type'].replace('', np.nan, inplace=True)
+        quarantine_df = quarantine_df.dropna(subset=['lockdown_type'])
+        quarantine_df = quarantine_df.groupby(['lockdown_date', 'Province_State']).agg(
+            {'lockdown_type': lambda col: '; '.join(col), 'emoji': lambda col: ''.join(col)}
+        ).reset_index()
+        quarantine_df['emoji'] = quarantine_df['emoji'].map(lambda s: ''.join(
+            {
+                'e': '🚨', 'b': '🛃', 't': '🧳', 'c': '🚧', 'l': '🏠', 'g': '👨‍👩‍👧‍👦', 's': '🎓', 'r': '🍴',
+                'n': '🎰'
+            }[c] for c in s.lower()
+        ))
+        quarantine_cols = ['Province_State', 'lockdown_date', 'lockdown_type', 'emoji']
         quarantine_df = quarantine_df[quarantine_cols]
         return quarantine_df
 
@@ -341,7 +361,7 @@ class CovidChart(object):
     def set_title(self, title):
         self.spec.title = title
         return self
-        
+
     def set_logscale(self):
         self.spec.yscale = 'log'
         return self

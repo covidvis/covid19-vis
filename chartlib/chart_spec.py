@@ -251,15 +251,16 @@ class ChartSpec(DotDict):
 
     def _make_tooltip_text_layer(self, point_layer, cursor):
         return point_layer.mark_text(
-            align='left', dx=5, dy=-5, font=self._font
+            align='left', dx=5, dy=45, font=self._font
         ).encode(
             text=alt.condition(cursor, 'tooltip_text:N', alt.value(' ')),
             opacity=alt.value(1),
             color=alt.value('black')
         ).transform_calculate(
-            tooltip_text=f'datum.{self._detailby} + ": " + datum.y'
+            tooltip_text=f'datum.{self._detailby} + ": " + datum.y',
             # tooltip_text='datum.y'
         ).transform_filter(self._in_focus())
+
     def _make_lockdown_icons_layer(self, rules, cursor):
         # return rules.mark_point(size=5,color="red").encode(
         #     x=self._get_x(), y=self._get_y()
@@ -270,8 +271,9 @@ class ChartSpec(DotDict):
         #     url='img'
         # ).transform_filter(self._in_focus())
         return rules.mark_text(size=20, dx=-15).encode(
-            x=self._get_x(), y=self._get_y(), 
-            text = alt.Text('emoji:N')
+            x=self._get_x(), y=self._get_y(),
+            opacity=alt.condition(cursor, alt.value(1), alt.value(.5)),
+            text=alt.Text('emoji:N')
         )
     
     def _make_lockdown_rules_layer(self, base, do_mark=True):
@@ -279,23 +281,22 @@ class ChartSpec(DotDict):
             base = base.mark_rule(size=3, strokeDash=[7, 3])
         return base.encode(
             self._get_x(), detail=self._alt_detail, color=self._alt_color,
-        ).transform_filter(
-            f'datum.x_type == "{self.lockdown_type}"'
-        ).transform_filter(self._in_focus())
+        )
 
-    def _make_lockdown_tooltips_layer(self, rules, cursor):
+    def _make_lockdown_tooltips_layer(self, base, cursor):
         text = 'lockdown_tooltip_text:N'
         if self.get('only_show_lockdown_tooltip_on_hover', False):
             text = alt.condition(cursor, text, alt.value(' '))
-        return rules.mark_text(align='left', dx=15, dy=0).encode(
-            y=self._get_y('y:Q'),
+        return base.mark_text(align='left', dx=15, dy=0, font=self._font).encode(
+            x=self._get_x(),
+            y=self._get_y(),
             text=text,
             color=alt.value('black')
         ).transform_calculate(
 # AGP        lockdown_tooltip_text=f'datum.{self._detailby} + " " + datum.lockdown_type+ " " +"("+ datum.lockdown_date + ")"'
              # lockdown_tooltip_text=f'datum.lockdown_type+ " " +"("+ datum.lockdown_date + ")"'
              lockdown_tooltip_text=f'datum.lockdown_type+ " " +"("+ datum.lockdown_date + ")"'
-        ).transform_filter(self._in_focus())
+        )
 
     def _make_cursor_selection(self, base):
         cursor = alt.selection_single(name=self.cursor, nearest=True, on='mouseover',
@@ -321,13 +322,16 @@ class ChartSpec(DotDict):
             ).transform_filter(
                 cursor
             ).transform_filter(self._someone_has_focus())
-        if self.get('lockdown_rules', False):
-            layers['lockdown_rules'] = self._make_lockdown_rules_layer(base)
-            layers['lockdown_tooltips'] = self._make_lockdown_tooltips_layer(
-                layers['lockdown_rules'], cursor
-            )
-            if self.get('lockdown_icons',False):
-                layers['lockdown_icons'] = self._make_lockdown_icons_layer(layers['lockdown_rules'], cursor)
+        lockdown_base = base.transform_filter(
+            f'datum.x_type == "{self.lockdown_type}"'
+        ).transform_filter(self._in_focus())
+        has_lockdown_rules = self.get('lockdown_rules', False)
+        if has_lockdown_rules:
+            layers['lockdown_rules'] = self._make_lockdown_rules_layer(lockdown_base)
+        if has_lockdown_rules or self.get('lockdown_tooltips', False):
+            layers['lockdown_tooltips'] = self._make_lockdown_tooltips_layer(lockdown_base, cursor)
+        if self.get('lockdown_icons', False):
+            layers['lockdown_icons'] = self._make_lockdown_icons_layer(lockdown_base, cursor)
 
 
     def _make_lockdown_extrapolation_layer(self, base, trend_select):
@@ -386,7 +390,6 @@ class ChartSpec(DotDict):
         ).transform_filter(
             self._show_trends()
         ).transform_calculate(
-            #extrap_text=f'"Original trend for " + datum.{self._detailby}'
             extrap_text='"Original trend"'
         ).add_selection(trend_select)
 

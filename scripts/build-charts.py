@@ -2,6 +2,7 @@
 import sys
 sys.path.append('.')
 from datetime import datetime
+import os
 
 import pandas as pd
 import yaml
@@ -9,12 +10,15 @@ import yaml
 from chartlib import CovidChart, DaysSinceNumReached
 
 
+STAGING = os.environ.get('STAGING', os.environ.get('STAGE', False))
+
+
 def chart_configs():
     mobile_override_props = {
         'width': 200,
         'ytitle': '',
     }
-    return [
+    configs = [
         {
             'name': 'jhu_world_cases',
             'gen': make_jhu_country_cases_chart,
@@ -31,29 +35,17 @@ def chart_configs():
             'name': 'jhu_us_deaths',
             'gen': make_jhu_state_deaths_chart,
         },
-
-        # mobile-friendly versions below
-        {
-            'name': 'jhu_world_cases_mobile',
-            'gen': make_jhu_country_cases_chart,
-            'override_props': mobile_override_props,
-        },
-        {
-            'name': 'jhu_world_deaths_mobile',
-            'gen': make_jhu_country_deaths_chart,
-            'override_props': mobile_override_props,
-        },
-        {
-            'name': 'jhu_us_cases_mobile',
-            'gen': make_jhu_state_cases_chart,
-            'override_props': mobile_override_props,
-        },
-        {
-            'name': 'jhu_us_deaths_mobile',
-            'gen': make_jhu_state_deaths_chart,
-            'override_props': mobile_override_props,
-        },
     ]
+
+    def _make_mobile_config(config):
+        return {
+            **config,
+            'name': config['name'] + '_mobile',
+            'override_props': mobile_override_props,
+        }
+    # force evaluation of list to avoid infinite loop
+    configs.extend(list(map(_make_mobile_config, configs)))
+    return configs
 
 
 def make_jhu_country_cases_chart(override_props) -> CovidChart:
@@ -112,16 +104,23 @@ def make_jhu_state_cases_chart(override_props) -> CovidChart:
     # grab us-specific
     jhu_df = jhu_df[(jhu_df.Country_Region == 'United States') & jhu_df.Province_State.notnull()]
 
+    if STAGING:
+        level = 'usa'
+        qcsv = './data/quarantine-activity-US-Apr16.csv'
+    else:
+        level = 'usa_old'
+        qcsv = './data/quarantine-activity-US.csv'
+
     days_since = 20
     chart = CovidChart(
         jhu_df,
         groupcol='Province_State',
         start_criterion=DaysSinceNumReached(days_since, 'Confirmed'),
         ycol='Confirmed',
-        level='usa_old',
+        level=level,
         xcol='Date',
         top_k_groups=20,
-        quarantine_df='./data/quarantine-activity-US.csv'  # should have a column with same name as `groupcol`
+        quarantine_df=qcsv  # should have a column with same name as `groupcol`
     )
     # chart.set_colormap()
     chart.set_unfocused_opacity(0.05)
@@ -130,12 +129,24 @@ def make_jhu_state_cases_chart(override_props) -> CovidChart:
     chart.set_width(600).set_height(400)
     chart.set_xdomain((0, 40)).set_ydomain((days_since, 200000))
     chart.spec.update(override_props)
+    if STAGING:
+        chart.lockdown_icons = True
+        chart.lockdown_rules = False
+        chart.lockdown_tooltips = True
+        chart.only_show_lockdown_tooltip_on_hover = True
     return chart
 
 
 def make_jhu_state_deaths_chart(override_props) -> CovidChart:
     jhu_df = pd.read_csv('./data/jhu-data.csv')
     jhu_df = jhu_df.loc[(jhu_df.Country_Region == 'United States') & jhu_df.Province_State.notnull()]
+
+    if STAGING:
+        level = 'usa'
+        qcsv = './data/quarantine-activity-US-Apr16.csv'
+    else:
+        level = 'usa_old'
+        qcsv = './data/quarantine-activity-US.csv'
 
     days_since = 10
     chart = CovidChart(
@@ -144,9 +155,9 @@ def make_jhu_state_deaths_chart(override_props) -> CovidChart:
         start_criterion=DaysSinceNumReached(days_since, 'Deaths'),
         ycol='Deaths',
         xcol='Date',
-        level='usa_old',
+        level=level,
         top_k_groups=20,
-        quarantine_df='./data/quarantine-activity-US.csv' # should have a column with same name as `groupcol`
+        quarantine_df=qcsv  # should have a column with same name as `groupcol`
     )
 
     chart = chart.set_ytitle('Number of Deaths (log scale)')
@@ -155,6 +166,11 @@ def make_jhu_state_deaths_chart(override_props) -> CovidChart:
     chart.set_ydomain((days_since, 100000))
     chart.set_xdomain((0, 40)).compile()
     chart.spec.update(override_props)
+    if STAGING:
+        chart.lockdown_icons = True
+        chart.lockdown_rules = False
+        chart.lockdown_tooltips = True
+        chart.only_show_lockdown_tooltip_on_hover = True
     return chart
 
 
