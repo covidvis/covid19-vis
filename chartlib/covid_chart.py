@@ -57,13 +57,13 @@ class CovidChart(object):
         readable_group_name = level
         if isinstance(quarantine_df, str):
             if level == 'usa_old':
-                quarantine_df = self._injest_usa_quarantine_df_old(quarantine_df)
+                quarantine_df = self._ingest_usa_quarantine_df_old(quarantine_df)
                 readable_group_name = 'state'
             elif level.lower() in ['us', 'usa', 'united states']:
-                quarantine_df = self._injest_usa_quarantine_df(quarantine_df)
+                quarantine_df = self._ingest_usa_quarantine_df(quarantine_df)
                 readable_group_name = 'state'
             elif level == 'country':
-                quarantine_df = self._injest_country_quarantine_df(quarantine_df)
+                quarantine_df = self._ingest_country_quarantine_df(quarantine_df)
             else:
                 raise ValueError('invalid level %s: only "US" and "country" allowed now')
         quarantine_df = quarantine_df.dropna(subset=[groupcol, 'lockdown_date', 'lockdown_type'])
@@ -93,7 +93,7 @@ class CovidChart(object):
         if 'lockdown_type' not in quarantine_df.columns:
             raise ValueError('lockdown_type should be in quarantine_df columns')
 
-    def _injest_country_quarantine_df(self, quarantine_csv):
+    def _ingest_country_quarantine_df(self, quarantine_csv):
         quarantine_df = pd.read_csv(quarantine_csv)
         # rename SK
         quarantine_df.loc[quarantine_df.Country_Region == 'Korea, South', 'Country_Region'] = 'South Korea'
@@ -112,7 +112,7 @@ class CovidChart(object):
         ] = 'Region-Specific Countermeasures Begin'
         return quarantine_df
 
-    def _injest_usa_quarantine_df_old(self, quarantine_csv):
+    def _ingest_usa_quarantine_df_old(self, quarantine_csv):
         quarantine_df = pd.read_csv(quarantine_csv)
         # only show statewide bars for now
         quarantine_df = quarantine_df.loc[quarantine_df.Regions == 'All']
@@ -132,7 +132,8 @@ class CovidChart(object):
             columns={'Date Enacted': 'lockdown_date', 'Lockdown Type': 'lockdown_type'}
         )
         return quarantine_df
-    def _injest_usa_quarantine_df(self, quarantine_csv):
+
+    def _ingest_usa_quarantine_df(self, quarantine_csv):
         quarantine_df = pd.read_csv(quarantine_csv)
 
         def create_lockdown_type (x):
@@ -192,26 +193,9 @@ class CovidChart(object):
             return (r + s).strip()
         
         quarantine_df = quarantine_df.rename(columns={'State': 'Province_State', 'Effective Date': 'lockdown_date'})
-        quarantine_df['lockdown_type'] = quarantine_df.apply(lambda x: create_lockdown_type(x), axis=1)
+        quarantine_df['lockdown_type'] = quarantine_df.apply(create_lockdown_type, axis=1)
         quarantine_cols = ['Province_State', 'lockdown_date', 'lockdown_type']
         quarantine_df = quarantine_df[quarantine_cols]
-        # only show statewide bars for now
-#         quarantine_df = quarantine_df.loc[quarantine_df.Regions == 'All']
-#         quarantine_df_emergency = quarantine_df.copy()
-#         quarantine_df = quarantine_df.loc[(quarantine_df.Type == 'Level 2 Lockdown') | (quarantine_df.Type == 'Level 1 Lockdown')]
-#         quarantine_df['Lockdown Type'] = 'Full Lockdown'
-#         quarantine_cols = ['Province_State', 'Date Enacted', 'Lockdown Type']
-#         quarantine_df = quarantine_df[quarantine_cols]
-#         quarantine_df_emergency['Lockdown Type'] = 'Emergency Declared'
-#         quarantine_cols_emergency = ['Province_State', 'State of emergency declared', 'Lockdown Type']
-#         quarantine_df_emergency = quarantine_df_emergency[quarantine_cols_emergency]
-#         quarantine_df_emergency = quarantine_df_emergency.rename(
-#             columns={'State of emergency declared': 'Date Enacted'}
-#         )
-#         quarantine_df = pd.concat([quarantine_df, quarantine_df_emergency])
-#         quarantine_df = quarantine_df.rename(
-#             columns={'Date Enacted': 'lockdown_date', 'Lockdown Type': 'lockdown_type'}
-#         )
         return quarantine_df
 
     def _preprocess_quarantine_df(self, df) -> pd.DataFrame:
