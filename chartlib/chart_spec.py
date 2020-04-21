@@ -280,6 +280,7 @@ class ChartSpec(DotDict):
             color=alt.value('black')
         ).transform_calculate(
 # AGP        lockdown_tooltip_text=f'datum.{self._detailby} + " " + datum.lockdown_type+ " " +"("+ datum.lockdown_date + ")"'
+             # lockdown_tooltip_text=f'datum.lockdown_type+ " " +"("+ datum.lockdown_date + ")"'
              lockdown_tooltip_text=f'datum.lockdown_type+ " " +"("+ datum.lockdown_date + ")"'
         ).transform_filter(self._in_focus())
 
