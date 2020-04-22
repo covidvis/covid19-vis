@@ -272,7 +272,8 @@ class ChartSpec(DotDict):
         # ).transform_filter(self._in_focus())
         return rules.mark_text(size=20, dx=-15).encode(
             x=self._get_x(), y=self._get_y(),
-            opacity=alt.condition(cursor, alt.value(1), alt.value(.5)),
+            opacity=alt.value(1),
+            # opacity=alt.condition(cursor, alt.value(1), alt.value(.5)),
             text=alt.Text('emoji:N')
         )
     
