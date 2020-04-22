@@ -1,4 +1,6 @@
 import altair as alt
+import numpy as np
+import pandas as pd
 
 from .dot_dict import DotDict
 
@@ -151,28 +153,11 @@ class ChartSpec(DotDict):
             extra_color_kwargs['scale'] = dict(
                 domain=domain, range=rng,
             )
-        return alt.Color(f'{self._colorby}:N', **extra_color_kwargs)
+        return alt.Color(f'{self._colorby}:N', legend=None, **extra_color_kwargs)
 
     @property
     def _yscale(self):
         return self.get('yscale', 'linear')
-
-    def _legend_is_active(self):
-        conditions = [
-            f'{str(self.get("legend_selection", False)).lower()}',
-            f'isDefined({self.legend}.{self._detailby})',
-            f'(!isDefined({self.click}) || !isDefined({self.click}_{self._detailby}))',
-        ]
-        # TODO (smacke): legend_tuple not defined for facet charts;
-        # need a more reliable way to detect if we clicked on a blank area
-        if self.get('facetby', None) is None:
-            conditions.extend([
-                f'isValid({self.legend}_tuple)',
-                f'!isDefined({self.legend}_tuple.unit)',
-            ])
-        else:
-            conditions.append(f'isValid({self.legend}_{self._detailby}_legend)')
-        return _ensure_parens(' && '.join(conditions))
 
     def _click_is_active(self):
         return _ensure_parens(' && '.join([
@@ -182,12 +167,6 @@ class ChartSpec(DotDict):
             f'{self.click}.{self._detailby} != "{self.EMPTY_SELECTION}"'
         ]))
 
-    def _legend_focused(self):
-        return _ensure_parens(' && '.join([
-            f'{self._legend_is_active()}',
-            f'indexof({self.legend}.{self._detailby}, datum.{self._detailby}) >= 0'
-        ]))
-
     def _click_focused(self):
         return _ensure_parens(' && '.join([
             self._click_is_active(),
@@ -195,16 +174,16 @@ class ChartSpec(DotDict):
         ]))
 
     def _in_focus(self):
-        return _ensure_parens(f'{self._click_focused()} || {self._legend_focused()}')
+        return _ensure_parens(self._click_focused())
 
     def _someone_has_focus(self):
-        return _ensure_parens(f'{self._click_is_active()} || {self._legend_is_active()}')
+        return _ensure_parens(self._click_is_active())
 
     def _in_focus_or_none_selected(self):
         return _ensure_parens(f'{self._in_focus()} || !{self._someone_has_focus()}')
 
     def _show_trends(self):
-        return '!isValid(trends_tuple) || trends_tuple.values[0]'
+        return 'trends.values[0]'
 
     def _maybe_add_facet(self, base):
         facetby = self.get('facetby', None)
@@ -430,31 +409,39 @@ class ChartSpec(DotDict):
             self[self.TRANSIENT]['colorby'] = self._get_legend_title()
             self[self.TRANSIENT]['detailby'] = self._get_legend_title()
 
-    def _collect_info_layers(self, layers, base):
-        vert_rules = self._make_lockdown_rules_layer(base, do_mark=False)
-        vert_rules = vert_rules.mark_rule(size=3, strokeDash=[7, 3]).encode(
-            alt.Y('lockdown_rule_offset:Q'),
-            alt.Y2('rule_zero:Q')
-        ).transform_calculate(
-            lockdown_rule_offset='-7000 + datum.lockdown_idx * 3000',
-            rule_zero='{}'.format(self.ydomain[1]),
-        ).transform_filter(self._in_focus())
+    def _make_manual_legend(self, df, click_selection):
+        groups = df[self.colorby].unique()
+        max_groups = 32
+        if len(groups) > max_groups:
+            raise ValueError('max 32 supported for now')
+        idx = max_groups + 2 - np.arange(len(groups))
+        leg_df = pd.DataFrame({'idx': idx, self._colorby: groups, 'zero': np.zeros_like(idx)})
 
-        horizontal_rules = base.encode(
-            alt.Y('lockdown_rule_offset:Q'),
-            self._get_x(),
-            alt.X2('rule_xmax:Q'),
-            detail=self._alt_detail, color=self._alt_color,
-        ).mark_rule(
-            size=3, strokeDash=[7,3]
-        ).transform_filter(
-            f'datum.x_type == "{self.lockdown_type}"'
-        ).transform_filter(self._in_focus()).transform_calculate(
-            lockdown_rule_offset='-7000 + datum.lockdown_idx * 3000',
-            rule_xmax='{}'.format(self.xdomain[1]),
+        axis = alt.Axis(domain=False, ticks=False, orient='right', grid=False, labels=False)
+        base = alt.Chart(
+            leg_df, height=500, width=10,
+        ).mark_point(shape='diamond', filled=True, size=160).encode(
+            x=alt.X('zero:Q', title='', axis=axis),
+            y=alt.Y('idx:Q', title='', axis=axis, scale=alt.Scale(domain=(0, max_groups))),
+            color=self._alt_color,
+            detail=self._alt_detail,
+            opacity=alt.condition(
+                self._in_focus_or_none_selected(),
+                alt.value(1),
+                alt.value(0.4),
+            )
         )
-        layers['vert_info'] = vert_rules
-        layers['horiz_info'] = horizontal_rules
+
+        layers = [
+            base.add_selection(click_selection),
+            base.mark_text(
+                align='left', dx=10, font=self._font,
+            ).encode(
+                text=f'{self._colorby}:N',
+                color=alt.value('black'),
+            )
+        ]
+        return alt.layer(*layers, view=alt.ViewConfig(strokeOpacity=0))
 
     def compile(self, df):
         self.validate(df)
@@ -480,12 +467,8 @@ class ChartSpec(DotDict):
                 extra_click_selection_kwargs['init'] = {self._detailby: click_init}
             click_selection = alt.selection_single(
                 fields=[self._detailby], on='click', name=self.click, empty='all',
-                bind=dropdown, clear='dblclick', **extra_click_selection_kwargs
-            )
-
-            legend_selection = alt.selection_multi(
-                fields=[self._colorby], on='click', name=self.legend, empty='all',
-                bind='legend', clear='dblclick',
+                bind=dropdown,
+                clear='dblclick', **extra_click_selection_kwargs
             )
 
             # put a fake layer in first with no click selection
@@ -509,9 +492,9 @@ class ChartSpec(DotDict):
             # We put a fake layer in here before we add any other layers w/ color channel specified, and we
             # furthermore add the legend selection to it b/c it also seems like a multi-selection bound to the
             # legend needs to be added to the layer that generates the legend.
-            layers['legend'] = base.mark_point(size=0).encode(
-                x=self._get_x(), y=self._get_y(), color=self._alt_color
-            ).add_selection(legend_selection)
+            # layers['legend'] = base.mark_point(size=0).encode(
+            #     x=self._get_x(), y=self._get_y(), color=self._alt_color
+            # )  # .add_selection(legend_selection)
 
             # Put a fake layer in first to attach the click selection to. We use a fake layer for this for a few reasons.
             # 1. It's not used as a base layer, so we won't get errors
@@ -548,13 +531,14 @@ class ChartSpec(DotDict):
                 layered = layered.interactive(bind_x=True, bind_y=True)
             if self.get('title', False):
                 layered.title = self.get('title')
-            layered = layered.configure(background=self.get('background', self.DEFAULT_BACKGROUND_COLOR))
-            layered = layered.configure_axis(
-                titleFontSize=self.get('axes_title_fontsize', self.DEFAULT_AXES_TITLE_FONTSIZE)
+            final_chart = layered | self._make_manual_legend(df, click_selection)
+            final_chart = final_chart.configure(background=self.get('background', self.DEFAULT_BACKGROUND_COLOR))
+            final_chart = final_chart.configure_axis(
+                titleFontSize=self.get('axes_title_fontsize', self.DEFAULT_AXES_TITLE_FONTSIZE),
             )
-            layered = layered.configure_legend(symbolType='diamond')
+            final_chart = final_chart.configure_title(font=self._font)
             alt.themes.register('customFont', _fontSettings(self._font))
             alt.themes.enable('customFont')
-            return layered
+            return final_chart
         finally:
             del self[self.TRANSIENT]

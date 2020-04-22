@@ -56,16 +56,16 @@ class CovidChart(object):
 
         readable_group_name = level
         if isinstance(quarantine_df, str):
-            if level == 'usa_old':
+            if level.lower() == 'usa_old':
                 quarantine_df = self._ingest_usa_quarantine_df_old(quarantine_df)
                 readable_group_name = 'state'
             elif level.lower() in ['us', 'usa', 'united states']:
                 quarantine_df = self._ingest_usa_quarantine_df(quarantine_df)
                 readable_group_name = 'state'
-            elif level in ('country', 'world'):
+            elif level.lower() in ('country', 'world'):
                 quarantine_df = self._ingest_country_quarantine_df(quarantine_df)
             else:
-                raise ValueError('invalid level %s: only "US" and "country" allowed now')
+                raise ValueError('invalid level %s: only "US" and "country" allowed now' % level)
         quarantine_df = quarantine_df.dropna(subset=[groupcol, 'lockdown_date', 'lockdown_type'])
         self._validate_quarantine_df(quarantine_df)
 
@@ -385,6 +385,7 @@ class CovidChart(object):
 
     def _preprocess_df(self) -> pd.DataFrame:
         df = self.df.copy()
+        df = df.loc[df[self.groupcol] != 'Veteran Hospitals']
         df[self.x_type] = 'normal'
         if self.ycol_is_cumulative:
             df[self.Y] = df[self.ycol]

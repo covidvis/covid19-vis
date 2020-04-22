@@ -53,10 +53,8 @@ def make_jhu_country_cases_chart(override_props) -> CovidChart:
     jhu_df = jhu_df[(jhu_df.Province_State.isnull()) & (jhu_df.Country_Region != 'China')]
 
     if STAGING:
-        level = 'country'
         qcsv = './data/quarantine-activity-Apr19.csv'
     else:
-        level = 'country_old'
         qcsv = './data/quarantine-activity.csv'
 
     days_since = 50
@@ -65,7 +63,7 @@ def make_jhu_country_cases_chart(override_props) -> CovidChart:
         groupcol='Country_Region',
         start_criterion=DaysSinceNumReached(days_since, 'Confirmed'),
         ycol='Confirmed',
-        level=level,
+        level='country',
         xcol='Date',
         top_k_groups=30,
         quarantine_df=qcsv
