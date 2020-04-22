@@ -23,6 +23,10 @@ def _fontSettings(font):
     }
 
 
+def _ensure_parens(expr):
+    return f'({expr})'
+
+
 class ChartSpec(DotDict):
     """
     A wrapper around a dictionary capturing all the state that determines how
@@ -153,12 +157,9 @@ class ChartSpec(DotDict):
     def _yscale(self):
         return self.get('yscale', 'linear')
 
-    def _ensure_parens(self, expr):
-        return f'({expr})'
-
     def _legend_is_active(self):
         conditions = [
-            f'{str(self.legend_selection).lower()}',
+            f'{str(self.get("legend_selection", False)).lower()}',
             f'isDefined({self.legend}.{self._detailby})',
             f'(!isDefined({self.click}) || !isDefined({self.click}_{self._detailby}))',
         ]
@@ -171,10 +172,10 @@ class ChartSpec(DotDict):
             ])
         else:
             conditions.append(f'isValid({self.legend}_{self._detailby}_legend)')
-        return self._ensure_parens(' && '.join(conditions))
+        return _ensure_parens(' && '.join(conditions))
 
     def _click_is_active(self):
-        return self._ensure_parens(' && '.join([
+        return _ensure_parens(' && '.join([
             f'{str(self.click_selection).lower()}',
             f'isDefined({self.click}.{self._detailby})',
             f'isDefined({self.click}_{self._detailby})',
@@ -182,25 +183,25 @@ class ChartSpec(DotDict):
         ]))
 
     def _legend_focused(self):
-        return self._ensure_parens(' && '.join([
+        return _ensure_parens(' && '.join([
             f'{self._legend_is_active()}',
             f'indexof({self.legend}.{self._detailby}, datum.{self._detailby}) >= 0'
         ]))
 
     def _click_focused(self):
-        return self._ensure_parens(' && '.join([
+        return _ensure_parens(' && '.join([
             self._click_is_active(),
             f'{self.click}.{self._detailby} == datum.{self._detailby}'
         ]))
 
     def _in_focus(self):
-        return self._ensure_parens(f'{self._click_focused()} || {self._legend_focused()}')
+        return _ensure_parens(f'{self._click_focused()} || {self._legend_focused()}')
 
     def _someone_has_focus(self):
-        return self._ensure_parens(f'{self._click_is_active()} || {self._legend_is_active()}')
+        return _ensure_parens(f'{self._click_is_active()} || {self._legend_is_active()}')
 
     def _in_focus_or_none_selected(self):
-        return self._ensure_parens(f'{self._in_focus()} || !{self._someone_has_focus()}')
+        return _ensure_parens(f'{self._in_focus()} || !{self._someone_has_focus()}')
 
     def _show_trends(self):
         return '!isValid(trends_tuple) || trends_tuple.values[0]'
@@ -299,11 +300,11 @@ class ChartSpec(DotDict):
              lockdown_tooltip_text=f'datum.lockdown_type+ " " +"("+ datum.lockdown_date + ")"'
         )
 
-    def _make_cursor_selection(self, base):
+    def _make_cursor_selection(self, base, x_bind_col):
         cursor = alt.selection_single(name=self.cursor, nearest=True, on='mouseover',
-                                      fields=['x'], empty='none')
+                                      fields=[x_bind_col], empty='none')
         return cursor, base.mark_point().encode(
-            x='x:Q', opacity=alt.value(0),
+            x=f'{x_bind_col}:Q', opacity=alt.value(0),
         ).add_selection(cursor)
 
     def _collect_tooltip_layers(self, layers, base, cursor):
@@ -494,8 +495,12 @@ class ChartSpec(DotDict):
                 x=self._get_x(), y=self._get_y()
             ).transform_filter('false')
 
-            # next goes the tooltip selector layer (needs to happen before click selection layer)
-            cursor, selectors = self._make_cursor_selection(base)
+            # Next goes the mouseover interaction layer (needs to happen before click selection layer).
+            # We are binding the hover interaction to the 'x' column in the dataframe, so any other layers
+            # that make use of the hover interaction need to use this column for their x encoding in Altair.
+            # This means that things like lockdown tooltips need to use 'x' and then apply a filter to filter
+            # out non-lockdown days if they want work with the mouseover interaction.
+            cursor, selectors = self._make_cursor_selection(base, x_bind_col=self.X)
             layers['selectors'] = selectors
 
             # The first layer with a specified color channel is used to generate the legend.

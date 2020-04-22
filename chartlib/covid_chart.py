@@ -34,7 +34,7 @@ class CovidChart(object):
             groupcol: str,
             start_criterion: StartCriterion,
             ycol: str,
-            level: str = 'US',  # one of: [US, USA, country]
+            level: str = 'US',  # one of: [usa_old, US, USA, country]
             use_defaults: bool = True,
             ycol_is_cumulative: bool = True,
             top_k_groups: int = None,
@@ -62,7 +62,7 @@ class CovidChart(object):
             elif level.lower() in ['us', 'usa', 'united states']:
                 quarantine_df = self._ingest_usa_quarantine_df(quarantine_df)
                 readable_group_name = 'state'
-            elif level == 'country':
+            elif level in ('country', 'world'):
                 quarantine_df = self._ingest_country_quarantine_df(quarantine_df)
             else:
                 raise ValueError('invalid level %s: only "US" and "country" allowed now')
