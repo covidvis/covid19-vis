@@ -52,17 +52,25 @@ def make_jhu_country_cases_chart(override_props) -> CovidChart:
     jhu_df = pd.read_csv('./data/jhu-data.csv')
     jhu_df = jhu_df[(jhu_df.Province_State.isnull()) & (jhu_df.Country_Region != 'China')]
 
+    if STAGING:
+        level = 'country'
+        qcsv = './data/quarantine-activity-Apr19.csv'
+    else:
+        level = 'country_old'
+        qcsv = './data/quarantine-activity.csv'
+
     days_since = 50
     chart = CovidChart(
         jhu_df,
         groupcol='Country_Region',
         start_criterion=DaysSinceNumReached(days_since, 'Confirmed'),
         ycol='Confirmed',
-        level='country',
+        level=level,
         xcol='Date',
-        top_k_groups=20,
-        quarantine_df='./data/quarantine-activity.csv'  # should have a column with same name as `groupcol`
+        top_k_groups=30,
+        quarantine_df=qcsv
     )
+
 
     # chart.set_colormap()
     chart.set_unfocused_opacity(0.05)
@@ -72,6 +80,11 @@ def make_jhu_country_cases_chart(override_props) -> CovidChart:
     chart.set_ydomain((days_since, 1000000))
     chart.set_xdomain((0, 60))
     chart.spec.update(override_props)
+    if STAGING:
+        chart.lockdown_icons = True
+        chart.lockdown_rules = False
+        chart.lockdown_tooltips = True
+        chart.only_show_lockdown_tooltip_on_hover = True
     return chart
 
 
