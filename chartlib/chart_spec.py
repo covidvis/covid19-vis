@@ -102,6 +102,8 @@ class ChartSpec(DotDict):
         xtitle = self.get('xtitle', None)
         if xtitle is not None:
             xaxis_kwargs['title'] = xtitle
+        if 'grid' in self:
+            xaxis_kwargs['axis'] = alt.Axis(grid=self['grid'])
         return alt.X(shorthand, **xaxis_kwargs)
 
     def _get_y(self, shorthand='y:Q'):
@@ -114,6 +116,8 @@ class ChartSpec(DotDict):
         ytitle = self.get('ytitle', None)
         if ytitle is not None:
             yaxis_kwargs['title'] = ytitle
+        if 'grid' in self:
+            yaxis_kwargs['axis'] = alt.Axis(grid=self['grid'])
         return alt.Y(shorthand, **yaxis_kwargs)
 
     def _prefer_transient(self, key, default=None):

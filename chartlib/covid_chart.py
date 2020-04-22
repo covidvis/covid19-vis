@@ -590,6 +590,10 @@ class CovidChart(object):
         self.spec.extrap_clip_to_ydomain = clip
         return self
 
+    def set_grid(self, grid):
+        self.spec.grid = grid
+        return self
+
     def set_defaults(self):
         self.spec.detailby = self.groupcol
         self.spec.colorby = self.groupcol
@@ -606,6 +610,8 @@ class CovidChart(object):
             self.spec.DEFAULT_WIDTH
         ).set_height(
             self.spec.DEFAULT_HEIGHT
+        ).set_grid(
+            False
         ).set_colormap()
         if self.quarantine_df is not None:
             ret = ret.add_lockdown_rules()
