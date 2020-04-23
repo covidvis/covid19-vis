@@ -25,7 +25,7 @@ negative mental health implications
 <div class="tab">
 <span class="button-group">
   <button class="button-left tablinks default-open" onclick="openTabs(event, '.tab-content-world')">World</button>
-  <button class="button-right tablinks" onclick="openTabs(event, '.tab-content-usa')">USA</button>
+  <button class="button-right tablinks" onclick="openTabs(event, '.tab-content-usa');populateInfoPages('jhu_us_cases');populateInfoPages('jhu_us_deaths')">USA</button>
 </span>
 <span style="width: 5px; float: left;">&nbsp;</span>
 <span class="button-group">

@@ -239,6 +239,23 @@ function startVegaEmbedding() {{
     with open('./website/js/autogen/vega_embed.js', 'w') as f:
         f.write(script)
 
+def make_chart_detail():
+    #.str.strip(to_strip='"')
+    quarantine_df = pd.read_csv('./data/quarantine-activity-US-Apr16.csv')
+    quarantine_df["detail_html"] = '<li>'+quarantine_df["Effective Date"].str.replace("-","/")+": "+quarantine_df["Details (if any) "]+" [<a href='"+quarantine_df["Reference links"]+"'>source</a>]"+'</li>'
+
+    quarantine_df["detail_html"] = quarantine_df["detail_html"].fillna("")
+
+    result_html = quarantine_df[["State","detail_html"]].groupby("State").aggregate(sum).reset_index()
+    result_series = pd.Series(data = result_html["detail_html"])
+    result_series.index= result_html['State']
+    # f.to_json("./website/js/us_state_details.js",orient='columns')
+    import json
+    with open("./website/js/autogen/us_state_details.js",'w') as f:
+        f.write("var stateDetails = ")
+        json.dump(result_series.to_dict(),f)
+        f.close()
+
 
 def make_jekyll_config(configs):
     with open('./website/_config.in.yml', 'r') as f:
@@ -255,6 +272,7 @@ def main():
     export_charts(configs)
     make_vega_embed_script(configs)
     make_jekyll_config(configs)
+    make_chart_detail()
 
 
 if __name__ == '__main__':

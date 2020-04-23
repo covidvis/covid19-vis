@@ -16,22 +16,25 @@ function populateInfoPages(tabId){
 	var possibleValues = getDropdownValues($(selector)[0])
 	for (let val of possibleValues){
 		var infoPage = document.createElement("div")
-		infoPage.id = val.split(" ").join("_")
+		var infoList = document.createElement("ul")
+		infoPage.id = val.split(" ").join("_")+"_"+tabId
 		infoPage.className = "infoPage"
+
 		chartDiv.appendChild(infoPage)
-		infoPage.innerHTML = "info about "+val
+		infoPage.appendChild(infoList)
+		infoList.innerHTML = stateDetails[val]
 	}
 
 	$(selector).on('change', function() {
 		// Turn everything off first
 		for (let val of possibleValues){
-			var pgName = val.split(" ").join("_")
+			var pgName = val.split(" ").join("_")+"_"+tabId
 			if (pgName){
 				$("#"+pgName).hide();
 			}
 		}
 		// Then turn on the page corresponding to the selected dropdown option
-		var pageName = this.value.split(" ").join("_")
+		var pageName = this.value.split(" ").join("_")+"_"+tabId
 		$("#"+pageName).show();
 
 	});
