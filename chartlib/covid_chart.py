@@ -345,9 +345,11 @@ class CovidChart(object):
             on=self.groupcol
         )
 
-        idx_before_at_lockdown = df.loc[df.x <= df.lockdown_x].groupby(df[self.groupcol]).x.idxmax()
-        df_lockdown_y = df.loc[idx_before_at_lockdown]
-        df_intercept = df.loc[df.groupby(self.groupcol).x.idxmin()]
+        # NB (smacke): quick hack to avoid using early days to calculate the counterfactual slope
+        df_elim_early = df.loc[df.lockdown_x - df.x < 5]
+        idx_before_at_lockdown = df_elim_early.loc[df_elim_early.x <= df_elim_early.lockdown_x].groupby(df_elim_early[self.groupcol]).x.idxmax()
+        df_lockdown_y = df_elim_early.loc[idx_before_at_lockdown]
+        df_intercept = df_elim_early.loc[df_elim_early.groupby(self.groupcol).x.idxmin()]
         df = df.merge(
             df_intercept.rename(columns={self.Y: 'y_start', self.X: 'x_start'})[[self.groupcol, 'y_start', 'x_start']],
             how='left',
