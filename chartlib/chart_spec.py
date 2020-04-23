@@ -414,36 +414,56 @@ class ChartSpec(DotDict):
             self[self.TRANSIENT]['detailby'] = self._get_legend_title()
 
     def _make_manual_legend(self, df, click_selection):
-        groups = df[self.colorby].unique()
+        groups = list(df[self.colorby].unique())
         max_groups = 32
         if len(groups) > max_groups:
             raise ValueError('max 32 supported for now')
-        idx = max_groups + 2 - np.arange(len(groups))
-        leg_df = pd.DataFrame({'idx': idx, self._colorby: groups, 'zero': np.zeros_like(idx)})
+        idx = list(max_groups + 1 - np.arange(len(groups)))
+        row_type = ['normal'] * len(idx)
+        idx.append(max_groups + 2)
+        row_type.append('title')
+        groups.append(f'Select {self.get("readable_group_name", "line")}')
+        leg_df = pd.DataFrame({'idx': idx, self._colorby: groups, 'zero': np.zeros_like(idx), 'row_type': row_type})
 
         axis = alt.Axis(domain=False, ticks=False, orient='right', grid=False, labels=False)
         base = alt.Chart(
             leg_df, height=500, width=10,
-        ).mark_point(shape='diamond', filled=True, size=160).encode(
-            x=alt.X('zero:Q', title='', axis=axis),
-            y=alt.Y('idx:Q', title='', axis=axis, scale=alt.Scale(domain=(0, max_groups))),
-            color=self._alt_color,
-            detail=self._alt_detail,
-            opacity=alt.condition(
+        )
+
+        def _make_base(base, **extra_kwargs):
+            return base.encode(
+                x=alt.X('zero:Q', title='', axis=axis),
+                y=alt.Y('idx:Q', title='', axis=axis, scale=alt.Scale(domain=(0, max_groups))),
+                color=self._alt_color,
+                detail=self._alt_detail,
+                **extra_kwargs
+            )
+
+        legend_points = _make_base(
+            base, opacity=alt.condition(
                 self._in_focus_or_none_selected(),
                 alt.value(1),
                 alt.value(0.4),
             )
-        )
-
+        ).mark_point(shape='diamond', filled=True, size=160)
+        legend_points = legend_points.transform_filter('datum.row_type == "normal"')
+        first_layer = legend_points
+        if self.get('legend_selection', False):
+            first_layer = legend_points.add_selection(click_selection)
         layers = [
-            base.add_selection(click_selection),
-            base.mark_text(
+            first_layer,
+            legend_points.mark_text(
                 align='left', dx=10, font=self._font,
             ).encode(
                 text=f'{self._colorby}:N',
                 color=alt.value('black'),
-            )
+            ),
+            _make_base(base).mark_text(
+                align='left', dx=-10, dy=-5, font=self._font, fontSize=16,
+            ).encode(
+                text=f'{self._colorby}:N',
+                color=alt.value('black'),
+            ).transform_filter('datum.row_type == "title"')
         ]
         return alt.layer(*layers, view=alt.ViewConfig(strokeOpacity=0))
 
