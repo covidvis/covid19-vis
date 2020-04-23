@@ -184,7 +184,7 @@ class CovidChart(object):
             for char in x.lower():
                 emo+=emoji_dict[char]
             return emo
-        emoji_dict = {'e':'🚨','b':'🛃','t':'💼','c':'🛩️','l':'🏠','g': '👨‍👩‍👧‍👦','s':'🎓','r':'🍽️','n':'🏬'}
+        emoji_dict = {'e':'🚨','b':'🛃','t':'💼','c':'🛩️','l':'🏠','g': '👨‍👩‍👧‍👦','s':'🎓','r':'🍔','n':'🏬'}
         quarantine_df["emoji"] = quarantine_df["emoji_string"].apply(str2emo)
         return quarantine_df
 
