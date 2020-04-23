@@ -58,6 +58,7 @@ class ChartSpec(DotDict):
     DEFAULT_MIN_TREND_LINE_DAYS = 5
     DEFAULT_FONT = 'Khula'
     MAX_LEGEND_MARKS = 32
+    MAX_EMOJI_LEGEND_MARKS = 20
     EMPTY_SELECTION = ''
     COLOR_SCHEME = list(
         map(
@@ -491,12 +492,14 @@ class ChartSpec(DotDict):
                 else:
                     cur_emoji += c
                 saw_sep = (c == u'\u200d')
+        # TODO (smacke): not sure what this weird unicode emoji modifier is
         emojis = sorted(set(_emoji_gen()) - {'️'})
-        if len(emojis) > self.MAX_LEGEND_MARKS:
-            raise ValueError(f'max {self.MAX_LEGEND_MARKS} supported for now')
-        idx = list(self.MAX_LEGEND_MARKS + 1 - np.arange(len(emojis)))
+        if len(emojis) > self.MAX_EMOJI_LEGEND_MARKS:
+            raise ValueError(f'max {self.MAX_EMOJI_LEGEND_MARKS} supported for now')
+        idx = list(self.MAX_EMOJI_LEGEND_MARKS + 1 - np.arange(len(emojis)))
         row_type = ['normal'] * len(idx)
-        idx.append(self.MAX_LEGEND_MARKS + 2)
+        idx.append(self.MAX_EMOJI_LEGEND_MARKS + 2)
+        idx = list(np.array(idx) - 2)
         row_type.append('title')
         emojis.append('Intervention type')
         leg_df = pd.DataFrame({'idx': idx, 'emoji': emojis, 'zero': np.zeros_like(idx), 'row_type': row_type})
@@ -505,7 +508,7 @@ class ChartSpec(DotDict):
             leg_df, height=self._height, width=10,
         ).encode(
             x=alt.X('zero:Q', title='', axis=axis),
-            y=alt.Y('idx:Q', title='', axis=axis, scale=alt.Scale(domain=(0, self.MAX_LEGEND_MARKS))),
+            y=alt.Y('idx:Q', title='', axis=axis, scale=alt.Scale(domain=(0, self.MAX_EMOJI_LEGEND_MARKS))),
             color=self._alt_color,
             detail=self._alt_detail,
         )
@@ -517,10 +520,20 @@ class ChartSpec(DotDict):
                 color=alt.value('black'),
             ).transform_calculate(
                 # TODO: concat with emoji description
-                emoji_and_description='datum.emoji'
+                emoji_and_description='datum.emoji + " " + {'
+                                      '"👨‍👩‍👧‍👦": "Gatherings banned", '
+                                      '"🏠": "Stay at home order", '
+                                      '"🍽": "Restaurants closed", '
+                                      '"🏬": "Non-ess. businesses closed", '
+                                      '"🚨": "State of emergency declared", '
+                                      '"🎓": "Schools closed", '
+                                      '"🛩️": "Travel restricted", '
+                                      '"💼": "Forgot what this meant", '
+                                      '"🛃": "Forgot what this meant", '
+                                      '}[datum.emoji]'
             ).transform_filter('datum.row_type == "normal"'),
             base.mark_text(
-                align='left', dx=-10, dy=-5, font=self._font, fontSize=16,
+                align='left', dy=-5, font=self._font, fontSize=16,
             ).encode(
                 text='emoji:N',
                 color=alt.value('black'),
