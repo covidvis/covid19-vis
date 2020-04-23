@@ -84,6 +84,7 @@ def make_jhu_country_cases_chart(override_props) -> CovidChart:
         chart.lockdown_rules = False
         chart.lockdown_tooltips = True
         chart.only_show_lockdown_tooltip_on_hover = True
+        chart.emoji_legend = True
     return chart
 
 
@@ -146,6 +147,7 @@ def make_jhu_state_cases_chart(override_props) -> CovidChart:
         chart.lockdown_rules = False
         chart.lockdown_tooltips = True
         chart.only_show_lockdown_tooltip_on_hover = True
+        chart.emoji_legend = True
     return chart
 
 
@@ -183,6 +185,7 @@ def make_jhu_state_deaths_chart(override_props) -> CovidChart:
         chart.lockdown_rules = False
         chart.lockdown_tooltips = True
         chart.only_show_lockdown_tooltip_on_hover = True
+        chart.emoji_legend = True
     return chart
 
 
@@ -263,6 +266,7 @@ def make_jekyll_config(configs):
     jekyll_config['date_last_modified'] = datetime.now().strftime('%B %d, %Y')
     for config in configs:
         jekyll_config['footer_scripts'].append(f'js/autogen/{config["name"]}.js')
+    jekyll_config['staging'] = STAGING
     with open('./website/_config.yml', 'w') as f:
         yaml.dump(jekyll_config, f)
 

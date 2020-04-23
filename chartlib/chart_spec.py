@@ -616,7 +616,7 @@ class ChartSpec(DotDict):
                 layered = layered.interactive(bind_x=True, bind_y=True)
             if self.get('title', False):
                 layered.title = self.get('title')
-            if self.get('emoji_legend', True):
+            if self.get('emoji_legend', False):
                 final_chart = alt.hconcat(self._make_emoji_legend(df), layered)
             else:
                 final_chart = layered

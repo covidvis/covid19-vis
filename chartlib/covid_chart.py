@@ -165,13 +165,13 @@ class CovidChart(object):
 
         quarantine_df = pd.read_csv ('./data/quarantine-activity-Apr19.csv')
         quarantine_df = quarantine_df = quarantine_df.rename(
-             columns  = {'date': 'lockdown_date', 'country_name': 'Country_Region'}
+             columns={'date': 'lockdown_date', 'country_name': 'Country_Region'}
         )
 
         quarantine_df = quarantine_df.groupby(['lockdown_date', 'Country_Region', 'coverage']).agg({'Travel Restrictions': list, 'Gathering Limitations': list,'Shelter-in-place Order':list, 'K-12 School Closure':list,'Non-essential Businesses Closure':list}).reset_index()
         quarantine_df = quarantine_df.applymap(strip_nans)
         quarantine_df['lockdown_type'] = quarantine_df.apply(lambda x: create_lockdown_type_world(x, 0), axis=1)
-        quarantine_df['emoji_string']  = quarantine_df.apply(lambda x: create_lockdown_type_world(x, 1), axis=1)
+        quarantine_df['emoji_string'] = quarantine_df.apply(lambda x: create_lockdown_type_world(x, 1), axis=1)
         quarantine_df['lockdown_type'].replace('', np.nan, inplace=True)
         quarantine_df = quarantine_df.dropna(subset = ['lockdown_type'])
         quarantine_df = quarantine_df.groupby(['lockdown_date', 'Country_Region']).agg({'lockdown_type': lambda col: '; '.join(col), 'emoji_string':lambda col: ''.join(col)}).reset_index()
@@ -182,7 +182,7 @@ class CovidChart(object):
         def str2emo(x):
             emo = ""
             for char in x.lower():
-                emo+=emoji_dict[char]
+                emo += emoji_dict[char]
             return emo
         emoji_dict = {'e':'🚨','b':'🛃','t':'💼','c':'🛩️','l':'🏠','g': '👨‍👩‍👧‍👦','s':'🎓','r':'🍔','n':'🏬'}
         quarantine_df["emoji"] = quarantine_df["emoji_string"].apply(str2emo)
