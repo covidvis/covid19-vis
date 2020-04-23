@@ -25,6 +25,7 @@ head_scripts:
 
 footer_scripts:
   - js/chart_ui.js
+  - js/chart_text.js
 
 # Site Settings
 locale                   : "en-US"
