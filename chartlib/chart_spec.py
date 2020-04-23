@@ -499,7 +499,7 @@ class ChartSpec(DotDict):
         idx = list(self.MAX_EMOJI_LEGEND_MARKS + 1 - np.arange(len(emojis)))
         row_type = ['normal'] * len(idx)
         idx.append(self.MAX_EMOJI_LEGEND_MARKS + 2)
-        idx = list(np.array(idx) - 2)
+        idx = list(np.array(idx) - 2.25)
         row_type.append('title')
         emojis.append('Intervention type')
         leg_df = pd.DataFrame({'idx': idx, 'emoji': emojis, 'zero': np.zeros_like(idx), 'row_type': row_type})
