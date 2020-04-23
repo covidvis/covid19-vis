@@ -57,6 +57,7 @@ class ChartSpec(DotDict):
     DEFAULT_BACKGROUND_COLOR = 'white'
     DEFAULT_MIN_TREND_LINE_DAYS = 5
     DEFAULT_FONT = 'Khula'
+    MAX_LEGEND_MARKS = 32
     EMPTY_SELECTION = ''
     COLOR_SCHEME = list(
         map(
@@ -162,6 +163,14 @@ class ChartSpec(DotDict):
     @property
     def _yscale(self):
         return self.get('yscale', 'linear')
+
+    @property
+    def _height(self):
+        return self.get('height', self.DEFAULT_HEIGHT)
+
+    @property
+    def _width(self):
+        return self.get('width', self.DEFAULT_WIDTH)
 
     def _click_is_active(self):
         return _ensure_parens(' && '.join([
@@ -415,25 +424,24 @@ class ChartSpec(DotDict):
 
     def _make_manual_legend(self, df, click_selection):
         groups = list(df[self.colorby].unique())
-        max_groups = 32
-        if len(groups) > max_groups:
+        if len(groups) > self.MAX_LEGEND_MARKS:
             raise ValueError('max 32 supported for now')
-        idx = list(max_groups + 1 - np.arange(len(groups)))
+        idx = list(self.MAX_LEGEND_MARKS + 1 - np.arange(len(groups)))
         row_type = ['normal'] * len(idx)
-        idx.append(max_groups + 2)
+        idx.append(self.MAX_LEGEND_MARKS + 2)
         row_type.append('title')
         groups.append(f'Select {self.get("readable_group_name", "line")}')
         leg_df = pd.DataFrame({'idx': idx, self._colorby: groups, 'zero': np.zeros_like(idx), 'row_type': row_type})
 
         axis = alt.Axis(domain=False, ticks=False, orient='right', grid=False, labels=False)
         base = alt.Chart(
-            leg_df, height=500, width=10,
+            leg_df, height=self._height, width=10,
         )
 
         def _make_base(base, **extra_kwargs):
             return base.encode(
                 x=alt.X('zero:Q', title='', axis=axis),
-                y=alt.Y('idx:Q', title='', axis=axis, scale=alt.Scale(domain=(0, max_groups))),
+                y=alt.Y('idx:Q', title='', axis=axis, scale=alt.Scale(domain=(0, self.MAX_LEGEND_MARKS))),
                 color=self._alt_color,
                 detail=self._alt_detail,
                 **extra_kwargs
@@ -467,6 +475,59 @@ class ChartSpec(DotDict):
         ]
         return alt.layer(*layers, view=alt.ViewConfig(strokeOpacity=0))
 
+    def _make_emoji_legend(self, df):
+        emojis = list(df['emoji'].dropna().unique())
+        emojis_flattened = []
+        for s in emojis:
+            emojis_flattened.extend([c for c in s])
+
+        def _emoji_gen():
+            cur_emoji = emojis_flattened[0]
+            saw_sep = False
+            for c in emojis_flattened[1:]:
+                if not saw_sep and c != u'\u200d':
+                    yield cur_emoji
+                    cur_emoji = c
+                else:
+                    cur_emoji += c
+                saw_sep = (c == u'\u200d')
+        emojis = sorted(set(_emoji_gen()) - {'️'})
+        if len(emojis) > self.MAX_LEGEND_MARKS:
+            raise ValueError(f'max {self.MAX_LEGEND_MARKS} supported for now')
+        idx = list(self.MAX_LEGEND_MARKS + 1 - np.arange(len(emojis)))
+        row_type = ['normal'] * len(idx)
+        idx.append(self.MAX_LEGEND_MARKS + 2)
+        row_type.append('title')
+        emojis.append('Intervention type')
+        leg_df = pd.DataFrame({'idx': idx, 'emoji': emojis, 'zero': np.zeros_like(idx), 'row_type': row_type})
+        axis = alt.Axis(domain=False, ticks=False, orient='right', grid=False, labels=False)
+        base = alt.Chart(
+            leg_df, height=self._height, width=10,
+        ).encode(
+            x=alt.X('zero:Q', title='', axis=axis),
+            y=alt.Y('idx:Q', title='', axis=axis, scale=alt.Scale(domain=(0, self.MAX_LEGEND_MARKS))),
+            color=self._alt_color,
+            detail=self._alt_detail,
+        )
+        layers = [
+            base.mark_text(
+                align='left', font=self._font, fontSize=12,
+            ).encode(
+                text='emoji_and_description:N',
+                color=alt.value('black'),
+            ).transform_calculate(
+                # TODO: concat with emoji description
+                emoji_and_description='datum.emoji'
+            ).transform_filter('datum.row_type == "normal"'),
+            base.mark_text(
+                align='left', dx=-10, dy=-5, font=self._font, fontSize=16,
+            ).encode(
+                text='emoji:N',
+                color=alt.value('black'),
+            ).transform_filter('datum.row_type == "title"')
+        ]
+        return alt.layer(*layers, view=alt.ViewConfig(strokeOpacity=0))
+
     def compile(self, df):
         self.validate(df)
         self[self.TRANSIENT] = DotDict()
@@ -474,8 +535,8 @@ class ChartSpec(DotDict):
             self._populate_transient_props(df)
             base = alt.Chart(
                 df,
-                width=self.get('width', self.DEFAULT_WIDTH),
-                height=self.get('height', self.DEFAULT_HEIGHT)
+                width=self._width,
+                height=self._height
             )
             layers = {}
 
@@ -555,7 +616,11 @@ class ChartSpec(DotDict):
                 layered = layered.interactive(bind_x=True, bind_y=True)
             if self.get('title', False):
                 layered.title = self.get('title')
-            final_chart = layered | self._make_manual_legend(df, click_selection)
+            if self.get('emoji_legend', True):
+                final_chart = alt.hconcat(self._make_emoji_legend(df), layered)
+            else:
+                final_chart = layered
+            final_chart = alt.hconcat(final_chart, self._make_manual_legend(df, click_selection))
             final_chart = final_chart.configure(background=self.get('background', self.DEFAULT_BACKGROUND_COLOR))
             final_chart = final_chart.configure_axis(
                 titleFontSize=self.get('axes_title_fontsize', self.DEFAULT_AXES_TITLE_FONTSIZE),

@@ -17,6 +17,7 @@ def chart_configs():
     mobile_override_props = {
         'width': 200,
         'ytitle': '',
+        'emoji_legend': False,
     }
     configs = [
         {
