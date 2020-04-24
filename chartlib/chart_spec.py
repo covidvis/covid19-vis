@@ -216,6 +216,9 @@ class ChartSpec(DotDict):
     def _legend_focused_or_none_selected(self):
         return _ensure_parens(f'{self._legend_hover_focused()} || !{self._someone_has_focus()}')
 
+    def _show_events(self):
+        return 'events.values[0]'
+
     def _show_trends(self):
         return 'trends.values[0]'
 
@@ -307,6 +310,8 @@ class ChartSpec(DotDict):
             y=self._get_y(),
             text=text,
             color=alt.value('black')
+        ).transform_filter(
+            self._show_events()
         ).transform_calculate(
 # AGP        lockdown_tooltip_text=f'datum.{self._detailby} + " " + datum.lockdown_type+ " " +"("+ datum.lockdown_date + ")"'
              # lockdown_tooltip_text=f'datum.lockdown_type+ " " +"("+ datum.lockdown_date + ")"'
@@ -603,7 +608,10 @@ class ChartSpec(DotDict):
                 bind=dropdown,
                 clear='dblclick', **extra_click_selection_kwargs
             )
-
+            # Checkbox to print event details
+            event_checkbox = alt.binding_checkbox(name='Show intervention event details')
+            event_select = alt.selection_single(bind=event_checkbox, name='events', init={'values': False})
+            
             # put a fake layer in first with no click selection
             # since it has X and Y, it will help chart.interactive() to find x and y fields to bind to,
             # allowing us to pan up and down and zoom over both axes instead of just 1.
@@ -638,7 +646,7 @@ class ChartSpec(DotDict):
             #    and similarly cannot be the layer with the legend_selection added on.
             layers['fake_points'] = self._make_point_layer(
                 base, point_size=400, is_fake=True
-            ).add_selection(click_selection)
+            ).add_selection(click_selection).add_selection(event_select)
 
             # now the meaty layers with actual content
             layers['lines'] = self._make_line_layer(base)
