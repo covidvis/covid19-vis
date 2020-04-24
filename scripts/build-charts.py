@@ -86,6 +86,7 @@ def make_jhu_country_cases_chart(override_props) -> CovidChart:
         chart.emoji_legend = True
         chart.grid = False
         chart.use_manual_legend = True
+        chart.event_select = True
     chart.spec.update(override_props)
     return chart
 
@@ -115,13 +116,16 @@ def make_jhu_country_deaths_chart(override_props) -> CovidChart:
     chart.set_width(600).set_height(400)
     chart.set_ydomain((10, 100000))
     chart.set_xdomain((0, 56)).compile()
-    chart.spec.update(override_props)
     if STAGING:
         chart.lockdown_icons = True
         chart.lockdown_rules = False
         chart.lockdown_tooltips = True
         chart.only_show_lockdown_tooltip_on_hover = False
         chart.emoji_legend = True
+        chart.grid = False
+        chart.use_manual_legend = True
+        chart.event_select = True
+    chart.spec.update(override_props)
     return chart
 
 
@@ -162,6 +166,7 @@ def make_jhu_state_cases_chart(override_props) -> CovidChart:
         chart.emoji_legend = True
         chart.grid = False
         chart.use_manual_legend = True
+        chart.event_select = True
     chart.spec.update(override_props)
     return chart
 

@@ -336,14 +336,14 @@ class ChartSpec(DotDict):
             self._get_x(), detail=self._alt_detail, color=self._alt_color,
         )
 
-    def _make_lockdown_tooltips_layer(self, base, cursor,event_select):
+    def _make_lockdown_tooltips_layer(self, base, cursor, event_select):
         text = 'lockdown_tooltip_text:N'
         # Note that event_select doesn't mingle well with tooltip
         # Logically it is hard to do both cursor and event checkbox selector simultaneously
         if self.get('only_show_lockdown_tooltip_on_hover', False):
             text = alt.condition(cursor, text, alt.value(' '))
 
-        return base.mark_text(align='left', dx=20, dy=0, font=self._font).encode(
+        ret = base.mark_text(align='left', dx=20, dy=0, font=self._font).encode(
             x=self._get_x(),
             y=self._get_y(),
             text=text,
@@ -352,9 +352,10 @@ class ChartSpec(DotDict):
 # AGP        lockdown_tooltip_text=f'datum.{self._detailby} + " " + datum.lockdown_type+ " " +"("+ datum.lockdown_date + ")"'
              # lockdown_tooltip_text=f'datum.lockdown_type+ " " +"("+ datum.lockdown_date + ")"'
              lockdown_tooltip_text=f'datum.lockdown_type+ " " +"("+ datum.lockdown_date + ")"'
-        ).transform_filter(
-            self._show_events()
-        ).add_selection(event_select)
+        )
+        if event_select is not None:
+            ret = ret.transform_filter(self._show_events()).add_selection(event_select)
+        return ret
 
     def _make_cursor_selection(self, base, x_bind_col):
         cursor = alt.selection_single(name=self.cursor, nearest=True, on='mouseover',
@@ -647,8 +648,10 @@ class ChartSpec(DotDict):
                 clear='dblclick', **extra_click_selection_kwargs
             )
             # Checkbox to print event details
-            event_checkbox = alt.binding_checkbox(name='Show intervention event details')
-            event_select = alt.selection_single(bind=event_checkbox, name='events', init={'values': False})
+            event_select = None
+            if self.get('event_select', False):
+                event_checkbox = alt.binding_checkbox(name='Show intervention event details')
+                event_select = alt.selection_single(bind=event_checkbox, name='events', init={'values': False})
             
             # put a fake layer in first with no click selection
             # since it has X and Y, it will help chart.interactive() to find x and y fields to bind to,
