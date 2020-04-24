@@ -78,13 +78,13 @@ def make_jhu_country_cases_chart(override_props) -> CovidChart:
     chart.set_width(600).set_height(400)
     chart.set_ydomain((days_since, 1000000))
     chart.set_xdomain((0, 60))
-    chart.spec.update(override_props)
     if STAGING:
         chart.lockdown_icons = True
         chart.lockdown_rules = False
         chart.lockdown_tooltips = True
         chart.only_show_lockdown_tooltip_on_hover = True
         chart.emoji_legend = True
+    chart.spec.update(override_props)
     return chart
 
 
@@ -141,13 +141,13 @@ def make_jhu_state_cases_chart(override_props) -> CovidChart:
     chart = chart.set_xtitle('Days since {} Confirmed'.format(days_since))
     chart.set_width(600).set_height(400)
     chart.set_xdomain((0, 40)).set_ydomain((days_since, 200000))
-    chart.spec.update(override_props)
     if STAGING:
         chart.lockdown_icons = True
         chart.lockdown_rules = False
         chart.lockdown_tooltips = True
         chart.only_show_lockdown_tooltip_on_hover = True
         chart.emoji_legend = True
+    chart.spec.update(override_props)
     return chart
 
 
@@ -179,13 +179,13 @@ def make_jhu_state_deaths_chart(override_props) -> CovidChart:
     chart.set_width(600).set_height(400)
     chart.set_ydomain((days_since, 100000))
     chart.set_xdomain((0, 40)).compile()
-    chart.spec.update(override_props)
     if STAGING:
         chart.lockdown_icons = True
         chart.lockdown_rules = False
         chart.lockdown_tooltips = True
         chart.only_show_lockdown_tooltip_on_hover = True
         chart.emoji_legend = True
+    chart.spec.update(override_props)
     return chart
 
 
