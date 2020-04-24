@@ -308,6 +308,17 @@ class CovidChart(object):
                 'e':'🚨','b':'🛃','t':'💼','c':'🛩️','l':'🏠','g': '👨‍👩‍👧‍👦','s':'🎓','r':'🍽️','n':'🏬'
             }[c] for c in s.lower()
         ))
+
+        # Breaking up emoji into separate rows for vertical stacking
+        # def split(word): 
+        #     return [char for char in word]  
+        # quarantine_df.emoji_string = quarantine_df.emoji_string.apply(split)
+        # quarantine_df = quarantine_df.explode(column="emoji_string")
+        # quarantine_df["Jurisdiction"]=quarantine_df.emoji_string.apply(lambda x: "Statewide" if str(x).isupper() else "Regional")
+        # quarantine_df.emoji_string = quarantine_df.emoji_string.str.lower()
+        # quarantine_df['event_index'] = quarantine_df.groupby(['Province_State','lockdown_date']).cumcount()+1
+
+        # quarantine_cols = ['Province_State', 'lockdown_date', 'lockdown_type', 'emoji',"emoji_string",'event_index']
         quarantine_cols = ['Province_State', 'lockdown_date', 'lockdown_type', 'emoji']
         quarantine_df = quarantine_df[quarantine_cols]
         return quarantine_df
