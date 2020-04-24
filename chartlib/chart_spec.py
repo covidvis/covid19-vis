@@ -181,20 +181,40 @@ class ChartSpec(DotDict):
             f'{self.click}.{self._detailby} != "{self.EMPTY_SELECTION}"'
         ]))
 
+    def _legend_is_active(self):
+        return _ensure_parens(' && '.join([
+            'isValid(legend_hover)',
+            'isValid(legend_hover.group_idx)',
+            'legend_hover.group_idx > -1'
+        ]))
+
     def _click_focused(self):
         return _ensure_parens(' && '.join([
             self._click_is_active(),
             f'{self.click}.{self._detailby} == datum.{self._detailby}'
         ]))
 
+    def _legend_hover_focused(self):
+        return _ensure_parens(' && '.join([
+            self._legend_is_active(),
+            f'!{self._click_is_active()}',
+            'datum.group_idx == legend_hover.group_idx'
+        ]))
+
     def _in_focus(self):
-        return _ensure_parens(self._click_focused())
+        return _ensure_parens(f'{self._click_focused()} || {self._legend_hover_focused()}')
 
     def _someone_has_focus(self):
-        return _ensure_parens(self._click_is_active())
+        return _ensure_parens(f'{self._click_is_active()} || {self._legend_is_active()}')
 
     def _in_focus_or_none_selected(self):
         return _ensure_parens(f'{self._in_focus()} || !{self._someone_has_focus()}')
+
+    def _click_focused_or_none_selected(self):
+        return _ensure_parens(f'{self._click_focused()} || !{self._someone_has_focus()}')
+
+    def _legend_focused_or_none_selected(self):
+        return _ensure_parens(f'{self._legend_hover_focused()} || !{self._someone_has_focus()}')
 
     def _show_trends(self):
         return 'trends.values[0]'
@@ -424,24 +444,32 @@ class ChartSpec(DotDict):
             self[self.TRANSIENT]['detailby'] = self._get_legend_title()
 
     def _make_manual_legend(self, df, click_selection):
-        groups = list(df[self.colorby].unique())
-        if len(groups) > self.MAX_LEGEND_MARKS:
-            raise ValueError('max 32 supported for now')
-        idx = list(self.MAX_LEGEND_MARKS + 1 - np.arange(len(groups)))
+        groups = df.groupby(self.colorby).first().reset_index().sort_values(self.colorby, ascending=True)
+        group_names = list(groups[self.colorby].values)
+        if len(group_names) > self.MAX_LEGEND_MARKS:
+            raise ValueError(f'max {self.MAX_LEGEND_MARKS} supported for now')
+        idx = list(self.MAX_LEGEND_MARKS + 1 - np.arange(len(group_names)))
         row_type = ['normal'] * len(idx)
         idx.append(self.MAX_LEGEND_MARKS + 2)
         row_type.append('title')
-        groups.append(f'Select {self.get("readable_group_name", "line")}')
-        leg_df = pd.DataFrame({'idx': idx, self._colorby: groups, 'zero': np.zeros_like(idx), 'row_type': row_type})
+        group_names.append(f'Select {self.get("readable_group_name", "line")}')
+        xs = np.zeros_like(idx)
+        leg_df = pd.DataFrame({
+            'idx': idx * 3,
+            'group_idx': list(groups['group_idx']) + (2 * len(idx) + 1) * [-1],
+            self._colorby: group_names * 3,
+            'x': list(xs) + list(xs-1) + list(xs+20),
+            'row_type': row_type + ['fake'] * 2 * len(idx)
+        })
 
         axis = alt.Axis(domain=False, ticks=False, orient='right', grid=False, labels=False)
         base = alt.Chart(
-            leg_df, height=self._height, width=10,
+            leg_df, height=self._height, width=100,
         )
 
         def _make_base(base, **extra_kwargs):
             return base.encode(
-                x=alt.X('zero:Q', title='', axis=axis),
+                x=alt.X('x:Q', title='', axis=axis, scale=alt.Scale(domain=(-1, 20))),
                 y=alt.Y('idx:Q', title='', axis=axis, scale=alt.Scale(domain=(0, self.MAX_LEGEND_MARKS))),
                 color=self._alt_color,
                 detail=self._alt_detail,
@@ -450,23 +478,31 @@ class ChartSpec(DotDict):
 
         legend_points = _make_base(
             base, opacity=alt.condition(
-                self._in_focus_or_none_selected(),
+                self._click_focused_or_none_selected(),
                 alt.value(1),
                 alt.value(0.4),
             )
         ).mark_point(shape='diamond', filled=True, size=160)
         legend_points = legend_points.transform_filter('datum.row_type == "normal"')
-        first_layer = legend_points
+        cursor = alt.selection_single(name='legend_hover', nearest=True, on='mouseover',
+                                      fields=['group_idx'], empty='none')
+        points_layer = legend_points
         if self.get('legend_selection', False):
-            first_layer = legend_points.add_selection(click_selection)
+            points_layer = points_layer.add_selection(click_selection)
         layers = [
-            first_layer,
+            _make_base(base).mark_point(size=0).add_selection(cursor),
             legend_points.mark_text(
                 align='left', dx=10, font=self._font,
             ).encode(
                 text=f'{self._colorby}:N',
                 color=alt.value('black'),
+                opacity=alt.condition(
+                    self._in_focus_or_none_selected(),
+                    alt.value(1),
+                    alt.value(0.4),
+                ),
             ),
+            points_layer,
             _make_base(base).mark_text(
                 align='left', dx=-10, dy=-5, font=self._font, fontSize=16,
             ).encode(
@@ -519,7 +555,6 @@ class ChartSpec(DotDict):
                 text='emoji_and_description:N',
                 color=alt.value('black'),
             ).transform_calculate(
-                # TODO: concat with emoji description
                 emoji_and_description='datum.emoji + " " + {'
                                       '"👨‍👩‍👧‍👦": "Gatherings banned", '
                                       '"🏠": "Stay at home order", '

@@ -426,6 +426,14 @@ class CovidChart(object):
         if self.quarantine_df is not None:
             df = self._preprocess_lockdown_info(df)
 
+        groups = df.groupby(self.groupcol).first().reset_index().sort_values(self.groupcol)
+        groups['group_idx'] = np.arange(len(groups[self.groupcol]))
+        df = df.merge(
+            groups[[self.groupcol, 'group_idx']],
+            how='left',
+            on=self.groupcol
+        )
+
         readable_group_name = self.spec.get('readable_group_name', None)
         if readable_group_name is not None:
             readable_group_name = self.spec._get_legend_title()
