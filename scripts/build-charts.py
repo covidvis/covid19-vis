@@ -92,6 +92,11 @@ def make_jhu_country_deaths_chart(override_props) -> CovidChart:
     jhu_df = pd.read_csv("./data/jhu-data.csv")
     jhu_df = jhu_df.loc[(jhu_df.Country_Region != 'China') & jhu_df.Province_State.isnull()]
 
+    if STAGING:
+        qcsv = './data/quarantine-activity-Apr19.csv'
+    else:
+        qcsv = './data/quarantine-activity.csv'
+
     chart = CovidChart(
         jhu_df,
         groupcol='Country_Region',
@@ -100,7 +105,7 @@ def make_jhu_country_deaths_chart(override_props) -> CovidChart:
         xcol='Date',
         level='country',
         top_k_groups=20,
-        quarantine_df='./data/quarantine-activity.csv'  # should have a column with same name as `groupcol`
+        quarantine_df=qcsv
     )
 
     chart = chart.set_ytitle('Number of Deaths (log scale)')
@@ -109,6 +114,12 @@ def make_jhu_country_deaths_chart(override_props) -> CovidChart:
     chart.set_ydomain((10, 100000))
     chart.set_xdomain((0, 56)).compile()
     chart.spec.update(override_props)
+    if STAGING:
+        chart.lockdown_icons = True
+        chart.lockdown_rules = False
+        chart.lockdown_tooltips = True
+        chart.only_show_lockdown_tooltip_on_hover = True
+        chart.emoji_legend = True
     return chart
 
 
