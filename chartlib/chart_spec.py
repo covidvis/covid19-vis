@@ -455,11 +455,11 @@ class ChartSpec(DotDict):
         group_names.append(f'Select {self.get("readable_group_name", "line")}')
         xs = np.zeros_like(idx)
         leg_df = pd.DataFrame({
-            'idx': idx * 3,
-            'group_idx': list(groups['group_idx']) + (2 * len(idx) + 1) * [-1],
-            self._colorby: group_names * 3,
-            'x': list(xs) + list(xs-1) + list(xs+20),
-            'row_type': row_type + ['fake'] * 2 * len(idx)
+            'idx': idx * 4,
+            'group_idx': (list(groups['group_idx']) + [-1]) * 2 + [-1] * (2 * len(idx)),
+            self._colorby: group_names * 4,
+            'x': list(xs) + list(xs+2) + list(xs-2) + list(xs+20),
+            'row_type': row_type + ['hover'] * 3 * len(idx)
         })
 
         axis = alt.Axis(domain=False, ticks=False, orient='right', grid=False, labels=False)
@@ -469,7 +469,7 @@ class ChartSpec(DotDict):
 
         def _make_base(base, **extra_kwargs):
             return base.encode(
-                x=alt.X('x:Q', title='', axis=axis, scale=alt.Scale(domain=(-1, 20))),
+                x=alt.X('x:Q', title='', axis=axis, scale=alt.Scale(domain=(-5, 20))),
                 y=alt.Y('idx:Q', title='', axis=axis, scale=alt.Scale(domain=(0, self.MAX_LEGEND_MARKS))),
                 color=self._alt_color,
                 detail=self._alt_detail,
@@ -490,7 +490,7 @@ class ChartSpec(DotDict):
         if self.get('legend_selection', False):
             points_layer = points_layer.add_selection(click_selection)
         layers = [
-            _make_base(base).mark_point(size=0).add_selection(cursor),
+            _make_base(base).mark_point(size=0).transform_filter('datum.row_type == "hover"').add_selection(cursor),
             legend_points.mark_text(
                 align='left', dx=10, font=self._font,
             ).encode(
@@ -668,7 +668,7 @@ class ChartSpec(DotDict):
                 final_chart = alt.hconcat(self._make_emoji_legend(df), layered)
             else:
                 final_chart = layered
-            final_chart = alt.hconcat(final_chart, self._make_manual_legend(df, click_selection))
+            final_chart = alt.hconcat(final_chart, self._make_manual_legend(df, click_selection), spacing=0)
             final_chart = final_chart.configure(background=self.get('background', self.DEFAULT_BACKGROUND_COLOR))
             final_chart = final_chart.configure_axis(
                 titleFontSize=self.get('axes_title_fontsize', self.DEFAULT_AXES_TITLE_FONTSIZE),
