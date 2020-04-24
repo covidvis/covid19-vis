@@ -159,7 +159,9 @@ class ChartSpec(DotDict):
             extra_color_kwargs['scale'] = dict(
                 domain=domain, range=rng,
             )
-        return alt.Color(f'{self._colorby}:N', legend=None, **extra_color_kwargs)
+        if self._manual_legend:
+            extra_color_kwargs['legend'] = None
+        return alt.Color(f'{self._colorby}:N', **extra_color_kwargs)
 
     @property
     def _yscale(self):
@@ -173,6 +175,10 @@ class ChartSpec(DotDict):
     def _width(self):
         return self.get('width', self.DEFAULT_WIDTH)
 
+    @property
+    def _manual_legend(self):
+        return self.get('use_manual_legend', False)
+
     def _click_is_active(self):
         return _ensure_parens(' && '.join([
             f'{str(self.click_selection).lower()}',
@@ -181,7 +187,26 @@ class ChartSpec(DotDict):
             f'{self.click}.{self._detailby} != "{self.EMPTY_SELECTION}"'
         ]))
 
+    def _old_legend_is_active(self):
+        conditions = [
+            f'{str(self.get("legend_selection", False)).lower()}',
+            f'isDefined({self.legend}.{self._detailby})',
+            f'(!isDefined({self.click}) || !isDefined({self.click}_{self._detailby}))',
+        ]
+        # TODO (smacke): legend_tuple not defined for facet charts;
+        # need a more reliable way to detect if we clicked on a blank area
+        if self.get('facetby', None) is None:
+            conditions.extend([
+                f'isValid({self.legend}_tuple)',
+                f'!isDefined({self.legend}_tuple.unit)',
+            ])
+        else:
+            conditions.append(f'isValid({self.legend}_{self._detailby}_legend)')
+        return _ensure_parens(' && '.join(conditions))
+
     def _legend_is_active(self):
+        if not self._manual_legend:
+            return self._old_legend_is_active()
         return _ensure_parens(' && '.join([
             'isValid(legend_hover)',
             'isValid(legend_hover.group_idx)',
@@ -194,7 +219,15 @@ class ChartSpec(DotDict):
             f'{self.click}.{self._detailby} == datum.{self._detailby}'
         ]))
 
+    def _old_legend_focused(self):
+        return _ensure_parens(' && '.join([
+            f'{self._legend_is_active()}',
+            f'indexof({self.legend}.{self._detailby}, datum.{self._detailby}) >= 0'
+        ]))
+
     def _legend_hover_focused(self):
+        if not self._manual_legend:
+            return self._old_legend_focused()
         return _ensure_parens(' && '.join([
             self._legend_is_active(),
             f'!{self._click_is_active()}',
@@ -220,7 +253,9 @@ class ChartSpec(DotDict):
         return 'events.values[0]'
 
     def _show_trends(self):
-        return 'trends.values[0]'
+        if self._manual_legend:
+            return 'trends.values[0]'
+        return '!isValid(trends_tuple) || trends_tuple.values[0]'
 
     def _maybe_add_facet(self, base):
         facetby = self.get('facetby', None)
@@ -636,9 +671,14 @@ class ChartSpec(DotDict):
             # We put a fake layer in here before we add any other layers w/ color channel specified, and we
             # furthermore add the legend selection to it b/c it also seems like a multi-selection bound to the
             # legend needs to be added to the layer that generates the legend.
-            # layers['legend'] = base.mark_point(size=0).encode(
-            #     x=self._get_x(), y=self._get_y(), color=self._alt_color
-            # )  # .add_selection(legend_selection)
+            if not self._manual_legend:
+                legend_selection = alt.selection_multi(
+                    fields=[self._colorby], on='click', name=self.legend, empty='all',
+                    bind='legend', clear='dblclick',
+                )
+                layers['legend'] = base.mark_point(size=0).encode(
+                    x=self._get_x(), y=self._get_y(), color=self._alt_color
+                ).add_selection(legend_selection)
 
             # Put a fake layer in first to attach the click selection to. We use a fake layer for this for a few reasons.
             # 1. It's not used as a base layer, so we won't get errors
@@ -679,12 +719,15 @@ class ChartSpec(DotDict):
                 final_chart = alt.hconcat(self._make_emoji_legend(df), layered)
             else:
                 final_chart = layered
-            final_chart = alt.hconcat(final_chart, self._make_manual_legend(df, click_selection), spacing=0)
+            if self._manual_legend:
+                final_chart = alt.hconcat(final_chart, self._make_manual_legend(df, click_selection), spacing=0)
             final_chart = final_chart.configure(background=self.get('background', self.DEFAULT_BACKGROUND_COLOR))
             final_chart = final_chart.configure_axis(
                 titleFontSize=self.get('axes_title_fontsize', self.DEFAULT_AXES_TITLE_FONTSIZE),
             )
             final_chart = final_chart.configure_title(font=self._font)
+            if not self._manual_legend:
+                final_chart = final_chart.configure_legend(symbolType='diamond')
             alt.themes.register('customFont', _fontSettings(self._font))
             alt.themes.enable('customFont')
             return final_chart
