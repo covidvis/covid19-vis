@@ -301,22 +301,25 @@ class ChartSpec(DotDict):
             self._get_x(), detail=self._alt_detail, color=self._alt_color,
         )
 
-    def _make_lockdown_tooltips_layer(self, base, cursor):
+    def _make_lockdown_tooltips_layer(self, base, cursor,event_select):
         text = 'lockdown_tooltip_text:N'
+        # Note that event_select doesn't mingle well with tooltip
+        # Logically it is hard to do both cursor and event checkbox selector simultaneously
         if self.get('only_show_lockdown_tooltip_on_hover', False):
             text = alt.condition(cursor, text, alt.value(' '))
-        return base.mark_text(align='left', dx=15, dy=0, font=self._font).encode(
+
+        return base.mark_text(align='left', dx=20, dy=0, font=self._font).encode(
             x=self._get_x(),
             y=self._get_y(),
             text=text,
             color=alt.value('black')
-        ).transform_filter(
-            self._show_events()
         ).transform_calculate(
 # AGP        lockdown_tooltip_text=f'datum.{self._detailby} + " " + datum.lockdown_type+ " " +"("+ datum.lockdown_date + ")"'
              # lockdown_tooltip_text=f'datum.lockdown_type+ " " +"("+ datum.lockdown_date + ")"'
              lockdown_tooltip_text=f'datum.lockdown_type+ " " +"("+ datum.lockdown_date + ")"'
-        )
+        ).transform_filter(
+            self._show_events()
+        ).add_selection(event_select)
 
     def _make_cursor_selection(self, base, x_bind_col):
         cursor = alt.selection_single(name=self.cursor, nearest=True, on='mouseover',
@@ -325,7 +328,7 @@ class ChartSpec(DotDict):
             x=f'{x_bind_col}:Q', opacity=alt.value(0),
         ).add_selection(cursor)
 
-    def _collect_tooltip_layers(self, layers, base, cursor):
+    def _collect_tooltip_layers(self, layers, base, cursor,event_select):
         if not self.get('has_tooltips', False):
             return
         if self.get('tooltip_points', False):
@@ -349,7 +352,7 @@ class ChartSpec(DotDict):
         if has_lockdown_rules:
             layers['lockdown_rules'] = self._make_lockdown_rules_layer(lockdown_base)
         if has_lockdown_rules or self.get('lockdown_tooltips', False):
-            layers['lockdown_tooltips'] = self._make_lockdown_tooltips_layer(lockdown_base, cursor)
+            layers['lockdown_tooltips'] = self._make_lockdown_tooltips_layer(lockdown_base, cursor,event_select)
         if self.get('lockdown_icons', False):
             layers['lockdown_icons'] = self._make_lockdown_icons_layer(lockdown_base, cursor)
 
@@ -563,7 +566,7 @@ class ChartSpec(DotDict):
                 emoji_and_description='datum.emoji + " " + {'
                                       '"👨‍👩‍👧‍👦": "Gatherings banned", '
                                       '"🏠": "Stay at home order", '
-                                      '"🍽": "Restaurant closures", '
+                                      '"🍔": "Restaurant closures", '
                                       '"🏬": "Non-ess. businesses closed", '
                                       '"🚨": "State of emergency declared", '
                                       '"🎓": "School closures", '
@@ -646,7 +649,7 @@ class ChartSpec(DotDict):
             #    and similarly cannot be the layer with the legend_selection added on.
             layers['fake_points'] = self._make_point_layer(
                 base, point_size=400, is_fake=True
-            ).add_selection(click_selection).add_selection(event_select)
+            ).add_selection(click_selection)
 
             # now the meaty layers with actual content
             layers['lines'] = self._make_line_layer(base)
@@ -656,7 +659,7 @@ class ChartSpec(DotDict):
                 is_fake=False
             )
 
-            self._collect_tooltip_layers(layers, base, cursor)
+            self._collect_tooltip_layers(layers, base, cursor, event_select)
 
             if self.get('lockdown_extrapolation', False):
                 trend_checkbox = alt.binding_checkbox(name='Show trend lines for selected ')
