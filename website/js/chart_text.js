@@ -2,8 +2,10 @@
 
 function getDropdownValues(mData) {
 	let arry = [];
-	for (let index = 0; index < mData.children.length; index++) {
-	    arry.push(mData.children[index].value);
+	if (mData){
+		for (let index = 0; index < mData.children.length; index++) {
+		    arry.push(mData.children[index].value);
+		}	
 	}
 	return arry;
 }
