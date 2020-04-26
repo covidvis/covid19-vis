@@ -570,7 +570,7 @@ class ChartSpec(DotDict):
         ]
         return alt.layer(*layers, view=alt.ViewConfig(strokeOpacity=0))
 
-    def _collect_emoji_legend_layers(self, df, layers, base):
+    def _collect_emoji_legend_layers(self, df, layers):
         emojis = list(df['emoji'].dropna().unique())
         emojis_flattened = []
         for s in emojis:
@@ -597,13 +597,13 @@ class ChartSpec(DotDict):
         base = alt.Chart(
             leg_df, height=self._height, width=self._width,
         ).encode(
-            x=self._get_x(),
-            y=self._get_y(),
             color=alt.value('black'),
         )
         layers['marks'] = base.mark_text(
             align='left', font=self._font, fontSize=12,
         ).encode(
+            x=self._get_x(),
+            y=self._get_y(),
             text='emoji_and_description:N',
         ).transform_calculate(
             emoji_and_description='datum.emoji + " " + {'
@@ -621,8 +621,16 @@ class ChartSpec(DotDict):
             'datum.row_type == "normal"'
         ).transform_calculate(
             x=f'5 + (datum.idx % 3) * {self.xdomain[1]//4 + 2}',
-            y='15 * pow(1.7, floor(datum.idx / 3))'
+            y='1.5 * pow(1.7, floor(datum.idx / 3))'
         )
+        num_emoji_rows = (len(emojis) + 2) // 3
+        layers['emoji_legend_sep'] = base.mark_rule(
+            strokeWidth=0.5,
+            strokeDash=[1, 0]
+        ).encode(
+            y=self._get_y(),
+            color=alt.value('gray')
+        ).transform_calculate(y={2: '4', 3: '7'}[num_emoji_rows])
         # layers['title'] = base.mark_text(
         #     align='left', dy=-5, font=self._font, fontSize=16,
         # ).encode(
@@ -746,7 +754,7 @@ class ChartSpec(DotDict):
                 )
 
             if self.get('emoji_legend', False):
-                self._collect_emoji_legend_layers(df, layers, base)
+                self._collect_emoji_legend_layers(df, layers)
 
             layered = alt.layer(*layers.values())
             layered = self._maybe_add_facet(layered)
@@ -754,10 +762,6 @@ class ChartSpec(DotDict):
                 layered = layered.interactive(bind_x=True, bind_y=True)
             if self.get('title', False):
                 layered.title = self.get('title')
-            # if self.get('emoji_legend', False):
-            #     final_chart = alt.hconcat(self._make_emoji_legend(df), layered)
-            # else:
-            #     final_chart = layered
             final_chart = layered
             if self._manual_legend:
                 final_chart = alt.hconcat(final_chart, self._make_manual_legend(df, click_selection), spacing=0)
