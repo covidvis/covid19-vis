@@ -147,7 +147,7 @@ class CovidChart(object):
                 not_the_first_flag = 1
                 emo_s = (emo_s + "n") if (regional_flag == 1) else (emo_s + "N")
             if (emo_flag == 1): return emo_s
-            if (s == ""): return s # Ensures just "Regional" is not returned
+            if (s == ""): return s  # Ensures just "Regional" is not returned
             return (r + s).strip()
 
         def strip_nans(x):
@@ -164,7 +164,7 @@ class CovidChart(object):
 
 
         quarantine_df = pd.read_csv ('./data/quarantine-activity-Apr19.csv')
-        quarantine_df = quarantine_df = quarantine_df.rename(
+        quarantine_df = quarantine_df.rename(
              columns={'date': 'lockdown_date', 'country_name': 'Country_Region'}
         )
 
