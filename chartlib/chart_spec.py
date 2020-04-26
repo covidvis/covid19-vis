@@ -58,7 +58,7 @@ class ChartSpec(DotDict):
     DEFAULT_MIN_TREND_LINE_DAYS = 5
     DEFAULT_FONT = 'Khula'
     MAX_LEGEND_MARKS = 32
-    MAX_EMOJI_LEGEND_MARKS = 20
+    MAX_EMOJI_LEGEND_MARKS = 7
     EMPTY_SELECTION = ''
     COLOR_SCHEME = list(
         map(
@@ -108,13 +108,13 @@ class ChartSpec(DotDict):
             xaxis_kwargs['axis'] = alt.Axis(grid=self['grid'])
         return alt.X(shorthand, **xaxis_kwargs)
 
-    def _get_y(self, shorthand='y:Q'):
-        yaxis_kwargs = {}
-        yscale = self.get('yscale', 'linear')
-        if 'ydomain' in self:
-            yaxis_kwargs['scale'] = alt.Scale(type=yscale, domain=self.ydomain)
-        else:
-            yaxis_kwargs['scale'] = alt.Scale(type=yscale)
+    def _get_y(self, shorthand='y:Q', **yaxis_kwargs):
+        if 'scale' not in yaxis_kwargs:
+            yscale = self.get('yscale', 'linear')
+            if 'ydomain' in self:
+                yaxis_kwargs['scale'] = alt.Scale(type=yscale, domain=self.ydomain)
+            else:
+                yaxis_kwargs['scale'] = alt.Scale(type=yscale)
         ytitle = self.get('ytitle', None)
         if ytitle is not None:
             yaxis_kwargs['title'] = ytitle
@@ -570,7 +570,7 @@ class ChartSpec(DotDict):
         ]
         return alt.layer(*layers, view=alt.ViewConfig(strokeOpacity=0))
 
-    def _make_emoji_legend(self, df):
+    def _collect_emoji_legend_layers(self, df, layers, base):
         emojis = list(df['emoji'].dropna().unique())
         emojis_flattened = []
         for s in emojis:
@@ -590,49 +590,45 @@ class ChartSpec(DotDict):
         emojis = sorted(set(_emoji_gen()) - {'️'})
         if len(emojis) > self.MAX_EMOJI_LEGEND_MARKS:
             raise ValueError(f'max {self.MAX_EMOJI_LEGEND_MARKS} supported for now')
-        idx = list(self.MAX_EMOJI_LEGEND_MARKS + 1 - np.arange(len(emojis)))
-        row_type = ['normal'] * len(idx)
-        idx.append(self.MAX_EMOJI_LEGEND_MARKS + 2)
-        idx = list(np.array(idx) - 2.25)
-        row_type.append('title')
+        idx = list(np.arange(len(emojis) + 1))
+        row_type = ['normal'] * len(emojis) + ['title']
         emojis.append('Intervention type')
         leg_df = pd.DataFrame({'idx': idx, 'emoji': emojis, 'zero': np.zeros_like(idx), 'row_type': row_type})
-        axis = alt.Axis(domain=False, ticks=False, orient='right', grid=False, labels=False)
         base = alt.Chart(
-            leg_df, height=self._height, width=10,
+            leg_df, height=self._height, width=self._width,
         ).encode(
-            x=alt.X('zero:Q', title='', axis=axis),
-            y=alt.Y('idx:Q', title='', axis=axis, scale=alt.Scale(domain=(0, self.MAX_EMOJI_LEGEND_MARKS))),
-            color=self._alt_color,
-            detail=self._alt_detail,
+            x=self._get_x(),
+            y=self._get_y(),
+            color=alt.value('black'),
         )
-        layers = [
-            base.mark_text(
-                align='left', font=self._font, fontSize=12,
-            ).encode(
-                text='emoji_and_description:N',
-                color=alt.value('black'),
-            ).transform_calculate(
-                emoji_and_description='datum.emoji + " " + {'
-                                      '"👨‍👩‍👧‍👦": "Gatherings banned", '
-                                      '"🏠": "Stay at home order", '
-                                      '"🍔": "Restaurant closures", '
-                                      '"🏬": "Non-ess. businesses closed", '
-                                      '"🚨": "State of emergency declared", '
-                                      '"🎓": "School closures", '
-                                      '"🛩️": "Travel restrictions", '
-                                      '"💼": "Border cont. or quarantine", '
-                                      '"🛃": "Forgot what this meant", '
-                                      '}[datum.emoji]'
-            ).transform_filter('datum.row_type == "normal"'),
-            base.mark_text(
-                align='left', dy=-5, font=self._font, fontSize=16,
-            ).encode(
-                text='emoji:N',
-                color=alt.value('black'),
-            ).transform_filter('datum.row_type == "title"')
-        ]
-        return alt.layer(*layers, view=alt.ViewConfig(strokeOpacity=0))
+        layers['marks'] = base.mark_text(
+            align='left', font=self._font, fontSize=12,
+        ).encode(
+            text='emoji_and_description:N',
+        ).transform_calculate(
+            emoji_and_description='datum.emoji + " " + {'
+                                  '"👨‍👩‍👧‍👦": "Gatherings banned", '
+                                  '"🏠": "Stay at home order", '
+                                  '"🍔": "Restaurant closures", '
+                                  '"🏬": "Non-ess. businesses closed", '
+                                  '"🚨": "State of emergency declared", '
+                                  '"🎓": "School closures", '
+                                  '"🛩️": "Travel restrictions", '
+                                  '"💼": "Border cont. or quarantine", '
+                                  '"🛃": "Forgot what this meant", '
+                                  '}[datum.emoji]'
+        ).transform_filter(
+            'datum.row_type == "normal"'
+        ).transform_calculate(
+            x=f'5 + (datum.idx % 3) * {self.xdomain[1]//4 + 2}',
+            y='15 * pow(1.7, floor(datum.idx / 3))'
+        )
+        # layers['title'] = base.mark_text(
+        #     align='left', dy=-5, font=self._font, fontSize=16,
+        # ).encode(
+        #     text='emoji:N',
+        #     color=alt.value('black'),
+        # ).transform_filter('datum.row_type == "title"')
 
     def compile(self, df):
         self.validate(df)
@@ -749,16 +745,20 @@ class ChartSpec(DotDict):
                     layers['model_lines'], cursor, trend_select
                 )
 
+            if self.get('emoji_legend', False):
+                self._collect_emoji_legend_layers(df, layers, base)
+
             layered = alt.layer(*layers.values())
             layered = self._maybe_add_facet(layered)
             if self.get('interactive', False):
                 layered = layered.interactive(bind_x=True, bind_y=True)
             if self.get('title', False):
                 layered.title = self.get('title')
-            if self.get('emoji_legend', False):
-                final_chart = alt.hconcat(self._make_emoji_legend(df), layered)
-            else:
-                final_chart = layered
+            # if self.get('emoji_legend', False):
+            #     final_chart = alt.hconcat(self._make_emoji_legend(df), layered)
+            # else:
+            #     final_chart = layered
+            final_chart = layered
             if self._manual_legend:
                 final_chart = alt.hconcat(final_chart, self._make_manual_legend(df, click_selection), spacing=0)
             final_chart = final_chart.configure(background=self.get('background', self.DEFAULT_BACKGROUND_COLOR))
