@@ -599,6 +599,7 @@ class ChartSpec(DotDict):
         ).encode(
             color=alt.value('black'),
         )
+        num_emoji_rows = (len(emojis) + 2) // 3
         layers['marks'] = base.mark_text(
             align='left', font=self._font, fontSize=12,
         ).encode(
@@ -610,11 +611,11 @@ class ChartSpec(DotDict):
                                   '"👨‍👩‍👧‍👦": "Gatherings banned", '
                                   '"🏠": "Stay at home order", '
                                   '"🍔": "Restaurant closures", '
-                                  '"🏬": "Non-ess. businesses closed", '
+                                  '"🏬": "Business closures", '
                                   '"🚨": "State of emergency declared", '
                                   '"🎓": "School closures", '
                                   '"🛩️": "Travel restrictions", '
-                                  '"💼": "Border cont. or quarantine", '
+                                  '"💼": "Visitor/Border restrictions", '
                                   '"🛃": "Forgot what this meant", '
                                   '}[datum.emoji]'
         ).transform_filter(
