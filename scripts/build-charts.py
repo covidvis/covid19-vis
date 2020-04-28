@@ -120,7 +120,7 @@ def make_jhu_country_deaths_chart(override_props) -> CovidChart:
         ycol='Deaths',
         xcol='Date',
         level='country',
-        top_k_groups=20,
+        top_k_groups=30,
         quarantine_df=qcsv
     )
 
@@ -156,7 +156,7 @@ def make_jhu_state_cases_chart(override_props) -> CovidChart:
         ycol='Confirmed',
         level=level,
         xcol='Date',
-        top_k_groups=20,
+        top_k_groups=30,
         quarantine_df=qcsv  # should have a column with same name as `groupcol`
     )
     # chart.set_colormap()
@@ -191,7 +191,7 @@ def make_jhu_state_deaths_chart(override_props) -> CovidChart:
         ycol='Deaths',
         xcol='Date',
         level=level,
-        top_k_groups=20,
+        top_k_groups=30,
         quarantine_df=qcsv  # should have a column with same name as `groupcol`
     )
 

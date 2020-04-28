@@ -378,14 +378,14 @@ class ChartSpec(DotDict):
         event_select = None
         calculate_kwargs = {empty_if_checkbox: f'datum.{lockdown_tooltip_text}'}
         if self.get('event_select', False):
-            event_checkbox = alt.binding_checkbox(name='Show all intervention event details')
+            event_checkbox = alt.binding_checkbox(name='Show all intervention details ')
             event_select = alt.selection_single(bind=event_checkbox, name='events', init={'values': False})
             calculate_kwargs[empty_if_checkbox] = f'{self._show_events()} ? " " : datum.{lockdown_tooltip_text}'
             hover_layer = hover_layer.add_selection(event_select)
         if 'Coverage' in df.columns:
             # TODO: put this in a better place
             # I'm just putting it here so that it appears earlier than the "show all events" checkbox for now
-            regional_checkbox = alt.binding_checkbox(name='Hide regionally-scoped countermeasure icons')
+            regional_checkbox = alt.binding_checkbox(name='Hide regional intervention icons ')
             regional_select = alt.selection_single(
                 bind=regional_checkbox, name='hide_regional_icons', init={'values': False}
             )
