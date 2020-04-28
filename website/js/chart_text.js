@@ -11,14 +11,20 @@ function makePopulateInfoPageSpaceHandler(tabId){
 		}
 		possibleValues.add(value);
 		var infoPage = document.createElement("div");
-		var infoList = document.createElement("ul");
 		infoPage.id = value.split(" ").join("_")+"_"+tabId;
 		infoPage.className = "infoPage";
 
+		var infoHeader = document.createElement("h3");
+		infoHeader.innerHTML = value + " Intervention Details";
+		infoPage.appendChild(infoHeader);
+		infoPage.appendChild(document.createElement("hr"));
+
+		var infoList = document.createElement("ul");
+		infoList.innerHTML = stateDetails[value];
+		infoPage.appendChild(infoList);
+
 		var chartDiv = document.getElementById(tabId);
 		chartDiv.appendChild(infoPage);
-		infoPage.appendChild(infoList);
-		infoList.innerHTML = stateDetails[value];
 	}
 
 	var oldValue = null;
