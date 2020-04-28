@@ -17,6 +17,8 @@ $covidvis-fonts: 'Khula', sans-serif, -apple-system,BlinkMacSystemFont,"Roboto",
 $nav-link-color: rgb(242,246,246);
 $ui-width: 850px;
 
+html {background-color: white;}
+
 body, h1, h2, h3, footer, button, select, .masthead__menu, .page__footer-copyright, {
     font-family: $covidvis-fonts;
     font-weight: 300;
