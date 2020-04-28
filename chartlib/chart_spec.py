@@ -610,6 +610,7 @@ class ChartSpec(DotDict):
                 else:
                     cur_emoji += c
                 saw_sep = (c == u'\u200d')
+            yield cur_emoji
         # TODO (smacke): not sure what this weird unicode emoji modifier is
         emojis = sorted(set(_emoji_gen()) - {'️'})
         if len(emojis) > self.MAX_EMOJI_LEGEND_MARKS:
@@ -635,7 +636,7 @@ class ChartSpec(DotDict):
                                   '"🏠": "Stay at home order", '
                                   '"🍔": "Restaurant closures", '
                                   '"🏬": "Business closures", '
-                                  '"🚨": "State of emergency declared", '
+                                  '"🚨": "Emergency declaration", '
                                   '"🎓": "School closures", '
                                   '"🛩": "Travel restrictions", '
                                   '"💼": "Visitor/Border restrictions", '
