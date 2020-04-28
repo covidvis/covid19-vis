@@ -5,44 +5,20 @@
 layout: single
 ---
 
-Visualizing the Impact of Intervention Strategies
+Visualizing the Impact of SARS-CoV-2 Intervention Strategies
 -----
-The rapid spread of <a href="https://en.wikipedia.org/wiki/Coronavirus_disease_2019">SARS-CoV-2</a> has led many countries and regions to enact various <a href="https://en.wikipedia.org/wiki/National_responses_to_the_2019%E2%80%9320_coronavirus_pandemic">interventions</a>, 
-such as social distancing, school closures, and border control, 
-in order to mitigate the growth of infection. Understanding the effects
-of these interventions is particularly important since each strategy comes with its side effects.
-We wanted to understand the impact of intervention strategies and their combinations on the disease spread.
-After collecting data at the country and state levels for certain types of interventions, we overlaid
-them on the disease growth curves, shown below.
-{% comment %}
-For example, in addition to the economic impact to businesses, there are
-<a href="https://www.thelancet.com/journals/lancet/article/PIIS0140-6736(20)30460-8/fulltext">
-negative mental health implications
-</a> to self-isolation and quarantine.
-{% endcomment %}
 
 <div class="tabbed-ui overflow-center">
 <div class="tab">
 <span class="button-group">
-  <button class="button-left tablinks default-open" onclick="openTabs(event, '.tab-content-world')">World</button>
-  <button class="button-right tablinks" onclick="openTabs(event, '.tab-content-usa');populateInfoPages('jhu_us_cases');populateInfoPages('jhu_us_deaths')">USA</button>
+  <button class="button-right tablinks default-open" onclick="openTabs(event, '.tab-content-usa');">USA</button>
+  <button class="button-left tablinks" onclick="openTabs(event, '.tab-content-world')">World</button>
 </span>
 <span style="width: 5px; float: left;">&nbsp;</span>
 <span class="button-group">
   <button class="button-left tablinks default-open" onclick="openTabs(event, '.tab-content-cases')">Cases</button>
   <button class="button-right tablinks" onclick="openTabs(event, '.tab-content-deaths')">Deaths</button>
 </span>
-</div>
-
-<div class="tab-content tab-content-world" id="world-tab">
-<div class="if-desktop">
-    <div class="tab-content tab-content-cases" id="jhu_world_cases"></div>
-    <div class="tab-content tab-content-deaths" id="jhu_world_deaths"></div>
-</div>
-<div class="if-mobile">
-    <div class="tab-content tab-content-cases" id="jhu_world_cases_mobile"></div>
-    <div class="tab-content tab-content-deaths" id="jhu_world_deaths_mobile"></div>
-</div>
 </div>
 
 <div class="tab-content tab-content-usa" id="usa-tab">
@@ -55,7 +31,33 @@ negative mental health implications
     <div class="tab-content tab-content-deaths" id="jhu_us_deaths_mobile"></div>
 </div>
 </div>
+
+<div class="tab-content tab-content-world" id="world-tab">
+<div class="if-desktop">
+    <div class="tab-content tab-content-cases" id="jhu_world_cases"></div>
+    <div class="tab-content tab-content-deaths" id="jhu_world_deaths"></div>
 </div>
+<div class="if-mobile">
+    <div class="tab-content tab-content-cases" id="jhu_world_cases_mobile"></div>
+    <div class="tab-content tab-content-deaths" id="jhu_world_deaths_mobile"></div>
+</div>
+</div>
+</div>
+
+<h2 id="about">About</h2>
+The rapid spread of <a href="https://en.wikipedia.org/wiki/Coronavirus_disease_2019">SARS-CoV-2</a> has led many countries and regions to enact various <a href="https://en.wikipedia.org/wiki/National_responses_to_the_2019%E2%80%9320_coronavirus_pandemic">interventions</a>, 
+such as social distancing, school closures, and border control, 
+in order to mitigate the growth of infection. Understanding the effects
+of these interventions is particularly important since each strategy comes with its side effects.
+We wanted to understand the impact of intervention strategies and their combinations on the disease spread.
+After collecting data at the country and state levels for certain types of interventions, we overlaid
+them on the disease growth curves, shown above.
+{% comment %}
+For example, in addition to the economic impact to businesses, there are
+<a href="https://www.thelancet.com/journals/lancet/article/PIIS0140-6736(20)30460-8/fulltext">
+negative mental health implications
+</a> to self-isolation and quarantine.
+{% endcomment %}
 
 <h2 id="lockdown_section">Effects of Lockdowns</h2>
 <p>

@@ -1,6 +1,6 @@
 WebFontConfig = {
     google: {
-        families: ['Khula:300'],
+        families: ['Khula:300', 'Khula:400', 'Khula:600'],
     },
     /* Called when all the specified web-font provider modules (google, typekit, and/or custom) have reported that they have started loading fonts. */
     loading: function() {

@@ -57,7 +57,7 @@ class ChartSpec(DotDict):
     DEFAULT_BACKGROUND_COLOR = 'white'
     DEFAULT_MIN_TREND_LINE_DAYS = 5
     DEFAULT_FONT = 'Khula'
-    MAX_LEGEND_MARKS = 40 # 32
+    MAX_LEGEND_MARKS = 33
     MAX_EMOJI_LEGEND_MARKS = 7
     EMPTY_SELECTION = ''
     COLOR_SCHEME = list(
@@ -303,31 +303,34 @@ class ChartSpec(DotDict):
 
     def _make_tooltip_text_layer(self, point_layer, cursor):
         return point_layer.mark_text(
-            align='left', dx=5, dy=45, font=self._font
+            align='left', dx=5, dy=45, font=self._font,
         ).encode(
             text=alt.condition(cursor, 'tooltip_text:N', alt.value(' ')),
             opacity=alt.value(1),
             color=alt.value('black')
         ).transform_calculate(
+            # tooltip_text='"(" + datum.Date + "): " + datum.y',
             tooltip_text=f'datum.{self._detailby} + ": " + datum.y',
             # tooltip_text='datum.y'
         ).transform_filter(self._in_focus())
 
-    def _make_lockdown_icons_layer(self, rules, cursor):
-        # return rules.mark_point(size=5,color="red").encode(
-        #     x=self._get_x(), y=self._get_y()
-        # ).transform_filter(self._in_focus())
-        
-        # return rules.mark_image(size=5).encode(
-        #     x=self._get_x(), y=self._get_y(), 
-        #     url='img'
-        # ).transform_filter(self._in_focus())
-        return rules.mark_text(size=20, dx=-15).encode(
-            x=self._get_x(), y=self._get_y(),
-            opacity=alt.condition(cursor, alt.value(1), alt.value(.5)),
+    def _make_lockdown_icons_layer(self, df, base):
+        ycol = 'y'
+        if 'event_index' in df.columns:
+            ycol = 'event_index_y'
+        ret = base.mark_text(size=20).encode(
+            x=self._get_x(), y=self._get_y(f'{ycol}:Q'),
+            opacity=alt.value(1),
             text=alt.Text('emoji:N')
         )
-    
+        if 'event_index' in df.columns:
+            ret = ret.transform_calculate(**{
+                # gross. we want constant offsets but graph is log scale
+                # TODO don't assume log scale
+                ycol: 'exp(log(datum.y) + (2 * (datum.event_index % 2) - 1) * floor((datum.event_index+1) / 2) * .8)'
+            })
+        return ret
+
     def _make_lockdown_rules_layer(self, base, do_mark=True):
         if do_mark:
             base = base.mark_rule(size=3, strokeDash=[7, 3])
@@ -335,14 +338,16 @@ class ChartSpec(DotDict):
             self._get_x(), detail=self._alt_detail, color=self._alt_color,
         )
 
-    def _collect_lockdown_tooltip_layers(self, layers, base, cursor):
+    def _collect_lockdown_tooltip_layers(self, df, layers, base, cursor):
         # Since it's difficult to support a condition of type 'mouseover OR checkbox'
         # (due to broken alt.condition not two non-constants for if_true and if_false
         # and due to completely broken checkboxes in Vega Lite), we'll add two layers
         # to accompish the same thing. The first layer will be active when 'mouseover
         # AND NOT checkbox' and the second layer will be active when just 'checkbox'.
         def _make_base(tooltip):
-            return base.mark_text(align='left', dx=20, dy=0, font=self._font).encode(
+            ret = base.mark_text(
+                align='left', dx=15, dy=0, font=self._font, fontWeight=600,
+            ).encode(
                 x=self._get_x(),
                 y=self._get_y(),
                 text=tooltip,
@@ -352,6 +357,9 @@ class ChartSpec(DotDict):
                  # lockdown_tooltip_text=f'datum.lockdown_type+ " " +"("+ datum.lockdown_date + ")"'
                  lockdown_tooltip_text='datum.lockdown_type + " " + "(" + datum.lockdown_date + ")"'
             )
+            if 'event_index' in df.columns:
+                ret = ret.transform_filter('datum.event_index == 0')
+            return ret
         lockdown_tooltip_text = 'lockdown_tooltip_text'
         empty_if_checkbox = 'empty_if_checkbox'
         hover_layer = _make_base(alt.condition(cursor, f'{empty_if_checkbox}:N', alt.value(' ')))
@@ -370,7 +378,7 @@ class ChartSpec(DotDict):
                 f'{lockdown_tooltip_text}:N'
             ).transform_filter(self._show_events())
 
-    def _collect_tooltip_layers(self, layers, base, cursor):
+    def _collect_tooltip_layers(self, df, layers, base, cursor):
         if not self.get('has_tooltips', False):
             return
         if self.get('tooltip_points', False):
@@ -395,9 +403,9 @@ class ChartSpec(DotDict):
         if has_lockdown_rules:
             layers['lockdown_rules'] = self._make_lockdown_rules_layer(lockdown_base)
         if has_lockdown_icons:
-            layers['lockdown_icons'] = self._make_lockdown_icons_layer(lockdown_base, cursor)
+            layers['lockdown_icons'] = self._make_lockdown_icons_layer(df, lockdown_base)
         if has_lockdown_rules or has_lockdown_icons or self.get('lockdown_tooltips', False):
-            self._collect_lockdown_tooltip_layers(layers, lockdown_base, cursor)
+            self._collect_lockdown_tooltip_layers(df, layers, lockdown_base, cursor)
 
     def _make_lockdown_extrapolation_layer(self, base):
         def _add_model_transformation_fields(base_chart):
@@ -445,7 +453,7 @@ class ChartSpec(DotDict):
         else:
             x, y = max_template.format(x), max_template.format(y)
         return extrap.mark_text(
-            align='center', dx=0, dy=-5, font=self._font
+            align='center', dx=0, dy=-5, font=self._font,
         ).encode(
             x=self._get_x(x),
             y=self._get_y(y),
@@ -478,7 +486,7 @@ class ChartSpec(DotDict):
             color_scheme_idx += 1
         self[self.TRANSIENT]['colormap'] = colormap
 
-    def _get_legend_title(self):
+    def _get_old_legend_title(self):
         readable_group_name = self.get('readable_group_name', None)
         if readable_group_name is not None and self.get('legend_selection', False):
             return f'Select_{readable_group_name}'
@@ -491,14 +499,14 @@ class ChartSpec(DotDict):
         self._populate_transient_colormap(df)
         readable_group_name = self.get('readable_group_name', None)
         if readable_group_name is not None and self.get('legend_selection', False):
-            self[self.TRANSIENT]['colorby'] = self._get_legend_title()
-            self[self.TRANSIENT]['detailby'] = self._get_legend_title()
+            self[self.TRANSIENT]['colorby'] = self._get_old_legend_title()
+            self[self.TRANSIENT]['detailby'] = self._get_old_legend_title()
 
     def _make_manual_legend(self, df, click_selection):
         groups = df.groupby(self.colorby).first().reset_index().sort_values(self.colorby, ascending=True)
         group_names = list(groups[self.colorby].values)
         if len(group_names) > self.MAX_LEGEND_MARKS:
-            raise ValueError(f'max {self.MAX_LEGEND_MARKS} supported for now')
+            raise ValueError(f'max {self.MAX_LEGEND_MARKS} supported for now ({len(group_names)} requested)')
         idx = list(self.MAX_LEGEND_MARKS + 1 - np.arange(len(group_names)))
         row_type = ['normal'] * len(idx)
         idx.append(self.MAX_LEGEND_MARKS + 2)
@@ -614,7 +622,7 @@ class ChartSpec(DotDict):
                                   '"🏬": "Business closures", '
                                   '"🚨": "State of emergency declared", '
                                   '"🎓": "School closures", '
-                                  '"🛩️": "Travel restrictions", '
+                                  '"🛩": "Travel restrictions", '
                                   '"💼": "Visitor/Border restrictions", '
                                   '"🛃": "Forgot what this meant", '
                                   '}[datum.emoji]'
@@ -744,7 +752,7 @@ class ChartSpec(DotDict):
                 is_fake=False
             )
 
-            self._collect_tooltip_layers(layers, base, cursor)
+            self._collect_tooltip_layers(df, layers, base, cursor)
 
             if self.get('lockdown_extrapolation', False):
                 trend_checkbox = alt.binding_checkbox(name='Show trend lines for selected ')

@@ -19,9 +19,14 @@ $ui-width: 850px;
 
 body, h1, h2, h3, footer, button, select, .masthead__menu, .page__footer-copyright, {
     font-family: $covidvis-fonts;
+    font-weight: 300;
 }
 
-.layout--single {
+h1, h2, h3 {
+    font-weight: 400;
+}
+
+.layout--single, form.vega-bindings {
     background-color: white;
     line-height: 1.5;
     //color: #40514e;
@@ -48,6 +53,8 @@ h2 {
     border: 1px solid #ccc;
     border-radius: 10px;
     border-top: none;
+    margin-top: 20px;
+    margin-bottom: 20px;
 }
 
 $mobile-offset: 24px;
