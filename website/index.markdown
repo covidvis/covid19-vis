@@ -121,8 +121,7 @@ interventions in slowing the infection rates.
 
 
 
-Datasets and Procedures
-----
+<h2 id="datasets">Datasets and Procedures</h2>
 
 We draw on data regarding COVID-19 cases and deaths from [JHU Coronavirus Resource Center](https://coronavirus.jhu.edu/data) as well as the [New York Times US dataset](https://github.com/nytimes/covid-19-data).  
 
