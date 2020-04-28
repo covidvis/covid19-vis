@@ -246,7 +246,7 @@ function startVegaEmbedding() {{
     embed_calls = []
     for config in configs:
         then = ''
-        if config.get('make_text_area', False):
+        if STAGING and config.get('make_text_area', False):
             then = f'''.then(function(chart) {{
     chart.view.addSignalListener('click', makePopulateInfoPageSpaceHandler('{config["name"]}'));
 }})'''
