@@ -252,6 +252,9 @@ class ChartSpec(DotDict):
     def _show_events(self):
         return 'events.values[0]'
 
+    def _hide_regional_icons(self):
+        return 'hide_regional_icons.values[0]'
+
     def _show_trends(self):
         if self._manual_legend:
             return 'trends.values[0]'
@@ -371,6 +374,14 @@ class ChartSpec(DotDict):
             event_select = alt.selection_single(bind=event_checkbox, name='events', init={'values': False})
             calculate_kwargs[empty_if_checkbox] = f'{self._show_events()} ? " " : datum.{lockdown_tooltip_text}'
             hover_layer = hover_layer.add_selection(event_select)
+        if 'Coverage' in df.columns:
+            # TODO: put this in a better place
+            # I'm just putting it here so that it appears earlier than the "show all events" checkbox for now
+            regional_checkbox = alt.binding_checkbox(name='Hide regionally-scoped countermeasure icons')
+            regional_select = alt.selection_single(
+                bind=regional_checkbox, name='hide_regional_icons', init={'values': False}
+            )
+            hover_layer = hover_layer.add_selection(regional_select)
         hover_layer = hover_layer.transform_calculate(**calculate_kwargs)
         layers['hover_layer'] = hover_layer
         if event_select is not None:
@@ -398,6 +409,10 @@ class ChartSpec(DotDict):
         lockdown_base = base.transform_filter(
             f'datum.x_type == "{self.lockdown_type}"'
         ).transform_filter(self._in_focus())
+        if 'Coverage' in df.columns:
+            lockdown_base = lockdown_base.transform_filter(
+                f'datum.Coverage == "Statewide" || !{self._hide_regional_icons()}'
+            )
         has_lockdown_rules = self.get('lockdown_rules', False)
         has_lockdown_icons = self.get('lockdown_icons', False)
         if has_lockdown_rules:
