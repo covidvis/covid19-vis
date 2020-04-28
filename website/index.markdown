@@ -131,7 +131,7 @@ We manually constructed a dataset for interventions enacted in each US state, dr
 <li>School, Restaurant, Non-Essential Business Closures</li>
 <li>Banning of Gatherings</li>
 <li>Visitor Quarantines and Border Closures</li>
-<li>Stay at home declaration</li>
+<li>Stay-at-home Orders</li>
 </ul>
 After several rounds of manual coding procedures for these interventions, we eventually developed a form to force consistent and error-free coding. This form is available [here](https://github.com/covidvis/covid19-vis/blob/master/data/quarantine-activity-US-form.pdf). 
 

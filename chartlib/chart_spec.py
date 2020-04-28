@@ -639,7 +639,7 @@ class ChartSpec(DotDict):
         ).transform_calculate(
             emoji_and_description='datum.emoji + " " + {'
                                   '"👨‍👩‍👧‍👦": "Gatherings banned", '
-                                  '"🏠": "Stay at home order", '
+                                  '"🏠": "Stay-at-home order", '
                                   '"🍔": "Restaurant closures", '
                                   '"🏬": "Business closures", '
                                   '"⚠️": "Emergency declaration", '
