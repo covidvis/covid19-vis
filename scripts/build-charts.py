@@ -31,10 +31,12 @@ def chart_configs():
         {
             'name': 'jhu_us_cases',
             'gen': make_jhu_state_cases_chart,
+            'make_text_area': True,
         },
         {
             'name': 'jhu_us_deaths',
             'gen': make_jhu_state_deaths_chart,
+            'make_text_area': True,
         },
     ]
 
@@ -43,6 +45,7 @@ def chart_configs():
             **config,
             'name': config['name'] + '_mobile',
             'override_props': mobile_override_props,
+            'make_text_area': False,
         }
     # force evaluation of list to avoid infinite loop
     configs.extend(list(map(_make_mobile_config, configs)))
@@ -242,9 +245,12 @@ function startVegaEmbedding() {{
     """
     embed_calls = []
     for config in configs:
-        embed_calls.append(
-            f'    vegaEmbed("#{config.get("embed_id", config["name"])}", {config["name"]}, embedOpt);'
-        )
+        then = ''
+        if config.get('make_text_area', False):
+            then = f'''.then(function(chart) {{
+    chart.view.addSignalListener('click', makePopulateInfoPageSpaceHandler('{config["name"]}'));
+}})'''
+        embed_calls.append(f'vegaEmbed("#{config.get("embed_id", config["name"])}", {config["name"]}, embedOpt){then};')
     embed_calls = '\n'.join(embed_calls)
     script = script.format(embed_calls=embed_calls)
     with open('./website/js/autogen/vega_embed.js', 'w') as f:
@@ -260,7 +266,7 @@ def make_chart_detail():
 
     result_html = quarantine_df[["State", "detail_html"]].groupby("State").aggregate(sum).reset_index()
     result_series = pd.Series(data=result_html["detail_html"])
-    result_series.index= result_html['State']
+    result_series.index = result_html['State']
     # f.to_json("./website/js/us_state_details.js",orient='columns')
     import json
     with open("./website/js/autogen/us_state_details.js",'w') as f:
