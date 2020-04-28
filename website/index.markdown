@@ -4,7 +4,6 @@
 
 layout: single
 ---
-
 Visualizing the Impact of SARS-CoV-2 Intervention Strategies
 -----
 
@@ -44,7 +43,7 @@ Visualizing the Impact of SARS-CoV-2 Intervention Strategies
 </div>
 </div>
 
-<h2 id="about">About</h2>
+<h2 id="about">Overview</h2>
 The rapid spread of <a href="https://en.wikipedia.org/wiki/Coronavirus_disease_2019" target="_blank">SARS-CoV-2</a> has led many countries and regions to enact various <a href="https://en.wikipedia.org/wiki/National_responses_to_the_2019%E2%80%9320_coronavirus_pandemic" target="_blank">interventions</a>, 
 such as social distancing, school closures, and border control, 
 in order to mitigate the growth of infection. Understanding the effects
@@ -59,7 +58,7 @@ negative mental health implications
 </a> to self-isolation and quarantine.
 {% endcomment %}
 
-<h2 id="lockdown_section">Effects of Lockdowns</h2>
+<h2 id="lockdown_section">Effects of Interventions</h2>
 <p>
 As a first step towards understanding the impact of interventions, the
 visualization above shows the number of confirmed cases over time (on a
