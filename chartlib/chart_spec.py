@@ -332,7 +332,7 @@ class ChartSpec(DotDict):
                 ret = ret.transform_calculate(**{
                     # gross. we want constant offsets but graph is log scale
                     # TODO don't assume log scale
-                    ycol: 'exp(log(datum.y) + (2 * (datum.event_index % 2) - 1) * floor((datum.event_index+1) / 2) * .8)'
+                    ycol: 'exp(log(datum.y) + (2 * (datum.event_index % 2) - 1) * ceil(datum.event_index / 2) * .8)'
                 })
             return ret
         icons = _make_base(size=20)
@@ -488,7 +488,6 @@ class ChartSpec(DotDict):
         ).transform_calculate(
             extrap_text='"Original trend"'
         ).add_selection(trend_select)
-
 
     def _populate_transient_colormap(self, df):
         colormap = self.get('colormap', None)
@@ -669,6 +668,17 @@ class ChartSpec(DotDict):
         #     text='emoji:N',
         #     color=alt.value('black'),
         # ).transform_filter('datum.row_type == "title"')
+
+    # def _make_day_0_warning_layer(self, df):
+    #     groups = df.groupby(self.colorby).first().reset_index().sort_values(self.colorby, ascending=True)
+    #     group_names = list(groups[self.colorby].values)
+    #     if len(group_names) > self.MAX_LEGEND_MARKS:
+    #         raise ValueError(f'max {self.MAX_LEGEND_MARKS} supported for now ({len(group_names)} requested)')
+    #     idx = list(np.arange(len(group_names)))
+    #     warning_df = pd.DataFrame({
+    #         'idx': idx,
+    #         self._colorby: group_names,
+    #     })
 
     def compile(self, df):
         self.validate(df)
