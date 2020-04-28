@@ -7,10 +7,12 @@ import os
 import pandas as pd
 import yaml
 
-from chartlib import CovidChart, DaysSinceNumReached
+from chartlib import CovidChart, DaysSinceNumReached, days_between
 
 
 STAGING = os.environ.get('STAGING', os.environ.get('STAGE', False))
+
+EXTRA_DAYS_TO_INCLUDE = days_between('2020-04-28', datetime.now())
 
 
 def chart_configs():
@@ -94,7 +96,7 @@ def make_jhu_country_cases_chart(override_props) -> CovidChart:
     chart = chart.set_xtitle('Days since {} Confirmed'.format(days_since))
     chart.set_width(600).set_height(400)
     chart.set_ydomain((days_since, 1000000))
-    chart.set_xdomain((0, 60))
+    chart.set_xdomain((0, 72 + EXTRA_DAYS_TO_INCLUDE))
     chart.click_selection_init = 'Austria'
     chart = _maybe_add_staging_props(chart)
     chart.spec.update(override_props)
@@ -126,7 +128,7 @@ def make_jhu_country_deaths_chart(override_props) -> CovidChart:
     chart = chart.set_xtitle('Days since 10 Deaths')
     chart.set_width(600).set_height(400)
     chart.set_ydomain((days_since, 100000))
-    chart.set_xdomain((0, 56))
+    chart.set_xdomain((0, 62 + EXTRA_DAYS_TO_INCLUDE))
     chart = _maybe_add_staging_props(chart)
     chart.spec.update(override_props)
     return chart
@@ -160,7 +162,7 @@ def make_jhu_state_cases_chart(override_props) -> CovidChart:
     chart = chart.set_ytitle('Number of Confirmed Cases (log scale)')
     chart = chart.set_xtitle('Days since {} Confirmed'.format(days_since))
     chart.set_width(600).set_height(400)
-    chart.set_xdomain((0, 40)).set_ydomain((days_since, 200000))
+    chart.set_xdomain((0, 47 + EXTRA_DAYS_TO_INCLUDE)).set_ydomain((days_since, 200000))
     chart = _maybe_add_staging_props(chart)
     chart.spec.update(override_props)
     return chart
@@ -193,7 +195,7 @@ def make_jhu_state_deaths_chart(override_props) -> CovidChart:
     chart = chart.set_xtitle('Days since 10 Deaths')
     chart.set_width(600).set_height(400)
     chart.set_ydomain((days_since, 100000))
-    chart.set_xdomain((0, 40))
+    chart.set_xdomain((0, 47 + EXTRA_DAYS_TO_INCLUDE))
     chart = _maybe_add_staging_props(chart)
     chart.spec.update(override_props)
     return chart
