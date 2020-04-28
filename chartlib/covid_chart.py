@@ -115,9 +115,15 @@ class CovidChart(object):
             'lockdown_type': lambda col: '; '.join(col),
             'emoji_string': lambda col: ''.join(col)
         }).reset_index()
-        quarantine_cols = ['Country_Region', 'lockdown_date', 'lockdown_type', 'emoji_string']
-        quarantine_df = quarantine_df[quarantine_cols]
+
+        # Breaking up emoji into separate rows for vertical stacking
+        quarantine_df.emoji_string = quarantine_df.emoji_string.apply(split_into_list)
+        quarantine_df = quarantine_df.explode(column='emoji_string')
+        quarantine_df.emoji_string = quarantine_df.emoji_string.str.lower()
         quarantine_df['emoji'] = quarantine_df['emoji_string'].map(str2emo)
+        quarantine_df['event_index'] = quarantine_df.groupby([self.groupcol, 'lockdown_date']).cumcount()
+        quarantine_cols = [self.groupcol, 'lockdown_date', 'lockdown_type', 'emoji_string', 'emoji', 'event_index']
+        quarantine_df = quarantine_df[quarantine_cols]
         return quarantine_df
 
     def _ingest_country_quarantine_df_old(self, quarantine_csv):
@@ -186,7 +192,7 @@ class CovidChart(object):
         quarantine_df['event_index'] = quarantine_df.groupby(['Province_State', 'lockdown_date']).cumcount()
 
         quarantine_cols = [
-            'Province_State', 'lockdown_date', 'lockdown_type', 'emoji', 'emoji_string', 'event_index', 'Coverage'
+            self.groupcol, 'lockdown_date', 'lockdown_type', 'emoji', 'emoji_string', 'event_index', 'Coverage'
         ]
         # quarantine_cols = ['Province_State', 'lockdown_date', 'lockdown_type', 'emoji']
         quarantine_df = quarantine_df[quarantine_cols]
