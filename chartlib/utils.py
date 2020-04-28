@@ -147,7 +147,7 @@ def create_lockdown_type_world(x, emo_flag):
 def str2emo(s):
     return ''.join(
         {
-            'e': '🚨',
+            'e': '⚠️',
             'b': '🛃',
             't': '💼',
             'c': '🛩',

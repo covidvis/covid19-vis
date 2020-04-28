@@ -612,15 +612,14 @@ class ChartSpec(DotDict):
             cur_emoji = emojis_flattened[0]
             saw_sep = False
             for c in emojis_flattened[1:]:
-                if not saw_sep and c != u'\u200d':
+                if not saw_sep and c not in (u'\u200d', '️'):
                     yield cur_emoji
                     cur_emoji = c
                 else:
                     cur_emoji += c
-                saw_sep = (c == u'\u200d')
+                saw_sep = (c in (u'\u200d', '️'))
             yield cur_emoji
-        # TODO (smacke): not sure what this weird unicode emoji modifier is
-        emojis = sorted(set(_emoji_gen()) - {'️'})
+        emojis = sorted(set(_emoji_gen()))
         if len(emojis) > self.MAX_EMOJI_LEGEND_MARKS:
             raise ValueError(f'max {self.MAX_EMOJI_LEGEND_MARKS} supported for now')
         idx = list(np.arange(len(emojis) + 1))
@@ -644,7 +643,7 @@ class ChartSpec(DotDict):
                                   '"🏠": "Stay at home order", '
                                   '"🍔": "Restaurant closures", '
                                   '"🏬": "Business closures", '
-                                  '"🚨": "Emergency declaration", '
+                                  '"⚠️": "Emergency declaration", '
                                   '"🎓": "School closures", '
                                   '"🛩": "Travel restrictions", '
                                   '"💼": "Visitor/Border restrictions", '
