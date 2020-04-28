@@ -57,7 +57,7 @@ class ChartSpec(DotDict):
     DEFAULT_BACKGROUND_COLOR = 'white'
     DEFAULT_MIN_TREND_LINE_DAYS = 5
     DEFAULT_FONT = 'Khula'
-    MAX_LEGEND_MARKS = 32
+    MAX_LEGEND_MARKS = 40 # 32
     MAX_EMOJI_LEGEND_MARKS = 7
     EMPTY_SELECTION = ''
     COLOR_SCHEME = list(
@@ -458,6 +458,7 @@ class ChartSpec(DotDict):
             extrap_text='"Original trend"'
         ).add_selection(trend_select)
 
+
     def _populate_transient_colormap(self, df):
         colormap = self.get('colormap', None)
         if colormap is None:
@@ -599,7 +600,6 @@ class ChartSpec(DotDict):
         ).encode(
             color=alt.value('black'),
         )
-        num_emoji_rows = (len(emojis) + 2) // 3
         layers['marks'] = base.mark_text(
             align='left', font=self._font, fontSize=12,
         ).encode(
@@ -753,7 +753,7 @@ class ChartSpec(DotDict):
                 layers['model_tooltip'] = self._make_extrapolation_tooltip_layer(
                     layers['model_lines'], cursor, trend_select
                 )
-
+            
             if self.get('emoji_legend', False):
                 self._collect_emoji_legend_layers(df, layers)
 
