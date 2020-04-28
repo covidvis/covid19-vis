@@ -28,24 +28,25 @@ h1, h2, h3 {
     font-weight: 400;
 }
 
-.vega-bind-name{
-    font-size: 15px;
-}
-
-.vega-bindings{
-    line-height: 1;
-
-}
-
-.vega-bind{
-    width: 250px;
-    float:left;
-}
-
 .layout--single,  {
     background-color: white;
-//    line-height: 1.5;
-//    color: #40514e;
+    line-height: 1.5;
+}
+
+@media only screen and (min-width: 800px) {
+    .vega-bind-name {
+        font-size: 15px;
+    }
+
+    .vega-bindings {
+        line-height: 1;
+
+    }
+
+    .vega-bind {
+        width: 250px;
+        float: left;
+    }
 }
 
 .masthead__inner-wrap {
@@ -69,6 +70,7 @@ h2 {
 
 .tabbed-ui {
     min-width: 375px;
+    min-height: 580px;
     width: $ui-width;
     border: 1px solid #ccc;
     border-radius: 10px;

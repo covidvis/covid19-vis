@@ -119,10 +119,15 @@ class CovidChart(object):
         # Breaking up emoji into separate rows for vertical stacking
         quarantine_df.emoji_string = quarantine_df.emoji_string.apply(split_into_list)
         quarantine_df = quarantine_df.explode(column='emoji_string')
+        quarantine_df['Coverage'] = quarantine_df.emoji_string.apply(
+            lambda x: 'Statewide' if str(x).isupper() else 'Regional'
+        )
         quarantine_df.emoji_string = quarantine_df.emoji_string.str.lower()
         quarantine_df['emoji'] = quarantine_df['emoji_string'].map(str2emo)
         quarantine_df['event_index'] = quarantine_df.groupby([self.groupcol, 'lockdown_date']).cumcount()
-        quarantine_cols = [self.groupcol, 'lockdown_date', 'lockdown_type', 'emoji_string', 'emoji', 'event_index']
+        quarantine_cols = [
+            self.groupcol, 'lockdown_date', 'lockdown_type', 'emoji_string', 'emoji', 'event_index', 'Coverage'
+        ]
         quarantine_df = quarantine_df[quarantine_cols]
         return quarantine_df
 
