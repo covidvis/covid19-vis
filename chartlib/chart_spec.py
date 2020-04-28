@@ -303,7 +303,7 @@ class ChartSpec(DotDict):
 
     def _make_tooltip_text_layer(self, point_layer, cursor):
         return point_layer.mark_text(
-            align='left', dx=5, dy=45, font=self._font,fontWeight="bolder"
+            align='left', dx=5, dy=45, font=self._font,
         ).encode(
             text=alt.condition(cursor, 'tooltip_text:N', alt.value(' ')),
             opacity=alt.value(1),
@@ -345,7 +345,9 @@ class ChartSpec(DotDict):
         # to accompish the same thing. The first layer will be active when 'mouseover
         # AND NOT checkbox' and the second layer will be active when just 'checkbox'.
         def _make_base(tooltip):
-            ret = base.mark_text(align='left', dx=15, dy=0, font=self._font,fontWeight="bolder").encode(
+            ret = base.mark_text(
+                align='left', dx=15, dy=0, font=self._font,
+            ).encode(
                 x=self._get_x(),
                 y=self._get_y(),
                 text=tooltip,
@@ -451,7 +453,7 @@ class ChartSpec(DotDict):
         else:
             x, y = max_template.format(x), max_template.format(y)
         return extrap.mark_text(
-            align='center', dx=0, dy=-5, font=self._font,fontWeight="bolder"
+            align='center', dx=0, dy=-5, font=self._font,
         ).encode(
             x=self._get_x(x),
             y=self._get_y(y),
