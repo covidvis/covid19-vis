@@ -317,22 +317,30 @@ class ChartSpec(DotDict):
             # tooltip_text='datum.y'
         ).transform_filter(self._in_focus())
 
-    def _make_lockdown_icons_layer(self, df, base):
+    def _collect_lockdown_icon_layers(self, df, layers, base):
         ycol = 'y'
         if 'event_index' in df.columns:
             ycol = 'event_index_y'
-        ret = base.mark_text(size=20).encode(
-            x=self._get_x(), y=self._get_y(f'{ycol}:Q'),
-            opacity=alt.value(1),
-            text=alt.Text('emoji:N')
-        )
-        if 'event_index' in df.columns:
-            ret = ret.transform_calculate(**{
-                # gross. we want constant offsets but graph is log scale
-                # TODO don't assume log scale
-                ycol: 'exp(log(datum.y) + (2 * (datum.event_index % 2) - 1) * floor((datum.event_index+1) / 2) * .8)'
-            })
-        return ret
+
+        def _make_base(size):
+            ret = base.mark_text(size=size).encode(
+                x=self._get_x(), y=self._get_y(f'{ycol}:Q'),
+                opacity=alt.value(1),
+                text=alt.Text('emoji:N')
+            )
+            if 'event_index' in df.columns:
+                ret = ret.transform_calculate(**{
+                    # gross. we want constant offsets but graph is log scale
+                    # TODO don't assume log scale
+                    ycol: 'exp(log(datum.y) + (2 * (datum.event_index % 2) - 1) * floor((datum.event_index+1) / 2) * .8)'
+                })
+            return ret
+        icons = _make_base(size=20)
+        if 'Coverage' in df.columns:
+            layers['statewide_lockdown_icons'] = icons.transform_filter('datum.Coverage == "Statewide"')
+            layers['regional_lockdown_icons'] = _make_base(size=12).transform_filter('datum.Coverage != "Statewide"')
+        else:
+            layers['lockdown_icons'] = icons
 
     def _make_lockdown_rules_layer(self, base, do_mark=True):
         if do_mark:
@@ -418,7 +426,7 @@ class ChartSpec(DotDict):
         if has_lockdown_rules:
             layers['lockdown_rules'] = self._make_lockdown_rules_layer(lockdown_base)
         if has_lockdown_icons:
-            layers['lockdown_icons'] = self._make_lockdown_icons_layer(df, lockdown_base)
+            self._collect_lockdown_icon_layers(df, layers, lockdown_base)
         if has_lockdown_rules or has_lockdown_icons or self.get('lockdown_tooltips', False):
             self._collect_lockdown_tooltip_layers(df, layers, lockdown_base, cursor)
 
