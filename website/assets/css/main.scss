@@ -22,7 +22,7 @@ body, h1, h2, h3, footer, button, select, .masthead__menu, .page__footer-copyrig
     font-weight: 300;
 }
 
-.layout--single {
+.layout--single, form.vega-bindings {
     background-color: white;
     line-height: 1.5;
     //color: #40514e;
@@ -49,6 +49,8 @@ h2 {
     border: 1px solid #ccc;
     border-radius: 10px;
     border-top: none;
+    margin-top: 20px;
+    margin-bottom: 20px;
 }
 
 $mobile-offset: 24px;

@@ -346,7 +346,7 @@ class ChartSpec(DotDict):
         # AND NOT checkbox' and the second layer will be active when just 'checkbox'.
         def _make_base(tooltip):
             ret = base.mark_text(
-                align='left', dx=15, dy=0, font=self._font,
+                align='left', dx=15, dy=0, font=self._font, fontWeight=600,
             ).encode(
                 x=self._get_x(),
                 y=self._get_y(),
