@@ -94,7 +94,7 @@ class CovidChart(object):
             raise ValueError('lockdown_type should be in quarantine_df columns')
 
     def _ingest_country_quarantine_df(self, quarantine_csv):
-        quarantine_df = pd.read_csv('./data/quarantine-activity-Apr19.csv')
+        quarantine_df = pd.read_csv(quarantine_csv)
         quarantine_df = quarantine_df.rename(
              columns={'date': 'lockdown_date', 'country_name': 'Country_Region'}
         )
