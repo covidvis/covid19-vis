@@ -67,7 +67,7 @@ We have overlaid trends with various countermeasures
 taken by the governing entities. 
 We use icons (💼, 🏠, 👨‍👩‍👧‍👦, 🎓, 🍔, 🏬) to depict 
 these interventions; regional interventions are shown in smaller size than
-interventions that are more complete (either at the state level for US States, 
+interventions that are more encompassing (either at the state level for US States, 
 or at the country level for countries).
 For example, the icon 🏠 indicates a stay-at-home order or <a href="https://en.wikipedia.org/wiki/Curfews_and_lockdowns_related_to_the_2019%E2%80%9320_coronavirus_pandemic" target="_blank">lockdown</a>. 
 We invite the reader to reveal
