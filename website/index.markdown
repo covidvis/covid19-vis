@@ -62,7 +62,7 @@ negative mental health implications
 <p>
 As a first step towards understanding the impact of interventions, the
 visualization above shows the number of confirmed cases over time (on a
-log scale), for the 30 US States with the most confirmed cases of SARS-CoV-2.
+log scale), for the 30 US states with the most confirmed cases of SARS-CoV-2.
 We have overlaid trends with various countermeasures 
 taken by the governing entities. 
 We use icons (💼, 🏠, 👨‍👩‍👧‍👦, 🎓, 🍔, 🏬) to depict 
