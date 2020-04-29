@@ -16,7 +16,7 @@ Visualizing the Impact of SARS-CoV-2 Intervention Strategies
 <span style="width: 5px; float: left;">&nbsp;</span>
 <span class="button-group">
   <button class="button-left tablinks default-open" onclick="openTabs(event, '.tab-content-cases')">Cases</button>
-  <button class="button-right tablinks" onclick="openTabs(event, '.tab-content-deaths')">Deaths</button>
+  <button class="button-right tablinks" onclick="openTabs(event, '.tab-content-deaths')">Mortality</button>
 </span>
 </div>
 
@@ -80,7 +80,7 @@ or US states by switching between the
 and between the visualizations for
 confirmed cases or deaths 
 by switching between the <i>Cases</i>
-or <i>Deaths</i> tabs.
+or <i>Mortality</i> tabs.
 </p>
 
 
