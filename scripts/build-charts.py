@@ -249,7 +249,7 @@ function startVegaEmbedding() {{
   $(document).ready(function() {{
 {embed_calls}
   }});
-}};
+}}
     """
     embed_calls = []
     for config in configs:

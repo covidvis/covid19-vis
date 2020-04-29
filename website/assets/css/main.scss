@@ -33,19 +33,22 @@ h1, h2, h3 {
     line-height: 1.5;
 }
 
+.vega-bind-name {
+    font-size: 15px;
+}
+
+.vega-bindings {
+    line-height: 1;
+    display: inline-block;
+}
+
+.vega-bind {
+    float: left;
+}
+
 @media only screen and (min-width: 800px) {
-    .vega-bind-name {
-        font-size: 15px;
-    }
-
-    .vega-bindings {
-        line-height: 1;
-
-    }
-
     .vega-bind {
         width: 250px;
-        float: left;
     }
 }
 
@@ -70,7 +73,6 @@ h2 {
 
 .tabbed-ui {
     min-width: 375px;
-    min-height: 580px;
     width: $ui-width;
     border: 1px solid #ccc;
     border-radius: 10px;
