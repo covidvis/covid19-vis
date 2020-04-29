@@ -10,7 +10,7 @@ import yaml
 from chartlib import CovidChart, DaysSinceNumReached, days_between
 
 
-STAGING = os.environ.get('STAGING', os.environ.get('STAGE', False))
+STAGING = True  # os.environ.get('STAGING', os.environ.get('STAGE', False))
 
 EXTRA_DAYS_TO_INCLUDE = days_between('2020-04-28', datetime.now())
 
