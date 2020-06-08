@@ -164,7 +164,7 @@ def make_jhu_state_cases_chart(override_props) -> CovidChart:
     chart = chart.set_ytitle('Number of Confirmed Cases (log scale)')
     chart = chart.set_xtitle(['Days since {} Confirmed'.format(days_since), '(Events prior to Day 0 not shown)'])
     chart.set_width(600).set_height(400)
-    chart.set_xdomain((0, 47 + EXTRA_DAYS_TO_INCLUDE)).set_ydomain((days_since, 200000))
+    chart.set_xdomain((0, 47 + EXTRA_DAYS_TO_INCLUDE)).set_ydomain((days_since, 1000000))
     chart.click_selection_init = first_alphabetic_group(chart._preprocess_df(), groupcol)
     chart = _maybe_add_staging_props(chart)
     chart.spec.update(override_props)
