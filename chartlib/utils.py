@@ -93,7 +93,7 @@ def create_lockdown_type(x, emo_flag):
     if x['Banning Gatherings of a Certain Size'] == x['Banning Gatherings of a Certain Size']:
         if not_the_first_flag == 1:
             s = s + ","
-        s = s + " Gatherings (>" + str(int(x['Banning Gatherings of a Certain Size'])) + ") Banned"
+        s = s + " Gatherings (>" + str(x['Banning Gatherings of a Certain Size']) + ") Banned"
         emo_s = (emo_s + "g") if (regional_flag == 1) else (emo_s + "G")
         not_the_first_flag = 1
     if 'Face Covering Requirements' in x:
@@ -191,6 +191,63 @@ def create_lockdown_type_world(x, emo_flag):
         not_the_first_flag = 1
         emo_s = (emo_s + "s") if (regional_flag == 1) else (emo_s + "S")
     if x['Non-essential Businesses Closure'] == "Required Closing Workspaces":
+        # Recommend Closing Workspaces is omitted
+        if not_the_first_flag == 1:
+            s = s + ","
+        if closure_flag == 0:
+            s = s + " Closure of Non-essential Businesses"
+        else:
+            s = s + " Non-essential Businesses"
+        closure_flag = 1
+        not_the_first_flag = 1
+        emo_s = (emo_s + "n") if (regional_flag == 1) else (emo_s + "N")
+    if emo_flag == 1:
+        return emo_s
+    if s == "":
+        return s  # Ensures just "Regional" is not returned
+    return (r + s).strip()
+
+
+def create_lockdown_type_world_new_export(x, emo_flag):
+    s = r = emo_s = ""
+    regional_flag = closure_flag = not_the_first_flag = 0
+    if x['coverage'] == 'Targeted':
+        r = 'Regional'
+        regional_flag = 1
+    if x['Travel Restrictions'] == "Screening":  # assumption: only one travel restriction at a time
+        s = s + " Border Screening"
+        not_the_first_flag = 1
+        emo_s = (emo_s + "b") if (regional_flag == 1) else (emo_s + "B")
+    elif x['Travel Restrictions'] == "Quarantine arrivals from high-risk regions":
+        s = s + " Visitor Quarantine"
+        not_the_first_flag = 1
+        emo_s = (emo_s + "t") if (regional_flag == 1) else (emo_s + "T")
+    elif x['Travel Restrictions'] == "Ban on high-risk regions":
+        s = s + " Border Closures"
+        not_the_first_flag = 1
+        emo_s = (emo_s + "c") if (regional_flag == 1) else (emo_s + "C")
+    if x['Shelter-in-place Order'] == x['Shelter-in-place Order']:  # just check if not null
+        # Movement restriction recommended is omitted
+        if not_the_first_flag == 1:
+            s = s + ","
+        s = s + " Stay-at-home Order"
+        not_the_first_flag = 1
+        emo_s = (emo_s + "l") if (regional_flag == 1) else (emo_s + "L")
+    if x['Gathering Limitations'] == "Require Cancelling":
+        # Recommend Cancelling Public Events is omitted
+        if not_the_first_flag == 1:
+            s = s + ","
+        s = s + " Gatherings Banned"
+        not_the_first_flag = 1
+        emo_s = (emo_s + "g") if (regional_flag == 1) else (emo_s + "G")
+    if x['K-12 School Closure'] == x['K-12 School Closure'] and 'Require closing' in x['K-12 School Closure']:
+        if not_the_first_flag == 1:
+            s = s + ","
+        s = s + " Closure of Schools"
+        closure_flag = 1
+        not_the_first_flag = 1
+        emo_s = (emo_s + "s") if (regional_flag == 1) else (emo_s + "S")
+    if x['Non-essential Businesses Closure'] == x['Non-essential Businesses Closure'] and 'require closing' in x['Non-essential Businesses Closure']:
         # Recommend Closing Workspaces is omitted
         if not_the_first_flag == 1:
             s = s + ","

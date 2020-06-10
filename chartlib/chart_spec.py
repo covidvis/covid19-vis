@@ -618,7 +618,7 @@ class ChartSpec(DotDict):
                     cur_emoji += c
                 saw_sep = (c in (u'\u200d', '️'))
             yield cur_emoji
-        emojis = sorted(set(_emoji_gen()))
+        emojis = sorted(set(_emoji_gen()) - {'🚫'})
         if len(emojis) > self.MAX_EMOJI_LEGEND_MARKS:
             raise ValueError(f'max {self.MAX_EMOJI_LEGEND_MARKS} supported for now')
         idx = list(np.arange(len(emojis) + 1))

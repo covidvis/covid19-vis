@@ -6,7 +6,15 @@ import pandas as pd
 
 from .chart_spec import ChartSpec
 from .start_criterion import StartCriterion
-from .utils import create_lockdown_type, create_lockdown_type_world, days_between, strip_nans, split_into_list, str2emo
+from .utils import (
+    create_lockdown_type,
+    create_lockdown_type_world,
+    create_lockdown_type_world_new_export,
+    days_between,
+    strip_nans,
+    split_into_list,
+    str2emo
+)
 
 
 class CovidChart(object):
@@ -66,7 +74,7 @@ class CovidChart(object):
                 quarantine_df = self._ingest_country_quarantine_df(quarantine_df)
             else:
                 raise ValueError('invalid level %s: only "US" and "country" allowed now' % level)
-        quarantine_df = quarantine_df.dropna(subset=[groupcol, 'lockdown_date', 'lockdown_type'])
+        quarantine_df = quarantine_df.dropna(subset=[groupcol, 'lockdown_date'])
         self._validate_quarantine_df(quarantine_df)
 
         object.__setattr__(self, 'df', df)
@@ -96,7 +104,8 @@ class CovidChart(object):
     def _ingest_country_quarantine_df(self, quarantine_csv):
         quarantine_df = pd.read_csv(quarantine_csv)
         quarantine_df = quarantine_df.rename(
-             columns={'date': 'lockdown_date', 'country_name': 'Country_Region'}
+             columns={'date': 'lockdown_date', 'Date Enacted': 'lockdown_date',
+                      'country_name': 'Country_Region', 'Coverage': 'coverage'}
         )
 
         quarantine_df = quarantine_df.groupby(['lockdown_date', 'Country_Region', 'coverage']).agg({
@@ -107,8 +116,12 @@ class CovidChart(object):
             'Non-essential Businesses Closure': list
         }).reset_index()
         quarantine_df = quarantine_df.applymap(strip_nans)
-        quarantine_df['lockdown_type'] = quarantine_df.apply(lambda x: create_lockdown_type_world(x, 0), axis=1)
-        quarantine_df['emoji_string'] = quarantine_df.apply(lambda x: create_lockdown_type_world(x, 1), axis=1)
+        if quarantine_csv.endswith('quarantine-activity-world-new-export.csv'):
+            lockdown_mapper = create_lockdown_type_world_new_export
+        else:
+            lockdown_mapper = create_lockdown_type_world
+        quarantine_df['lockdown_type'] = quarantine_df.apply(lambda x: lockdown_mapper(x, 0), axis=1)
+        quarantine_df['emoji_string'] = quarantine_df.apply(lambda x: lockdown_mapper(x, 1), axis=1)
         quarantine_df['lockdown_type'].replace('', np.nan, inplace=True)
         quarantine_df = quarantine_df.dropna(subset=['lockdown_type'])
         quarantine_df = quarantine_df.groupby(['lockdown_date', 'Country_Region']).agg({
