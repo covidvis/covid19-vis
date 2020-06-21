@@ -1,0 +1,203 @@
+{
+    "C1": {
+        "category": "Containment and closure",
+        "name": "school closure",
+        "coverage": {
+            "0": "Targeted",
+            "1": "General",
+            "blank": "No data"
+        },
+        "levels": {
+            "0": "No measures",
+            "1": "recommend closing",
+            "2": "Require closing (only some levels or categories)",
+            "3": "Require closing all levels",
+            "blank": "No data"
+        }
+    },
+    "C2": {
+        "category": "Containment and closure",
+        "name": "workplace closure",
+        "coverage": {
+            "0": "Targeted",
+            "1": "General",
+            "blank": "No data"
+        },
+        "levels": {
+            "0": "No measures",
+            "1": "1 recommend closing (or work from home)",
+            "2": "2 require closing (or work from home) for some sectors or categories of workers",
+            "3": "3 require closing (or work from home) all-but essential workplaces",
+            "blank": "No data"
+        }
+    },
+    "C3": {
+        "category": "Containment and closure",
+        "name": "cancellation of public events",
+        "coverage": {
+            "0": "Targeted",
+            "1": "General",
+            "blank": "No data"
+        },
+        "levels": {
+            "0": "No measures",
+            "1": "Recommend cancelling",
+            "2": "Require cancelling",
+            "blank": "No data"
+        }
+    },
+    "C4": {
+        "category": "Containment and closure",
+        "name": "restrictions on gathering size",
+        "coverage": {
+            "0": "Targeted",
+            "1": "General",
+            "blank": "No data"
+        },
+        "levels": {
+            "0": "No restrictions",
+            "1": "Restrictions on very large gatherings (the limit is above 1000 people)",
+            "2": "Restrictions on gatherings between 100-1000 people",
+            "3": "Restrictions on gatherings between 10-100 people",
+            "4": "Restrictions on gatherings of less than 10 people",
+            "blank": "No data"
+        }
+    },
+    "C5": {
+        "category": "Containment and closure",
+        "name": "public transport closures",
+        "coverage": {
+            "0": "Targeted",
+            "1": "General",
+            "blank": "No data"
+        },
+        "levels": {
+            "0": "No measures",
+            "1": "Recommend closing (or significantly reduce volume/route/means of transport available)",
+            "2": "Require closing (or prohibit most citizens from using it)"
+        }
+    },
+    "C6": {
+        "category": "Containment and closure",
+        "name": "stay-at-home requirements",
+        "coverage": {
+            "0": "Targeted",
+            "1": "General",
+            "blank": "No data"
+        },
+        "levels": {
+            "0": "No measures",
+            "1": "recommend not leaving house",
+            "2": "require not leaving house with exceptions for daily exercise/ grocery shopping/ and ‘essential’ trips",
+            "3": "Require not leaving house with minimal exceptions",
+            "blank": "No data"
+        }
+    },
+    "C7": {
+        "category": "Containment and closure",
+        "name": "restrictions on domestic/internal movement",
+        "coverage": {
+            "0": "Targeted",
+            "1": "General",
+            "blank": "No data"
+        },
+        "levels": {
+            "0": "No measures",
+            "1": "Recommend closing (or significantly reduce volume/route/means of transport)",
+            "2": "Require closing (or prohibit most people from using it)"
+        }
+    },
+    "C8": {
+        "category": "Containment and closure",
+        "name": "restrictions on international travel",
+        "coverage": {},
+        "levels": {
+            "0": "No measures",
+            "1": "Screening",
+            "2": "Quarantine arrivals from high-risk regions",
+            "3": "Ban on high-risk regions",
+            "4": "Total border closure",
+            "blank": "No data"
+        }
+    },
+    "E1": {
+        "category": "Economic",
+        "name": "income support",
+        "coverage": {},
+        "levels": {},
+        "amount": 0
+    },
+    "E2": {
+        "category": "Economic",
+        "name": "debt/contract relief for households",
+        "coverage": {},
+        "levels": {},
+        "amount": 0
+    },
+    "E3": {
+        "category": "Economic",
+        "name": "economic stimulus measures",
+        "coverage": {},
+        "levels": {},
+        "amount": 0
+    },
+    "E4": {
+        "category": "Economic",
+        "name": "giving international support to other countries",
+        "coverage": {},
+        "levels": {},
+        "amount": 0
+    },
+    "H1": {
+        "category": "Health system",
+        "name": "public information campaign",
+        "coverage": {
+            "0": "Targeted",
+            "1" : "General",
+            "blank": "No data"
+        },
+        "levels": {
+            "0": "No COVID-19 public information campaign",
+            "1": "public officials urging caution about COVID-19",
+            "2": "coordinated public information campaign",
+            "blank": "No data"
+        }
+    },
+    "H2": {
+        "category": "Health system",
+        "name": "testing policy",
+        "coverage": {},
+        "levels": {
+            "0" : "No testing policy",
+            "1" : "Only those who both (a) have symptoms AND (b) meet specific criteria",
+            "2" : "testing of anyone showing COVID-19 symptoms",
+            "3" : "open public testing",
+            "blank": "No data"
+        }
+    },
+    "H3": {
+        "category": "Health system",
+        "name": "contact tracing policy",
+        "coverage": {},
+        "levels": {
+            "0": "No contact tracing",
+            "1": "Limited contact tracing not done for all cases",
+            "2": "Comprehensive contact tracing done for all cases",
+            "blank": "No data"
+        }
+    },
+    "H4": {
+        "category": "Health system",
+        "name": "emergency investment in healthcare",
+        "coverage": {},
+        "levels": {},
+        "amount": 0
+    },
+    "H5": {
+        "category": "Health system",
+        "name": "investment in vaccines",
+        "coverage": {},
+        "levels": {},
+        "amount": 0
+    }
+}
