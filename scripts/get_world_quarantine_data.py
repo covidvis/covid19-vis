@@ -214,7 +214,7 @@ def format_date(date):
     # yyyymmdd to mm-dd-yyyy
     m = date[4:6]
     d = date[6:]
-    y = date[:5]
+    y = date[:4]
     return '-'.join([m,d,y])
     
 
