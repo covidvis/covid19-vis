@@ -148,6 +148,71 @@ def create_lockdown_type(x, emo_flag):
     return (r + s).strip()
 
 
+# Performing a delta for world events
+def append_most_recent_events (df, x): 
+    df = df[df['Country_Region'] == x['Country_Region']][df['lockdown_date'] < x['lockdown_date']]
+    if (x['coverage'] == 'General'):
+        df = df[df['coverage'] == x['coverage']]
+    df = df.sort_values(by = ['lockdown_date'])
+    for i in {'Travel Restrictions', 'Gathering Limitations', 'Shelter-in-place Order', 'K-12 School Closure', 'Non-essential Businesses Closure'}:
+        s = ""
+        for index, r in df.iterrows():
+            if (r[i] != ''):
+                s = r[i]
+        x[i] = x[i] + "*"  + s
+    return x
+
+# Helper function that computes the emoji and string for world events
+def interpret_events (y, regional_flag, not_the_first_flag, s, emo_s, lockdown_type):
+    a = y[lockdown_type].lower().split('*')
+    if (lockdown_type == 'Shelter-in-place Order'):
+        readable_closed = " Shelter-in-place Order"; readable_open = " Shelter-in-place Order Lifted";
+        emoji_close = "L"; emoji_open = "H"
+    if (lockdown_type == 'Gathering Limitations'): 
+        readable_closed = " Gatherings Banned"; readable_open = " Gathering Ban Lifted";
+        emoji_close = "G"; emoji_open = "J"
+    if (lockdown_type == 'K-12 School Closure'): 
+        readable_closed = " Schools Closed"; readable_open = " Schools Reopened";
+        emoji_close = "S"; emoji_open = "M"
+    if (lockdown_type == 'Non-essential Businesses Closure'): 
+        readable_closed = " Businesses Closed"; readable_open = " Businesses Reopened";
+        emoji_close = "N"; emoji_open = "O"
+    if ((("require" in a[0]) or ("require" in a[1])) and 
+        (not (("require" in a[0]) and ("require" in a[1])))):
+        if not_the_first_flag == 1:
+            s = s + ","
+        if ("require" in a[0]):
+            s = s + readable_closed
+            r = emoji_close.lower() if (regional_flag == 1) else emoji_close
+            emo_s = (emo_s + emoji_close.lower()) if (regional_flag == 1) else (emo_s + emoji_close)
+            # distinct[r] = distinct.get(r, 0) + 1
+        else:
+            s = s + readable_open
+            r = emoji_open.lower() if (regional_flag == 1) else emoji_open
+            emo_s = (emo_s + emoji_open.lower()) if (regional_flag == 1) else (emo_s + emoji_open)
+            # distinct[r] = distinct.get(r, 0) + 1
+        not_the_first_flag = 1
+    
+    return not_the_first_flag, s, emo_s 
+
+
+# lockdown new export: requires df
+def create_lockdown_type_world_new_export(df, x, emo_flag):
+    s = r = emo_s = ""
+    x = append_most_recent_events (df, x)
+    regional_flag = closure_flag = not_the_first_flag = 0
+    if x['coverage'] == 'Targeted':
+        r = 'Regional'
+        regional_flag = 1
+    for i in {'Shelter-in-place Order', 'Gathering Limitations','K-12 School Closure', 'Non-essential Businesses Closure'}:
+        not_the_first_flag, s, emo_s = interpret_events (x, regional_flag, not_the_first_flag, s, emo_s, i)
+    if emo_flag == 1:
+        return emo_s
+    if s == "":
+        return s  # Ensures just "Regional" is not returned
+    return (r + s).strip()
+
+
 # border screening = b/B; travel restrictions= t/T; border closures = c/C
 # shelter-in-place = l/L; gathering limitations= g/G; k-12 school closures = s/S
 # non-essential business closure = n/N
@@ -208,61 +273,7 @@ def create_lockdown_type_world(x, emo_flag):
     return (r + s).strip()
 
 
-def create_lockdown_type_world_new_export(x, emo_flag):
-    s = r = emo_s = ""
-    regional_flag = closure_flag = not_the_first_flag = 0
-    if x['coverage'] == 'Targeted':
-        r = 'Regional'
-        regional_flag = 1
-    if x['Travel Restrictions'] == "Screening":  # assumption: only one travel restriction at a time
-        s = s + " Border Screening"
-        not_the_first_flag = 1
-        emo_s = (emo_s + "b") if (regional_flag == 1) else (emo_s + "B")
-    elif x['Travel Restrictions'] == "Quarantine arrivals from high-risk regions":
-        s = s + " Visitor Quarantine"
-        not_the_first_flag = 1
-        emo_s = (emo_s + "t") if (regional_flag == 1) else (emo_s + "T")
-    elif x['Travel Restrictions'] == "Ban on high-risk regions":
-        s = s + " Border Closures"
-        not_the_first_flag = 1
-        emo_s = (emo_s + "c") if (regional_flag == 1) else (emo_s + "C")
-    if x['Shelter-in-place Order'] == x['Shelter-in-place Order']:  # just check if not null
-        # Movement restriction recommended is omitted
-        if not_the_first_flag == 1:
-            s = s + ","
-        s = s + " Stay-at-home Order"
-        not_the_first_flag = 1
-        emo_s = (emo_s + "l") if (regional_flag == 1) else (emo_s + "L")
-    if x['Gathering Limitations'] == "Require Cancelling":
-        # Recommend Cancelling Public Events is omitted
-        if not_the_first_flag == 1:
-            s = s + ","
-        s = s + " Gatherings Banned"
-        not_the_first_flag = 1
-        emo_s = (emo_s + "g") if (regional_flag == 1) else (emo_s + "G")
-    if x['K-12 School Closure'] == x['K-12 School Closure'] and 'Require closing' in x['K-12 School Closure']:
-        if not_the_first_flag == 1:
-            s = s + ","
-        s = s + " Closure of Schools"
-        closure_flag = 1
-        not_the_first_flag = 1
-        emo_s = (emo_s + "s") if (regional_flag == 1) else (emo_s + "S")
-    if x['Non-essential Businesses Closure'] == x['Non-essential Businesses Closure'] and 'require closing' in x['Non-essential Businesses Closure']:
-        # Recommend Closing Workspaces is omitted
-        if not_the_first_flag == 1:
-            s = s + ","
-        if closure_flag == 0:
-            s = s + " Closure of Non-essential Businesses"
-        else:
-            s = s + " Non-essential Businesses"
-        closure_flag = 1
-        not_the_first_flag = 1
-        emo_s = (emo_s + "n") if (regional_flag == 1) else (emo_s + "N")
-    if emo_flag == 1:
-        return emo_s
-    if s == "":
-        return s  # Ensures just "Regional" is not returned
-    return (r + s).strip()
+
 
 
 def str2emo(s):

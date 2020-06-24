@@ -76,8 +76,9 @@ def make_jhu_country_cases_chart(override_props) -> CovidChart:
     jhu_df = pd.read_csv('./data/jhu-data.csv')
     jhu_df = jhu_df[(jhu_df.Province_State.isnull()) & (jhu_df.Country_Region != 'China')]
 
-    qcsv = './data/quarantine-activity-Apr19.csv'
-
+    #qcsv = './data/quarantine-activity-Apr19.csv'
+    qcsv = './data/quarantine-activity-world-new-export.csv'
+    
     days_since = 50
     groupcol = 'Country_Region'
     chart = CovidChart(

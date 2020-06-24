@@ -118,10 +118,14 @@ class CovidChart(object):
         quarantine_df = quarantine_df.applymap(strip_nans)
         if quarantine_csv.endswith('quarantine-activity-world-new-export.csv'):
             lockdown_mapper = create_lockdown_type_world_new_export
+            quarantine_df['lockdown_type'] = quarantine_df.apply(lambda x: lockdown_mapper(quarantine_df, x, 0), axis=1)
+            quarantine_df['emoji_string'] = quarantine_df.apply(lambda x: lockdown_mapper(quarantine_df, x, 1), axis=1)
         else:
             lockdown_mapper = create_lockdown_type_world
-        quarantine_df['lockdown_type'] = quarantine_df.apply(lambda x: lockdown_mapper(x, 0), axis=1)
-        quarantine_df['emoji_string'] = quarantine_df.apply(lambda x: lockdown_mapper(x, 1), axis=1)
+            quarantine_df['lockdown_type'] = quarantine_df.apply(lambda x: lockdown_mapper(x, 0), axis=1)
+            quarantine_df['emoji_string'] = quarantine_df.apply(lambda x: lockdown_mapper(x, 1), axis=1)
+      
+        
         quarantine_df['lockdown_type'].replace('', np.nan, inplace=True)
         quarantine_df = quarantine_df.dropna(subset=['lockdown_type'])
         quarantine_df = quarantine_df.groupby(['lockdown_date', 'Country_Region']).agg({
