@@ -1,20 +1,45 @@
-# 'e':Declaration of Emergency 
-# 't':'Travel restrictions'
-# 'c': Border Closure/Visitor Quarantine
-# 's': School closure 
-# 'n':Closure of non-essential businesses
-# 'l': Stay at home order
-severityScore = {'e':0.1,'g':0.3, 'c':0.3, 's':0.4,'r':0.6 , 't':0.6, 'n':0.8, 'l':1}
+# Closure:
+# emergency declaration = e/E; restaurant closure = r/R
+# border screening = b/B; travel restrictions= t/T; border closures = c/C
+# shelter-in-place = l/L; gathering limitations= g/G; k-12 school closures = s/S
+# non-essential business closure = n/N
+# face covering requirement = f/F
+
+# Opening:
+# emergency declaration lifted = a/A; 
+# travel restrictions lifted= d/D;
+# border closures lifted = k/K;
+# shelter-in-place lifted = h/H;
+# night-time curfew lifted= i/I; 
+# Banning gatherings lifted = j/J;
+# Face covering requirement lifted =p/P;
+# k-12 school open = m/M;
+# Bar and Dine-in Restaurant open = q/Q;
+# Non-essential Businesses open = o/O
+
+severityScore = {'e':0.1,'g':0.3, 'c':0.3, 's':0.4,'r':0.6 , 't':0.6, 'n':0.8, 'l':1, 'f':0.5,
+                 'a':-0.1, 'd':-0.6, 'k':-0.3, 'h':-1, 'n':-0.8, 'p':-0.5, 'q':-0.6, 'o':-0.8, 'j':-0.3}
+
 
 import pandas as pd
 import numpy as np
 from utils import create_lockdown_type, split_into_list, str2emo
-df = pd.read_csv("../data/quarantine-activity-US-Apr16-long.csv")
+df = pd.read_csv("../data/combined-activity-US-Jun9.csv")
 
 
 # START modified from _ingest_usa_quarantine_df
-quarantine_csv = "../data/quarantine-activity-US-Apr16-long.csv"
+quarantine_csv = "../data/combined-activity-US-Jun9-with-pop.csv"
 quarantine_df = pd.read_csv(quarantine_csv)
+
+quarantine_df = quarantine_df.rename(columns={'Effective.Date' : 'Effective Date', 'State.of.Emergency.Declaration' : 'State of Emergency Declaration', 
+                'Travel.Restrictions' : 'Travel Restrictions', 'Shelter.in.place.Order' : 'Shelter-in-place Order', 
+                'Gathering.Limitations' : 'Gathering Limitations', 'Banning.Gatherings.of.a.Certain.Size' : 'Banning Gatherings of a Certain Size',
+                'K.12.School.Closure' : 'K-12 School Closure', 'Bar.and.Dine.in.Restaurant.Closure' : 'Bar and Dine-in Restaurant Closure',
+                'Non.essential.Businesses.Closure' : 'Non-essential Businesses Closure', 'Details..if.any.' : 'Details (if any)',
+                'Reference.links' : 'Reference links', 'Face.Covering.Requirements' : 'Face Covering Requirements', 'state_pop_2019' : 'population_size'})
+quarantine_df = quarantine_df.drop('Unnamed: 0', axis=1)
+
+
 groupcol = 'Province_State'
 
 quarantine_df = quarantine_df.rename(columns={'State': 'Province_State', 'Effective Date': 'lockdown_date','Coverage.type':'Coverage'})
@@ -48,14 +73,24 @@ quarantine_df['event_index'] = quarantine_df.groupby(['Province_State', 'lockdow
 # # quarantine_cols = [
 # #     groupcol, 'lockdown_date', 'lockdown_type', 'emoji', 'emoji_string', 'event_index', 'Coverage','Coverage.location'
 # # ]
-quarantine_cols = ['Province_State', 'Coverage', 'Coverage.location', 'lockdown_date','population_size','lockdown_type', 'emoji_string', 'emoji',
+quarantine_cols = ['Province_State', 'Coverage', 'lockdown_date','population_size','lockdown_type', 'emoji_string', 'emoji',
        'event_index']
+
+print(quarantine_df.columns)
 quarantine_df = quarantine_df[quarantine_cols]
 
 # # END modified from _ingest_usa_quarantine_df
 
 quarantine_df_orig = pd.read_csv(quarantine_csv)
-state_populations = quarantine_df_orig[quarantine_df_orig["Coverage.type"]=="State-wide"][["State","population_size"]].drop_duplicates()
+quarantine_df_orig = quarantine_df_orig.rename(columns={'Effective.Date' : 'Effective Date', 'State.of.Emergency.Declaration' : 'State of Emergency Declaration', 
+                'Travel.Restrictions' : 'Travel Restrictions', 'Shelter.in.place.Order' : 'Shelter-in-place Order', 
+                'Gathering.Limitations' : 'Gathering Limitations', 'Banning.Gatherings.of.a.Certain.Size' : 'Banning Gatherings of a Certain Size',
+                'K.12.School.Closure' : 'K-12 School Closure', 'Bar.and.Dine.in.Restaurant.Closure' : 'Bar and Dine-in Restaurant Closure',
+                'Non.essential.Businesses.Closure' : 'Non-essential Businesses Closure', 'Details..if.any.' : 'Details (if any)',
+                'Reference.links' : 'Reference links', 'Face.Covering.Requirements' : 'Face Covering Requirements', 'state_pop_2019' : 'population_size'})
+quarantine_df_orig = quarantine_df_orig.drop('Unnamed: 0', axis=1)
+
+state_populations = quarantine_df_orig[["State","population_size"]].drop_duplicates()
 state_populations = state_populations.rename(columns={'State': 'Province_State',"population_size":"state_population_size"})
 state_populations.loc[state_populations["Province_State"]=="Puerto Rico","state_population_size"] = 3725789 # Obtained from https://www.census.gov/quickfacts/PR
 state_populations.state_population_size = state_populations.state_population_size.astype("int")
@@ -63,16 +98,16 @@ state_populations.state_population_size = state_populations.state_population_siz
 quarantine_df = quarantine_df.merge(state_populations)
 
 quarantine_df = quarantine_df.dropna(subset=["population_size"])
-quarantine_df.population_size = quarantine_df.population_size.str.replace(",","")
+#quarantine_df.population_size = quarantine_df.population_size.str.replace(",","")
 quarantine_df.population_size = quarantine_df.population_size.astype("int")
 
 quarantine_df["severityScore"] = quarantine_df.emoji_string.apply(lambda x: severityScore[x])
 quarantine_df.lockdown_date = quarantine_df.lockdown_date.str.replace("/","-")
 quarantine_df.lockdown_date = pd.to_datetime(quarantine_df.lockdown_date)
-quarantine_df = quarantine_df[['Province_State', 'Coverage', 'Coverage.location', 'lockdown_date',
+quarantine_df = quarantine_df[['Province_State', 'Coverage', 'lockdown_date',
        'population_size', 'state_population_size', 'severityScore']]
 
-def compute_state_replacements(qdf,state):
+"""def compute_state_replacements(qdf,state):
     df_state_replacements = []
     qdf = quarantine_df[quarantine_df["Province_State"]==state]
     statewideEvents = qdf[qdf["Coverage"]=="Statewide"]
@@ -84,6 +119,28 @@ def compute_state_replacements(qdf,state):
     other_population = state_population_size - relevant_county_population_lookup.population_size.sum()
     qdf.loc[len(qdf)] = [state,"Regional","Others",np.nan,other_population,state_population_size,np.nan]
     relevantCountiesInState  = relevantCountiesInState + ["Others"]
+    for statewideEvent in statewideEvents.iterrows(): 
+    #     statewideLockdown_date = "2020-03-12"
+    #     statewideSeverity = "0.1"
+        statewideLockdown_date = statewideEvent[1].lockdown_date
+        statewideSeverity = statewideEvent[1].severityScore
+        for county in relevantCountiesInState: 
+            #print(county)
+            #display(qdf[qdf["Coverage.location"]==county])
+            try:
+                # Catch error since some counties don't show up until a later date, ignore these counties 
+                clone = np.repeat(qdf[qdf["Coverage.location"]==county].iloc[0],1)
+                clone.lockdown_date = statewideLockdown_date
+                clone.severityScore = statewideSeverity
+                df_state_replacements.append(clone)
+            except (IndexError):
+                pass"""
+def compute_state_replacements(qdf,state):
+    df_state_replacements = []
+    qdf = quarantine_df[quarantine_df["Province_State"]==state]
+    statewideEvents = qdf[qdf["Coverage"]=="Statewide"]
+    regionalEvents = qdf[qdf["Coverage"]=="Regional"]
+    state_population_size = state_populations[state_populations["Province_State"]==state].state_population_size.values[0]
     for statewideEvent in statewideEvents.iterrows(): 
     #     statewideLockdown_date = "2020-03-12"
     #     statewideSeverity = "0.1"
