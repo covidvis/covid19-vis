@@ -28,7 +28,8 @@ df = pd.read_csv("../data/combined-activity-US-Jun9.csv")
 
 
 # START modified from _ingest_usa_quarantine_df
-quarantine_csv = "../data/combined-activity-US-Jun9-with-pop.csv"
+# quarantine_csv = "../data/combined-activity-US-Jun9-with-pop.csv"
+quarantine_csv = "../data/combined-activity-US-Jun9-with-partial-pop-b4-Apr16.csv"
 quarantine_df = pd.read_csv(quarantine_csv)
 
 quarantine_df = quarantine_df.rename(columns={'Effective.Date' : 'Effective Date', 'State.of.Emergency.Declaration' : 'State of Emergency Declaration', 
