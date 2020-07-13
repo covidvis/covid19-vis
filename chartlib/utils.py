@@ -149,17 +149,24 @@ def create_lockdown_type(x, emo_flag):
 
 
 # Performing a delta for world events
-def append_most_recent_events (df, x): 
-    df = df[df['Country_Region'] == x['Country_Region']][df['lockdown_date'] < x['lockdown_date']]
+def append_most_recent_events (df, x):
+    df = df[df['Country_Region'] == x['Country_Region']]
+    df = df[df['lockdown_date'] < x['lockdown_date']]
     if (x['coverage'] == 'General'):
-        df = df[df['coverage'] == x['coverage']]
+        df = df[df['coverage'] != 'Targeted']
     df = df.sort_values(by = ['lockdown_date'])
+    # print (x['lockdown_date'], df)
     for i in {'Travel Restrictions', 'Gathering Limitations', 'Shelter-in-place Order', 'K-12 School Closure', 'Non-essential Businesses Closure'}:
-        s = ""
+        s_global = "" # most recent global/complete
+        s_targeted = "" # most recent targeted
         for index, r in df.iterrows():
             if (r[i] != ''):
-                s = r[i]
-        x[i] = x[i] + "*"  + s
+                if (r['coverage'] == 'Targeted'):
+                    s_targeted = r[i]
+                else:
+                    s_global = r[i]
+        x[i] = x[i] + "*"  + s_global + "*" + s_targeted
+    # print ("appended: ", x)
     return x
 
 # Helper function that computes the emoji and string for world events
@@ -177,22 +184,45 @@ def interpret_events (y, regional_flag, not_the_first_flag, s, emo_s, lockdown_t
     if (lockdown_type == 'Non-essential Businesses Closure'): 
         readable_closed = " Businesses Closed"; readable_open = " Businesses Reopened";
         emoji_close = "N"; emoji_open = "O"
-    if ((("require" in a[0]) or ("require" in a[1])) and 
-        (not (("require" in a[0]) and ("require" in a[1])))):
-        if not_the_first_flag == 1:
-            s = s + ","
-        if ("require" in a[0]):
-            s = s + readable_closed
-            r = emoji_close.lower() if (regional_flag == 1) else emoji_close
-            emo_s = (emo_s + emoji_close.lower()) if (regional_flag == 1) else (emo_s + emoji_close)
-            # distinct[r] = distinct.get(r, 0) + 1
-        else:
-            s = s + readable_open
-            r = emoji_open.lower() if (regional_flag == 1) else emoji_open
-            emo_s = (emo_s + emoji_open.lower()) if (regional_flag == 1) else (emo_s + emoji_open)
-            # distinct[r] = distinct.get(r, 0) + 1
+
+
+    # a targeted reopening is one where we move to a 
+    # -- "no measure/recommend" state from a targeted or global "restrict"
+    # -- targeted "restrict" state from a global "restrict", and a targeted "non-restricted" state
+    # a global reopening is one where we move to a  
+    # -- "no measure/recommend" state from a targeted or global "restrict"
+    if ((
+            (("recommend" in a[0]) or ("no measures" in a[0])) and 
+            (("require" in a[1]) or ("require" in a[2]))
+        ) or 
+        (
+            (regional_flag == 1) and ("require" in a[0]) and 
+            ("require" in a[1]) and ("require" not in a[2])
+        )): 
+        if not_the_first_flag == 1: s = s + ","
+        s = s + readable_open
+        r = emoji_open.lower() if (regional_flag == 1) else emoji_open
+        emo_s = (emo_s + emoji_open.lower()) if (regional_flag == 1) else (emo_s + emoji_open)
         not_the_first_flag = 1
-    
+
+    # a targeted closing is one where we move to a 
+    # -- "restrict" state where neither targeted nor global is "restricted"
+    # a global reopening is one where we move to a  
+    # -- "restrict" state where the global is not "restricted"
+    if ((
+            (regional_flag == 1) and ("require" in a[0]) and 
+            ("require" not in a[1]) and ("require" not in a[2])
+        ) or
+        (
+            (regional_flag != 1) and ("require" in a[0]) and ("require" not in a[1])
+        )):
+        if not_the_first_flag == 1: s = s + ","
+        s = s + readable_closed
+        r = emoji_close.lower() if (regional_flag == 1) else emoji_close
+        emo_s = (emo_s + emoji_close.lower()) if (regional_flag == 1) else (emo_s + emoji_close)
+        not_the_first_flag = 1
+
+
     return not_the_first_flag, s, emo_s 
 
 
