@@ -439,6 +439,10 @@ class ChartSpec(DotDict):
             ).transform_filter(
                 'datum.y !== null'
             ).transform_filter(
+                'datum.lockdown_y !== null'
+            ).transform_filter(
+                'datum.lockdown_slope !== null'
+            ).transform_filter(
                 'datum.x >= datum.lockdown_x'
             ).transform_filter(
                 # only show the trend lines if the main lockdown rule appears after the start of the line

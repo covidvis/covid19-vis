@@ -107,7 +107,7 @@ class CovidChart(object):
              columns={'date': 'lockdown_date', 'Date Enacted': 'lockdown_date',
                       'country_name': 'Country_Region', 'Coverage': 'coverage'}
         )
-        quarantine_df = quarantine_df.fillna({'coverage': 'Complete'})
+
         quarantine_df = quarantine_df.groupby(['lockdown_date', 'Country_Region', 'coverage']).agg({
             'Travel Restrictions': list,
             'Gathering Limitations': list,
@@ -117,7 +117,6 @@ class CovidChart(object):
         }).reset_index()
         quarantine_df = quarantine_df.applymap(strip_nans)
         if quarantine_csv.endswith('quarantine-activity-world-new-export.csv'):
-            # print (quarantine_df[quarantine_df['Country_Region'] == "Bangladesh"])
             lockdown_mapper = create_lockdown_type_world_new_export
             quarantine_df['lockdown_type'] = quarantine_df.apply(lambda x: lockdown_mapper(quarantine_df, x, 0), axis=1)
             quarantine_df['emoji_string'] = quarantine_df.apply(lambda x: lockdown_mapper(quarantine_df, x, 1), axis=1)
@@ -248,8 +247,10 @@ class CovidChart(object):
 
     def _preprocess_lockdown_info(self, df) -> pd.DataFrame:
         quarantine_df = self._preprocess_quarantine_df(df)
-        # for trends, use earliest lockdown that appears... eventually we will want to specify this somehow
-        trend_df = quarantine_df.loc[quarantine_df.groupby(self.groupcol).x.idxmax()]
+        # for trends, use earliest statewide shelter-in-place that appears... eventually we will want to specify this somehow
+        trend_df = quarantine_df.loc[quarantine_df.Coverage == 'Statewide']
+        trend_df = trend_df.loc[trend_df.emoji_string == 'l']
+        trend_df = trend_df.loc[trend_df.groupby(self.groupcol).x.idxmin()]
         df = df.merge(
             trend_df.rename(columns={self.X: self.lockdown_x})[[self.groupcol, self.lockdown_x]],
             how='left',
@@ -271,7 +272,7 @@ class CovidChart(object):
             how='left',
             on=self.groupcol
         )
-        df['lockdown_slope'] = np.exp(np.log(df.lockdown_y / df.y_start) / (df.lockdown_x - df.x_start))
+        df['lockdown_slope'] = np.power(df.lockdown_y / df.y_start, 1. / (df.lockdown_x - df.x_start))
 
         # these new rows are to ensure we have at least one point where x == lockdown_x since this is the filter
         # used to generate lockdown rules...
