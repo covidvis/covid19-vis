@@ -27,14 +27,6 @@ def chart_configs():
     }
     configs = [
         {
-            'name': 'jhu_world_cases',
-            'gen': make_jhu_country_cases_chart,
-        },
-        {
-            'name': 'jhu_world_deaths',
-            'gen': make_jhu_country_deaths_chart,
-        },
-        {
             'name': 'jhu_us_cases',
             'gen': make_jhu_state_cases_chart,
             'make_text_area': True,
@@ -43,6 +35,14 @@ def chart_configs():
             'name': 'jhu_us_deaths',
             'gen': make_jhu_state_deaths_chart,
             'make_text_area': True,
+        },
+        {
+            'name': 'jhu_world_cases',
+            'gen': make_jhu_country_cases_chart,
+        },
+        {
+            'name': 'jhu_world_deaths',
+            'gen': make_jhu_country_deaths_chart,
         },
     ]
 
@@ -54,8 +54,11 @@ def chart_configs():
             'make_text_area': False,
         }
     # force evaluation of list to avoid infinite loop
-    configs.extend(list(map(_make_mobile_config, configs)))
-    return configs
+    configs_with_mobile = []
+    for config in configs:
+        configs_with_mobile.append(config)
+        configs_with_mobile.append(_make_mobile_config(config))
+    return configs_with_mobile
 
 
 def _maybe_add_staging_props(chart):
@@ -243,8 +246,25 @@ def export_charts(configs):
 
 
 def make_vega_embed_script(configs):
+    load_script_function = """
+function loadScript(scriptUrl) {
+  const script = document.createElement('script');
+  script.src = scriptUrl;
+  document.body.appendChild(script);
+  
+  return new Promise((res, rej) => {
+    script.onload = function() {
+      res();
+    }
+    script.onerror = function () {
+      rej();
+    }
+  });
+}
+    """
     script = """
 var COVIDVIS_CHARTS = {{}};
+{load_script_function}
 function startVegaEmbedding() {{
   var embedOpt = {{"mode": "vega-lite"}};
   $(document).ready(function() {{
@@ -252,8 +272,8 @@ function startVegaEmbedding() {{
   }});
 }}
     """
-    embed_calls = []
-    for config in configs:
+    embed_calls = None
+    for config in reversed(configs):
         then_add_listener = ''
         if STAGING and config.get('make_text_area', False):
             then_add_listener = f'''
@@ -265,9 +285,17 @@ function startVegaEmbedding() {{
     COVIDVIS_CHARTS['{config["name"]}'] = chart;
     {then_add_listener}
 }})'''
-        embed_calls.append(f'vegaEmbed("#{config.get("embed_id", config["name"])}", {config["name"]}, embedOpt){then};')
-    embed_calls = '\n'.join(embed_calls)
-    script = script.format(embed_calls=embed_calls)
+        embed_call = f'vegaEmbed("#{config.get("embed_id", config["name"])}", {config["name"]}, embedOpt){then};'
+        embed_call = f'loadScript("js/autogen/{config["name"]}.js").then(function() {{{ embed_call }}})'
+        if embed_calls is None:
+            embed_calls = embed_call
+        else:
+            embed_calls = f"""
+{embed_call}.then(function() {{
+    {embed_calls}
+}})
+        """.strip()
+    script = script.format(load_script_function=load_script_function, embed_calls=embed_calls)
     with open('./website/js/autogen/vega_embed.js', 'w') as f:
         f.write(script)
 
@@ -290,12 +318,12 @@ def make_chart_detail():
         f.close()
 
 
-def make_jekyll_config(configs):
+def make_jekyll_config():
     with open('./website/_config.in.yml', 'r') as f:
         jekyll_config = yaml.load(f.read(), yaml.SafeLoader)
     jekyll_config['date_last_modified'] = datetime.now().strftime('%B %d, %Y')
-    for config in configs:
-        jekyll_config['footer_scripts'].append(f'js/autogen/{config["name"]}.js')
+    # for config in configs:
+    #     jekyll_config['footer_scripts'].append(f'js/autogen/{config["name"]}.js')
     jekyll_config['staging'] = STAGING
     with open('./website/_config.yml', 'w') as f:
         yaml.dump(jekyll_config, f)
@@ -305,7 +333,7 @@ def main():
     configs = chart_configs()
     export_charts(configs)
     make_vega_embed_script(configs)
-    make_jekyll_config(configs)
+    make_jekyll_config()
     make_chart_detail()
 
 

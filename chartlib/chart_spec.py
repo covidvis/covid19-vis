@@ -665,7 +665,7 @@ class ChartSpec(DotDict):
         ).encode(
             y=self._get_y(),
             color=alt.value('gray')
-        ).transform_calculate(y={2: '4', 3: '7'}[num_emoji_rows])
+        ).transform_calculate(y={1: '2', 2: '4', 3: '7'}[num_emoji_rows])
         # layers['title'] = base.mark_text(
         #     align='left', dy=-5, font=self._font, fontSize=16,
         # ).encode(
