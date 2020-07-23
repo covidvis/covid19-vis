@@ -323,10 +323,10 @@ class ChartSpec(DotDict):
             ycol = 'event_index_y'
 
         def _make_base(size):
-            ret = base.mark_text(size=size).encode(
+            ret = base.mark_image(height=size, width=size).encode(
                 x=self._get_x(), y=self._get_y(f'{ycol}:Q'),
                 opacity=alt.value(1),
-                text=alt.Text('emoji:N')
+                url='image_url'
             )
             if 'event_index' in df.columns:
                 ret = ret.transform_calculate(**{
