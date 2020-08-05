@@ -541,6 +541,7 @@ class CovidChart(object):
 
     def compile(self):
         chart_df = self._preprocess_df()
+        chart_df['image_url'] = "https://vega.github.io/vega-datasets/data/ffox.png"
         return self.spec.compile(chart_df)
 
     def export(self, fname="vis.json", js_var="vis"):
