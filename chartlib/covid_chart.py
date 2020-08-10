@@ -562,7 +562,7 @@ class CovidChart(object):
         }
         def get_image_url(emoji_string):
             if emoji_string in image_map:
-                return image_map['emoji_string']
+                return image_map[emoji_string]
             else:
                 return '' # Altair will render this as a blank image--exactly what we want
         df_with_image_url = df.copy()
