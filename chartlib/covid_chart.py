@@ -539,9 +539,39 @@ class CovidChart(object):
             ret = ret.add_lockdown_rules()
         return ret
 
+    def add_image_column(self, df):
+        image_map = {
+            'e' : "https://vega.github.io/vega-datasets/data/ffox.png",
+            'g' : "https://vega.github.io/vega-datasets/data/gimp.png",
+            'c' : "https://vega.github.io/vega-datasets/data/ffox.png",
+            's' : "https://vega.github.io/vega-datasets/data/gimp.png",
+            'r' : "https://vega.github.io/vega-datasets/data/ffox.png",
+            't' : "https://vega.github.io/vega-datasets/data/gimp.png",
+            'n' : "https://vega.github.io/vega-datasets/data/ffox.png",
+            'l' : "https://vega.github.io/vega-datasets/data/gimp.png",
+            'f' : "https://vega.github.io/vega-datasets/data/ffox.png",
+            'a' : "https://vega.github.io/vega-datasets/data/gimp.png",
+            'd' : "https://vega.github.io/vega-datasets/data/ffox.png",
+            'k' : "https://vega.github.io/vega-datasets/data/gimp.png",
+            'h' : "https://vega.github.io/vega-datasets/data/ffox.png",
+            'n' : "https://vega.github.io/vega-datasets/data/gimp.png",
+            'p' : "https://vega.github.io/vega-datasets/data/ffox.png",
+            'q' : "https://vega.github.io/vega-datasets/data/gimp.png",
+            'o' : "https://vega.github.io/vega-datasets/data/ffox.png",
+            'j' : "https://vega.github.io/vega-datasets/data/gimp.png",
+        }
+        def get_image_url(emoji_string):
+            if emoji_string in image_map:
+                return image_map['emoji_string']
+            else:
+                return '' # Altair will render this as a blank image--exactly what we want
+        df_with_image_url = df.copy()
+        df_with_image_url['image_url'] = df['emoji_string'].apply(get_image_url)
+        return df_with_image_url
+
     def compile(self):
         chart_df = self._preprocess_df()
-        chart_df['image_url'] = "https://vega.github.io/vega-datasets/data/ffox.png"
+        chart_df = self.add_image_column(chart_df)
         return self.spec.compile(chart_df)
 
     def export(self, fname="vis.json", js_var="vis"):
