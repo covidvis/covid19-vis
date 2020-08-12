@@ -2,7 +2,6 @@
 import sys
 sys.path.append('.')
 from datetime import datetime
-import os
 
 import pandas as pd
 import yaml
@@ -92,6 +91,7 @@ def make_jhu_country_cases_chart(override_props) -> CovidChart:
         level='country',
         xcol='Date',
         top_k_groups=30,
+        sample_every=3,
         quarantine_df=qcsv
     )
 
@@ -125,6 +125,7 @@ def make_jhu_country_deaths_chart(override_props) -> CovidChart:
         xcol='Date',
         level='country',
         top_k_groups=30,
+        sample_every=3,
         quarantine_df=qcsv
     )
 
@@ -161,6 +162,7 @@ def make_jhu_state_cases_chart(override_props) -> CovidChart:
         level=level,
         xcol='Date',
         top_k_groups=30,
+        sample_every=3,
         quarantine_df=qcsv  # should have a column with same name as `groupcol`
     )
     # chart.set_colormap()
@@ -196,6 +198,7 @@ def make_jhu_state_deaths_chart(override_props) -> CovidChart:
         xcol='Date',
         level=level,
         top_k_groups=30,
+        sample_every=3,
         quarantine_df=qcsv  # should have a column with same name as `groupcol`
     )
 
