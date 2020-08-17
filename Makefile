@@ -23,4 +23,10 @@ stage:
 	STAGE=1 scripts/build-charts.py
 	scripts/transform-config.py website/_config.yml website/_config-staging.yml website/_config.yml
 	scripts/build-web.sh
+	scripts/serve-web.sh
+
+staging:
+	STAGE=1 scripts/build-charts.py
+	scripts/transform-config.py website/_config.yml website/_config-staging.yml website/_config.yml
+	scripts/build-web.sh
 	scripts/deploy-web.sh ../covidvis-staging gh-pages
