@@ -146,7 +146,8 @@ def make_jhu_state_cases_chart(override_props) -> CovidChart:
 
     if STAGING:
         level = 'usa'
-        qcsv = './data/quarantine-activity-US-Apr16.csv'
+        #qcsv = './data/quarantine-activity-US-Apr16.csv'
+        qcsv = './data/combined-activity-US-Jun9.csv'
     else:
         level = 'usa_old'
         qcsv = './data/quarantine-activity-US.csv'
@@ -181,7 +182,8 @@ def make_jhu_state_deaths_chart(override_props) -> CovidChart:
 
     if STAGING:
         level = 'usa'
-        qcsv = './data/quarantine-activity-US-Apr16.csv'
+        #qcsv = './data/quarantine-activity-US-Apr16.csv'
+        qcsv = './data/combined-activity-US-Jun9.csv'
     else:
         level = 'usa_old'
         qcsv = './data/quarantine-activity-US.csv'
@@ -224,7 +226,8 @@ def make_jhu_selected_state_chart(override_props) -> CovidChart:
         level='USA',
         xcol='Date',
         top_k_groups=20,
-        quarantine_df='./data/quarantine-activity-US.csv'  # should have a column with same name as `groupcol`
+        quarantine_df = './data/combined-activity-US-Jun9.csv'
+        #quarantine_df='./data/quarantine-activity-US.csv'  # should have a column with same name as `groupcol`
     )
     # chart.set_colormap()
     chart.set_unfocused_opacity(0.05)
@@ -302,7 +305,7 @@ function startVegaEmbedding() {{
 
 def make_chart_detail():
     #.str.strip(to_strip='"')
-    quarantine_df = pd.read_csv('./data/quarantine-activity-US-Apr16.csv')
+    quarantine_df = pd.read_csv(qcsv = './data/combined-activity-US-Jun9.csv')
     quarantine_df["detail_html"] = '<li>'+quarantine_df["Effective Date"].str.replace("-","/")+": "+quarantine_df["Details (if any) "]+" [<a href='"+quarantine_df["Reference links"]+"'>source</a>]"+'</li>'
 
     quarantine_df["detail_html"] = quarantine_df["detail_html"].fillna("")
