@@ -131,7 +131,7 @@ def create_lockdown_type(x, emo_flag):
     if x['Non-essential Businesses Closure'] == x['Non-essential Businesses Closure']:
         if not_the_first_flag == 1:
             s = s + ","
-        if x['Non-essential Businesses Closure'] == "Non-essential businesses closed" or x['Non-essential Businesses Closure'] == "Some (cherry-picked) businesses closed; others allowed to operate possibly with extra requirements":
+        if x['Non-essential Businesses Closure'] == "Non-essential businesses closed" or x['Non-essential Businesses Closure'] == "Some (cherry-picked) businesses closed; others allowed to operate possibly with extra requirements" or x['Non-essential Businesses Closure'] == "Some (cherry-picked) businesses closed":
             s = (s + " Closure of Non-essential Businesses") if (closure_flag == 0) else (
                     s + " Non-essential Businesses")
             emo_s = (emo_s + "n") if (regional_flag == 1) else (emo_s + "N")

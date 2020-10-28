@@ -22,7 +22,7 @@ Visualizing the Impact of SARS-CoV-2 Intervention Strategies
 
 <div class="tab-content tab-content-usa" id="usa-tab">
 <div class="if-desktop">
-    <div class="tab-content tab-content-cases" id="jhu_us_cases"></div>
+    <div class="tab-content tab-content-cases" id="jhu_us_cases"><img src="../../images/legend.png"></div>
     <div class="tab-content tab-content-deaths" id="jhu_us_deaths"></div>
 </div>
 <div class="if-mobile">
